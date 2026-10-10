@@ -1,5 +1,10 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "./db/client";
 import { getEnv } from "./env";
+import { DrizzlePhraseRepository } from "./phrases/repository";
+import type { PhraseRepository } from "./phrases/types";
+import { HaikuTranslator } from "./translation/haiku";
+import type { Translator } from "./translation/types";
 import { PostgresUsageLimiter, type UsageLimiter } from "./usage/limiter";
 
 // Composition root: builds the real implementations on first use. Route tests mock this module.
@@ -12,4 +17,20 @@ export function getUsageLimiter(): UsageLimiter {
     burstLimit: getEnv().BURST_LIMIT_PER_MINUTE,
   });
   return limiter;
+}
+
+let translator: Translator | undefined;
+
+export function getTranslator(): Translator {
+  translator ??= new HaikuTranslator(
+    new Anthropic({ apiKey: getEnv().ANTHROPIC_API_KEY }),
+  );
+  return translator;
+}
+
+let phraseRepository: PhraseRepository | undefined;
+
+export function getPhraseRepository(): PhraseRepository {
+  phraseRepository ??= new DrizzlePhraseRepository(getDb());
+  return phraseRepository;
 }
