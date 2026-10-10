@@ -1,8 +1,8 @@
 # Parlo — Design Spec
 
 - **Date:** 2026-10-09
-- **Status:** Approved in brainstorming, pending written review
-- **Plan:** [`docs/PLAN.md`](../../PLAN.md) (living task list)
+- **Status:** Approved
+- **Plan:** [`docs/plans/2026-10-09-parlo-plan.md`](../plans/2026-10-09-parlo-plan.md) (living task list)
 
 ## 1. Intent
 
@@ -238,23 +238,26 @@ Test pyramid: many unit tests, a few integration tests, no e2e this iteration.
     Library and a `MantineProvider` wrapper.
 - **Integration (Vitest, `*.int.test.ts`, separate config):** Drizzle repositories,
   `PostgresUsageLimiter`, and one translate route end to end (real DB and session, fake
-  `Translator`). These use the Docker `parlo_test` database; migrations run in global setup and
-  tables are truncated between tests.
+  `Translator`). These use the Docker `parlo_test` database, selected by `.env.test`; migrations run
+  in global setup and tables are truncated between tests.
 - **Never in CI:** real model calls. `npm run smoke:haiku` runs one live call by hand.
 - **Scripts:** `test` (unit), `test:int`, `test:all`, `typecheck`, `db:up`, `db:migrate`, `db:studio`.
 
 ## 11. Environments and config
 
-| Var | Local | Prod (Vercel) |
-|---|---|---|
-| `DATABASE_URL` | `postgres://…@localhost:5432/parlo` | Neon pooled URL |
-| `DATABASE_URL_TEST` | `…/parlo_test` | – |
-| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | dev values | prod values |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client with localhost redirect | same client, prod redirect added |
-| `ANTHROPIC_API_KEY` | dev key | prod key |
-| `DAILY_TRANSLATION_LIMIT`, `BURST_LIMIT_PER_MINUTE` | optional | optional |
+| Var | Local (`.env.local`) | Test (`.env.test`) | Prod (Vercel) |
+|---|---|---|---|
+| `DATABASE_URL` | `postgres://…@localhost:5432/parlo` | `…/parlo_test` | Neon pooled URL |
+| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | dev values | fixed test values | prod values |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client with localhost redirect | dummy | same client, prod redirect added |
+| `ANTHROPIC_API_KEY` | dev key | dummy (never called) | prod key |
+| `DAILY_TRANSLATION_LIMIT`, `BURST_LIMIT_PER_MINUTE` | optional | optional | optional |
 
-Env vars are validated at startup with Zod (`src/server/env.ts`). `.env.example` is committed.
+Env files are loaded with `@next/env` (Next.js does this for the app; the Vitest config calls
+`loadEnvConfig`). With `NODE_ENV=test`, which Vitest sets, it loads `.env.test` and skips
+`.env.local`. Env vars are validated at startup with Zod (`src/server/env.ts`). `.env.example` and
+`.env.test` are committed; `.env.test` holds no secrets, only local Docker credentials and dummies.
+`.env.local` stays ignored.
 
 ## 12. Future (post-Casper)
 
