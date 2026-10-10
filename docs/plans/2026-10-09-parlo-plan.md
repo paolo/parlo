@@ -45,7 +45,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 0 | 0.1 Accounts and credentials | – | you + Haiku 5.5 | off-clock | [x] |
 | 1 | 1.1 Tooling foundation | `tooling-foundation` | Sonnet 5.5 | 15m | [x] |
 | 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [x] |
-| 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [ ] |
+| 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [x] |
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [ ] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [ ] |
@@ -206,7 +206,7 @@ green on the PR.
 
 **Acceptance:** `npm run dev` shows the shell; mobile width shows the burger; tests pass.
 
-### Task 1.3: Database and auth — [ ]
+### Task 1.3: Database and auth — [x]
 
 **Branch** `database-auth` · **Model** Opus 5.5 · **Est.** 25m
 
@@ -570,3 +570,12 @@ Each task gets its own branch, and each is expanded before it starts.
   variables referenced from the Mantine theme (no CSS files left in the app). Color scheme follows the
   OS (`defaultColorScheme="auto"`). If `tsc` complains about `.next/types` after deleting routes,
   run `rm -rf .next`.
+- 2026-10-10: 1.3 done (better-auth 1.7, drizzle-orm 0.45, drizzle-kit 0.31).
+  - The npm `@better-auth/cli` stops at 1.4, so the auth tables were written by hand from
+    better-auth 1.7's own `getAuthTables()` output.
+  - Auth, DB and env are all lazy (`getAuth()`, `getDb()`, `getEnv()`), so builds need no secrets.
+  - `src/server/db/migrations` is excluded from Biome.
+  - Component tests render Mantine with `env="test"` (no transitions or portals).
+  - Verified by hand: `dailyLimit` is rejected at sign-up (`FIELD_NOT_ALLOWED`).
+  - If a regenerated migration conflicts with the test DB, drop and recreate its schema (it's
+    disposable).

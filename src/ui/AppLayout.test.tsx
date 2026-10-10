@@ -4,7 +4,13 @@ import { renderWithProviders } from "@/test/render";
 import { AppLayout } from "./AppLayout";
 
 const pathname = vi.hoisted(() => ({ current: "/" }));
-vi.mock("next/navigation", () => ({ usePathname: () => pathname.current }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => pathname.current,
+  useRouter: () => ({ push: vi.fn() }),
+}));
+vi.mock("@/ui/auth-client", () => ({
+  authClient: { useSession: () => ({ data: null }), signOut: vi.fn() },
+}));
 
 describe("AppLayout", () => {
   beforeEach(() => {

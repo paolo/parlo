@@ -11,7 +11,9 @@ export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MantineProvider theme={theme}>{children}</MantineProvider>
+        <MantineProvider theme={theme} env="test">
+          {children}
+        </MantineProvider>
       </QueryClientProvider>
     );
   }

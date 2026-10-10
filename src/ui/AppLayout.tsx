@@ -4,6 +4,7 @@ import { AppShell, Burger, Group, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import type { ReactNode } from "react";
 import { NavLinks } from "./NavLinks";
+import { UserMenu } from "./UserMenu";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [opened, { toggle, close }] = useDisclosure();
@@ -15,15 +16,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Burger
-            opened={opened}
-            onClick={toggle}
-            hiddenFrom="sm"
-            size="sm"
-            aria-label="Toggle navigation"
-          />
-          <Title order={3}>Parlo</Title>
+        <Group h="100%" px="md" justify="space-between">
+          <Group>
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+              aria-label="Toggle navigation"
+            />
+            <Title order={3}>Parlo</Title>
+          </Group>
+          <UserMenu />
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="sm">
