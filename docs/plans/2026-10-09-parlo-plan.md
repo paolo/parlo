@@ -531,6 +531,13 @@ Each task gets its own branch, and each is expanded before it starts.
 - [ ] **2.2 Prompt eval set** (Opus 5.5, `claude-api` skill `build-eval`): 30–50 tricky
       colloquial phrases across ES/EN/FR with expected corrections; grade with an LLM judge; track
       quality when the prompt or model changes.
+      Seed cases from smoke runs:
+      - "Ayer fuistes al cine sin mí": expect a correction to "fuiste". Haiku 5.5 catches it only
+        ~2/3 at low and ~1/3 at medium effort, and sometimes wrongly calls it the vosotros form.
+      - "I could of told you that": expect "could have".
+      - "je suis excité pour la fête ce soir": a false friend; expect "j'ai hâte".
+      - "il pleut des cordes, on reste à la maison ?": expect **no** correction (casual lowercase).
+      - "Estoy hasta las narices de esperar": expect no correction, plus an idiom note.
 - [ ] **2.3 Prompt caching check** (Sonnet 5.5): confirm `cache_read_input_tokens` > 0 on repeat
       calls, or that the system prompt is below the minimum cacheable size; log usage tokens.
 - [ ] **2.4 Migrations in the pipeline** (Sonnet 5.5): run `db:migrate` against Neon from CI on
@@ -563,6 +570,8 @@ Each task gets its own branch, and each is expanded before it starts.
       on demand.
 - [ ] **5.2** (Opus 5.5): suggest a user's level from their correction history.
 - [ ] **5.3** (Sonnet 5.5): spaced-repetition review of phrasebook entries.
+- [ ] **5.4** (Sonnet 5.5): profile setting for the explanation language: strongest language
+      (default, today's behaviour) or the phrase's own language (immersion).
 
 ---
 
@@ -594,6 +603,15 @@ Each task gets its own branch, and each is expanded before it starts.
   - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
     500 during the first deploy).
   - Google consent screen set to In production so reviewers can sign in.
+- 2026-10-10: prompt refinements after review.
+  - Levels describe the *user* (never the phrase).
+  - Corrections apply regardless of level, and common colloquial non-standard forms count as
+    errors.
+  - Explanations are always in the user's strongest language (an explicit system-prompt rule, since
+    the model drifted to the phrase's language).
+  - Effort is now a `HaikuTranslator` option (default `low`; `SMOKE_EFFORT=medium` in the smoke
+    script).
+
 - 2026-10-10: 1.5 done (`@anthropic-ai/sdk` 0.133).
   - Haiku 5.5 facts, from the official migration guide:
     - adaptive thinking is on by default (effort default `medium`), and thinking tokens count
