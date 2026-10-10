@@ -4,6 +4,7 @@ import { AppShell, Burger, Group, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import type { ReactNode } from "react";
 import { NavLinks } from "./NavLinks";
+import { UsageBadge } from "./UsageBadge";
 import { UserMenu } from "./UserMenu";
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -27,7 +28,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             />
             <Title order={3}>Parlo</Title>
           </Group>
-          <UserMenu />
+          <Group gap="sm">
+            <UsageBadge />
+            <UserMenu />
+          </Group>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="sm">
