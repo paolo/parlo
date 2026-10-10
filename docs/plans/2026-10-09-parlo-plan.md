@@ -46,7 +46,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.1 Tooling foundation | `tooling-foundation` | Sonnet 5.5 | 15m | [x] |
 | 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [x] |
-| 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [ ] |
+| 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [ ] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [ ] |
@@ -265,7 +265,9 @@ pooled URL in production. One code path, and it works on Vercel Fluid compute. S
 **Acceptance:** sign in locally with Google **and** with email/password; visiting `/` signed out
 redirects to `/sign-in`; tests pass.
 
-### Task 1.4: First deploy (walking skeleton) — [ ]
+### Task 1.4: First deploy (walking skeleton) — [x]
+
+Live at **https://parlo-flax.vercel.app**.
 
 **Branch** `first-deploy` · **Model** Sonnet 5.5 · **Est.** 10m
 
@@ -532,7 +534,11 @@ Each task gets its own branch, and each is expanded before it starts.
 - [ ] **2.3 Prompt caching check** (Sonnet 5.5): confirm `cache_read_input_tokens` > 0 on repeat
       calls, or that the system prompt is below the minimum cacheable size; log usage tokens.
 - [ ] **2.4 Migrations in the pipeline** (Sonnet 5.5): run `db:migrate` against Neon from CI on
-      merge to `main` (or as a Vercel build step); Neon preview branches for PRs.
+      merge to `main` (or as a Vercel build step); Neon preview branches for PRs. Vercel env vars are
+      currently set for **Production only**, so previews build but can't authenticate (Google rejects
+      unregistered redirect URIs). Enabling previews needs a Neon branch per PR, a per-preview
+      `BETTER_AUTH_URL` (`VERCEL_URL`), and a strategy for OAuth on previews (e.g. email/password
+      enabled on previews only).
 - [ ] **2.5 Playwright e2e for the critical path** (Sonnet 5.5): sign-in (dev email/password),
       translate with a mocked translator, history.
 - [ ] **2.6 Observability** (Haiku 5.5): structured logs and an error-tracking integration.
@@ -579,3 +585,12 @@ Each task gets its own branch, and each is expanded before it starts.
   - Verified by hand: `dailyLimit` is rejected at sign-up (`FIELD_NOT_ALLOWED`).
   - If a regenerated migration conflicts with the test DB, drop and recreate its schema (it's
     disposable).
+- 2026-10-10: CI fix: `typecheck` runs `next typegen` first, because `LayoutProps`/`RouteContext`
+  globals are generated and don't exist in a fresh checkout. Local CI replay: `git archive <branch>`
+  into a scratch dir, then run the CI steps there.
+- 2026-10-10: 1.4 done.
+  - Neon database is `neondb`. Migrations run from a laptop with the **direct** URL; Vercel uses the
+    **pooled** URL with `sslmode=verify-full`.
+  - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
+    500 during the first deploy).
+  - Google consent screen set to In production so reviewers can sign in.
