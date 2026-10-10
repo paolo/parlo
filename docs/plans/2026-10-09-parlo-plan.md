@@ -49,7 +49,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
-| 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [ ] |
+| 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [x] |
 | 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] |
 | 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [ ] |
@@ -378,7 +378,7 @@ interface UsageLimiter {
   - `user.daily_limit` overrides the env default.
 - Route: 401 without a session; returns `{ usedToday, dailyLimit, resetAt }`.
 
-### Task 1.7: Translate flow — [ ]
+### Task 1.7: Translate flow — [x]
 
 **Branch** `translate-flow` · **Model** Sonnet 5.5 · **Est.** 20m
 
@@ -537,6 +537,8 @@ Each task gets its own branch, and each is expanded before it starts.
         the vosotros form. An earlier "medium" sample silently ran at low because of a bug, since
         fixed.
       - "I could of told you that": expect "could have".
+      - "je suis excité pour la fête ce soir" once produced the correction "J'ai trop hâte *pour*
+        la fête" (should be "hâte *de*"), so check that the correction text is itself correct.
       - "je suis excité pour la fête ce soir": a false friend; expect "j'ai hâte".
       - "il pleut des cordes, on reste à la maison ?": expect **no** correction (casual lowercase).
       - "Estoy hasta las narices de esperar": expect no correction, plus an idiom note.
@@ -605,6 +607,14 @@ Each task gets its own branch, and each is expanded before it starts.
   - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
     500 during the first deploy).
   - Google consent screen set to In production so reviewers can sign in.
+- 2026-10-10: 1.7 done.
+  - `buildNewGroup` drops a "correction" that equals the input.
+  - `parseJson` turns invalid JSON or schema failures into 400s with `fields`.
+  - Usage is refetched after every translate attempt (including 429s).
+  - The jsdom test setup gained a `document.fonts` polyfill (Mantine's autosize Textarea).
+  - Live: 201 in ~4.5 s with real Haiku; 422 for Italian with no usage recorded.
+  - "Use corrected" and the favorite toggle are wired in 1.8.
+
 - 2026-10-10: 1.6 done.
   - `PostgresUsageLimiter` takes an injectable clock, so the UTC-boundary tests need no waiting.
   - It runs one query: two `count(*) filter` columns plus a sub-select of `user.daily_limit`.
