@@ -1,3 +1,5 @@
+"use client";
+
 import { Alert, List, Stack, Text, Title } from "@mantine/core";
 import { IconRoad } from "@tabler/icons-react";
 
