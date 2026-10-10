@@ -44,7 +44,7 @@ sharing.
 | API | Route Handlers (`src/app/api/**/route.ts`) |
 | LLM | Anthropic TypeScript SDK, model `claude-haiku-5-5`, structured outputs (`messages.parse` + Zod) |
 | DB | PostgreSQL. Local and test: Docker; production: Neon |
-| ORM | Drizzle (`node-postgres` driver locally, `@neondatabase/serverless` in prod) and drizzle-kit migrations |
+| ORM | Drizzle with the `pg` (node-postgres) driver everywhere (Neon pooled URL in prod, Vercel Fluid compute) and drizzle-kit migrations |
 | Auth | Better Auth with the Drizzle adapter. Google OAuth in every environment; email/password only when `NODE_ENV !== "production"` |
 | Validation | Zod (route inputs, LLM output) |
 | Tests | Vitest and React Testing Library (jsdom); integration tests against Docker Postgres |
@@ -168,7 +168,7 @@ All routes require a session (401 otherwise) and return JSON.
 | GET | `/api/phrase-groups` | `?favorite=true&q=&cursor=&limit=20` | `{ items, nextCursor }` |
 | PATCH | `/api/phrase-groups/:id` | `{ isFavorite?, acceptCorrection? }` | `{ group }` |
 | DELETE | `/api/phrase-groups/:id` | – | `204` |
-| GET | `/api/profile/levels` | – | `{ levels: Record<Lang, Level> }` |
+| GET | `/api/profile/levels` | – | `{ levels: Record<Lang, Level>, isDefault: boolean }` |
 | PUT | `/api/profile/levels` | `{ levels }` | `{ levels }` |
 | GET | `/api/usage` | – | `{ usedToday, dailyLimit, resetAt }` |
 
