@@ -59,6 +59,22 @@ describe("HaikuTranslator", () => {
     ]);
   });
 
+  it("sends the configured effort", async () => {
+    const { client, parse } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: output,
+    });
+    await new HaikuTranslator(client, "medium").translate({
+      text: "hola",
+      levels,
+    });
+    const params = (parse.mock.calls[0] as unknown[])[0] as Record<
+      string,
+      unknown
+    >;
+    expect(params).toMatchObject({ output_config: { effort: "medium" } });
+  });
+
   it("fails on a refusal", async () => {
     const { client } = clientReturning({
       stop_reason: "refusal",

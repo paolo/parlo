@@ -47,9 +47,10 @@ export class HaikuTranslator implements Translator {
       model: TRANSLATION_MODEL,
       // Thinking tokens count toward max_tokens; leave room for them plus the JSON.
       max_tokens: 2048,
-      // Low effort: translation is latency-sensitive, and the model can skip thinking on easy phrases.
+      // Effort steers adaptive thinking. Default low: translation is latency-sensitive, and the model
+      // can skip thinking on easy phrases.
       output_config: {
-        effort: "low",
+        effort: this.effort,
         format: zodOutputFormat(translationOutputSchema),
       },
       system: SYSTEM_PROMPT,
