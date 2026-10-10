@@ -34,6 +34,7 @@ export default defineConfig({
           name: "int",
           environment: "node",
           include: ["src/**/*.int.test.ts"],
+          globalSetup: ["src/test/global-setup.int.ts"],
           fileParallelism: false,
         },
       },
