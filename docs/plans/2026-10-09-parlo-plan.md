@@ -532,8 +532,10 @@ Each task gets its own branch, and each is expanded before it starts.
       colloquial phrases across ES/EN/FR with expected corrections; grade with an LLM judge; track
       quality when the prompt or model changes.
       Seed cases from smoke runs:
-      - "Ayer fuistes al cine sin mí": expect a correction to "fuiste". Haiku 5.5 catches it only
-        ~2/3 at low and ~1/3 at medium effort, and sometimes wrongly calls it the vosotros form.
+      - "Ayer fuistes al cine sin mí": expect a correction to "fuiste". Haiku 5.5 catches it about
+        3/10 at low effort and 2/4 at medium (medium is ~2x slower), and sometimes wrongly calls it
+        the vosotros form. An earlier "medium" sample silently ran at low because of a bug, since
+        fixed.
       - "I could of told you that": expect "could have".
       - "je suis excité pour la fête ce soir": a false friend; expect "j'ai hâte".
       - "il pleut des cordes, on reste à la maison ?": expect **no** correction (casual lowercase).
