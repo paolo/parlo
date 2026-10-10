@@ -544,8 +544,13 @@ Each task gets its own branch, and each is expanded before it starts.
       - "Estoy hasta las narices de esperar": expect no correction, plus an idiom note.
 - [ ] **2.3 Prompt caching check** (Sonnet 5.5): confirm `cache_read_input_tokens` > 0 on repeat
       calls, or that the system prompt is below the minimum cacheable size; log usage tokens.
-- [ ] **2.4 Migrations in the pipeline** (Sonnet 5.5): run `db:migrate` against Neon from CI on
-      merge to `main` (or as a Vercel build step); Neon preview branches for PRs. Vercel env vars are
+- [~] **2.4 Migrations in the pipeline** (Sonnet 5.5).
+      - [x] The CI `migrate` job runs `db:migrate` on push to `main` after `check` passes, using
+            `DATABASE_URL` from the GitHub Environment `production` (Neon direct URL).
+      - [ ] Neon preview branches for PRs.
+      - Caveat: Vercel deploys independently of CI, so new code can go live a minute before its
+        migration. Keep migrations backward compatible (expand, then contract), or gate production
+        on CI checks in Vercel. Vercel env vars are
       currently set for **Production only**, so previews build but can't authenticate (Google rejects
       unregistered redirect URIs). Enabling previews needs a Neon branch per PR, a per-preview
       `BETTER_AUTH_URL` (`VERCEL_URL`), and a strategy for OAuth on previews (e.g. email/password
