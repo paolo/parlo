@@ -20,3 +20,14 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => false,
   }),
 });
+
+// Mantine's autosizing Textarea listens for font loading, which jsdom does not implement.
+if (!document.fonts) {
+  Object.defineProperty(document, "fonts", {
+    value: {
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      ready: Promise.resolve(),
+    },
+  });
+}
