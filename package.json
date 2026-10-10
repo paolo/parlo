@@ -17,6 +17,11 @@
     "db:down": "docker compose down"
   },
   "dependencies": {
+    "@mantine/core": "^9.7.1",
+    "@mantine/hooks": "^9.7.1",
+    "@mantine/notifications": "^9.7.1",
+    "@tabler/icons-react": "^3.49.0",
+    "@tanstack/react-query": "^5.104.1",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
