@@ -50,9 +50,9 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [x] |
-| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] |
-| 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] |
-| 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [ ] |
+| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] (post-submission) |
+| 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] (post-submission) |
+| 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [x] |
 | 2 | 2.x Hardening | per task | see below | – | [ ] |
 | 3 | 3.x Style variants | `style-variants` | Opus 5.5 | – | [ ] |
 | 4 | 4.x Pronunciation | `pronunciation` | Sonnet 5.5 | – | [ ] |
@@ -126,7 +126,8 @@ note it in the README.
 
 ## Phase 1: Casper submission (2h timebox)
 
-Record the start time here: `2026-10-10 02:49 UTC`, and the stop time: `____`.
+Record the start time here: `2026-10-10 02:49 UTC`, and the stop time: `2026-10-10 04:15 UTC` (submitted after 1.7, plus the README and "Coming next"
+placeholders; 1.8 and 1.9 continue after submission).
 
 ### Task 1.1: Tooling foundation — [x]
 
@@ -505,7 +506,7 @@ only favorites and search filters it.
 
 **Acceptance:** setting FR to beginner makes explanations simpler on FR input (check by hand).
 
-### Task 1.10: Submission README — [ ]
+### Task 1.10: Submission README — [x]
 
 **Branch** `submission-notes` · **Model** Haiku 5.5 · **Est.** 5m
 
@@ -612,6 +613,9 @@ Each task gets its own branch, and each is expanded before it starts.
   - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
     500 during the first deploy).
   - Google consent screen set to In production so reviewers can sign in.
+- 2026-10-10: Casper submission at 04:15 UTC. History, Phrasebook and Profile pages show "Coming
+  next" previews.
+
 - 2026-10-10: 1.7 done.
   - `buildNewGroup` drops a "correction" that equals the input.
   - `parseJson` turns invalid JSON or schema failures into 400s with `fields`.
