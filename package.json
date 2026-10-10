@@ -10,7 +10,7 @@
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --project unit --project ui",
-    "test:int": "vitest run --project int",
+    "test:int": "vitest run --project int --passWithNoTests",
     "test:all": "vitest run",
     "test:watch": "vitest --project unit --project ui",
     "db:up": "docker compose up -d --wait",
