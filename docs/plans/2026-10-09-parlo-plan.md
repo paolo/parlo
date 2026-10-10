@@ -42,8 +42,8 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 
 | Phase | Task | Branch | Model | Est. | Status |
 |---|---|---|---|---|---|
-| 0 | 0.1 Accounts and credentials | – | you + Haiku 5.5 | off-clock | [ ] |
-| 1 | 1.1 Tooling foundation | `tooling-foundation` | Sonnet 5.5 | 15m | [ ] |
+| 0 | 0.1 Accounts and credentials | – | you + Haiku 5.5 | off-clock | [x] |
+| 1 | 1.1 Tooling foundation | `tooling-foundation` | Sonnet 5.5 | 15m | [x] |
 | 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [ ] |
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [ ] |
@@ -109,7 +109,7 @@ These are external accounts and keys, not product code, so they sit outside the 
 code scaffolding is inside Phase 1. If you decide setup also counts as off-clock, move 1.1 here and
 note it in the README.
 
-### Task 0.1: Accounts and credentials — [ ]
+### Task 0.1: Accounts and credentials — [x]
 
 - [ ] **Anthropic:** create an API key and confirm `claude-haiku-5-5` is listed:
       `curl https://api.anthropic.com/v1/models/claude-haiku-5-5 -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01"`
@@ -126,9 +126,9 @@ note it in the README.
 
 ## Phase 1: Casper submission (2h timebox)
 
-Record the start time here: `____`, and the stop time: `____`.
+Record the start time here: `2026-10-10 02:49 UTC`, and the stop time: `____`.
 
-### Task 1.1: Tooling foundation — [ ]
+### Task 1.1: Tooling foundation — [x]
 
 **Branch** `tooling-foundation` · **Model** Sonnet 5.5 · **Est.** 15m
 
@@ -156,8 +156,8 @@ Record the start time here: `____`, and the stop time: `____`.
   - `src/server/env.test.ts`
   - `docker-compose.yml`: `postgres:17`, port 5432, user and password `parlo`, volume, and
     `docker/init.sql` creating the `parlo_test` database.
-  - `.env.example`, `.env.test` (test DB URL, fixed `BETTER_AUTH_SECRET`, dummy Google and
-    Anthropic values).
+  - `.env.test` (test DB URL, fixed `BETTER_AUTH_SECRET`, dummy Google and Anthropic values).
+    (`.env.example` landed early, before Phase 1.)
   - `.github/workflows/ci.yml`: Node 24, `npm ci`, `npm run lint`, `npm run typecheck`,
     `npm test`, `npm run test:int` with a `postgres:17` service.
 - Modify:
@@ -563,3 +563,6 @@ Each task gets its own branch, and each is expanded before it starts.
 ## Changelog
 
 - 2026-10-09: plan created from the approved spec.
+- 2026-10-10: 1.1 done. Vitest 5 needs `@types/node` ≥ 22 (bumped to 24); three Vitest projects
+  (`unit` node, `ui` jsdom, `int` node) instead of two, so route tests get Node's `Request`/`Response`;
+  `src/test/env-guard.test.ts` asserts tests run against `parlo_test`; CI also runs `next build`.
