@@ -48,7 +48,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [x] |
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
-| 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [ ] |
+| 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [ ] |
 | 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] |
 | 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] |
@@ -340,7 +340,7 @@ class TranslationFailedError extends Error {}  // refusal, schema mismatch, API 
 **Acceptance:** `npm run smoke:haiku "me late the train"` prints a sensible correction and three
 translations; unit tests pass.
 
-### Task 1.6: Usage limits — [ ]
+### Task 1.6: Usage limits — [x]
 
 **Branch** `usage-limits` · **Model** Sonnet 5.5 · **Est.** 10m
 
@@ -605,6 +605,13 @@ Each task gets its own branch, and each is expanded before it starts.
   - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
     500 during the first deploy).
   - Google consent screen set to In production so reviewers can sign in.
+- 2026-10-10: 1.6 done.
+  - `PostgresUsageLimiter` takes an injectable clock, so the UTC-boundary tests need no waiting.
+  - It runs one query: two `count(*) filter` columns plus a sub-select of `user.daily_limit`.
+  - `src/server/container.ts` (the composition root) arrived here instead of 1.7; routes import
+    `getUsageLimiter()` from it and tests mock the module.
+  - Burst `resetAt` is a conservative now + 60s.
+
 - 2026-10-10: prompt refinements after review.
   - Levels describe the *user* (never the phrase).
   - Corrections apply regardless of level, and common colloquial non-standard forms count as
