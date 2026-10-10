@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   bigserial,
   boolean,
@@ -176,3 +176,16 @@ export const translationUsage = pgTable(
     index("translation_usage_user_created_idx").on(t.userId, t.createdAt),
   ],
 );
+
+// --- Relations (for db.query ... with) ---
+
+export const phraseGroupRelations = relations(phraseGroup, ({ many }) => ({
+  phrases: many(phrase),
+}));
+
+export const phraseRelations = relations(phrase, ({ one }) => ({
+  group: one(phraseGroup, {
+    fields: [phrase.groupId],
+    references: [phraseGroup.id],
+  }),
+}));
