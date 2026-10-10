@@ -1,10 +1,15 @@
-import { Stack, Text, Title } from "@mantine/core";
+import { ComingNext } from "@/ui/ComingNext";
 
 export default function PhrasebookPage() {
   return (
-    <Stack>
-      <Title order={2}>Phrasebook</Title>
-      <Text c="dimmed">Starred phrases will appear here.</Text>
-    </Stack>
+    <ComingNext
+      title="Phrasebook"
+      intro="Your personal collection of the phrases worth keeping."
+      items={[
+        "Star any translation to add it here",
+        "Search across all three languages at once",
+        "Later: review them with spaced repetition",
+      ]}
+    />
   );
 }
