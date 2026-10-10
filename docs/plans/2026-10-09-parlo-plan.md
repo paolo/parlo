@@ -44,7 +44,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 |---|---|---|---|---|---|
 | 0 | 0.1 Accounts and credentials | – | you + Haiku 5.5 | off-clock | [x] |
 | 1 | 1.1 Tooling foundation | `tooling-foundation` | Sonnet 5.5 | 15m | [x] |
-| 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [ ] |
+| 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [ ] |
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [ ] |
@@ -177,7 +177,7 @@ green on the PR.
 - "Add Docker Postgres for development and tests"
 - "Add CI workflow"
 
-### Task 1.2: App shell and theme — [ ]
+### Task 1.2: App shell and theme — [x]
 
 **Branch** `app-shell` · **Model** Sonnet 5.5 · **Est.** 10m
 
@@ -566,3 +566,7 @@ Each task gets its own branch, and each is expanded before it starts.
 - 2026-10-10: 1.1 done. Vitest 5 needs `@types/node` ≥ 22 (bumped to 24); three Vitest projects
   (`unit` node, `ui` jsdom, `int` node) instead of two, so route tests get Node's `Request`/`Response`;
   `src/test/env-guard.test.ts` asserts tests run against `parlo_test`; CI also runs `next build`.
+- 2026-10-10: 1.2 done on Mantine 9.7 and TanStack Query 5. Geist fonts kept via `next/font` CSS
+  variables referenced from the Mantine theme (no CSS files left in the app). Color scheme follows the
+  OS (`defaultColorScheme="auto"`). If `tsc` complains about `.next/types` after deleting routes,
+  run `rm -rf .next`.
