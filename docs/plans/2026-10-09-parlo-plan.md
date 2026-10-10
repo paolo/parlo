@@ -47,7 +47,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.2 App shell and theme | `app-shell` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.3 Database and auth | `database-auth` | Opus 5.5 | 25m | [x] |
 | 1 | 1.4 First deploy (walking skeleton) | `first-deploy` | Sonnet 5.5 | 10m | [x] |
-| 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [ ] |
+| 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [ ] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [ ] |
 | 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] |
@@ -286,7 +286,7 @@ and Neon.
 
 **Acceptance:** the production URL opens, Google sign-in works, the shell renders.
 
-### Task 1.5: Translator (Haiku 5.5) — [ ]
+### Task 1.5: Translator (Haiku 5.5) — [x]
 
 **Branch** `translator` · **Model** Opus 5.5 · **Est.** 15m
 
@@ -594,3 +594,15 @@ Each task gets its own branch, and each is expanded before it starts.
   - Vercel env vars apply only to new deployments, so redeploy after changing them (the cause of a
     500 during the first deploy).
   - Google consent screen set to In production so reviewers can sign in.
+- 2026-10-10: 1.5 done (`@anthropic-ai/sdk` 0.133).
+  - Haiku 5.5 facts, from the official migration guide:
+    - adaptive thinking is on by default (effort default `medium`), and thinking tokens count
+      toward `max_tokens`;
+    - `temperature`/`top_p`/`top_k` return a 400, and so does assistant prefill;
+    - it can refuse (`stop_reason: "refusal"`), with no server-side fallback;
+    - the minimum cacheable prompt is 512 tokens.
+  - We use `messages.parse` with `zodOutputFormat`, `effort: "low"` and `max_tokens: 2048`.
+  - Live smoke run: ~2–3 s per call (~5 s cold). It caught a false friend ("excité"), a calque
+    ("me late") and idioms. A capitalization-only false positive was fixed in the prompt.
+  - The smoke script is `.mts` (tsx needs ESM for top-level await). The system prompt is below
+    512 tokens, so it isn't cached yet (see 2.3).
