@@ -59,4 +59,14 @@ describe("SYSTEM_PROMPT", () => {
     );
     expect(SYSTEM_PROMPT).toContain("<phrase>");
   });
+
+  it("corrects every phrase regardless of the user's level", () => {
+    expect(SYSTEM_PROMPT).toContain("regardless of the user's level");
+  });
+
+  it("keeps explanations in the requested language even for phrases in another language", () => {
+    expect(SYSTEM_PROMPT).toContain(
+      "Always write explanation and notes in the language the user message asks for",
+    );
+  });
 });

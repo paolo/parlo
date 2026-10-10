@@ -11,8 +11,13 @@ import {
 
 export const TRANSLATION_MODEL = "claude-haiku-5-5";
 
+export type Effort = "low" | "medium" | "high";
+
 export class HaikuTranslator implements Translator {
-  constructor(private readonly client: Anthropic) {}
+  constructor(
+    private readonly client: Anthropic,
+    private readonly effort: Effort = "low",
+  ) {}
 
   async translate(input: TranslateInput): Promise<TranslationResult> {
     let message: Awaited<ReturnType<typeof this.request>>;
