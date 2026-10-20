@@ -13,6 +13,7 @@ export interface UsageResponse {
 export const queryKeys = {
   usage: ["usage"] as const,
   phraseGroups: ["phrase-groups"] as const,
+  favorites: ["phrase-groups", { favorite: true }] as const,
 };
 
 export function useUsage() {
@@ -33,6 +34,27 @@ export function useTranslate() {
     // Refresh the quota either way: a 429 also means our cached count is stale.
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.usage }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
+  });
+}
+
+export function useFavorites() {
+  return useQuery({
+    queryKey: queryKeys.favorites,
+    queryFn: () =>
+      apiFetch<{ items: PhraseGroupDTO[] }>("/api/phrase-groups?favorite=true"),
+  });
+}
+
+export function useSetFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isFavorite }: { id: string; isFavorite: boolean }) =>
+      apiFetch<{ group: PhraseGroupDTO }>(`/api/phrase-groups/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isFavorite }),
+      }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
   });

@@ -50,7 +50,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [x] |
-| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] (post-submission) |
+| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] (favorites slice done) |
 | 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] (post-submission) |
 | 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [x] |
 | 2 | 2.x Hardening | per task | see below | – | [ ] |
@@ -450,6 +450,11 @@ and notes; the usage badge increments; tests pass.
 
 ### Task 1.8: History and phrasebook — [ ]
 
+> **Slice done (branch `phrasebook-favorites`):** the star on the translation result, `PATCH
+> /api/phrase-groups/:id` with `{ isFavorite }`, `GET /api/phrase-groups?favorite=true`, and the
+> Phrasebook page listing favorites. Still to do: history, search, paging, delete and "Use
+> corrected".
+
 **Branch** `history-phrasebook` · **Model** Sonnet 5.5 · **Est.** 15m
 
 **Files:**
@@ -615,6 +620,14 @@ Each task gets its own branch, and each is expanded before it starts.
   - Google consent screen set to In production so reviewers can sign in.
 - 2026-10-10: Casper submission at 04:15 UTC. History, Phrasebook and Profile pages show "Coming
   next" previews.
+
+- 2026-10-20: 1.8 favorites slice done.
+  - The star belongs to the whole group, not a language, so it keeps working once translations
+    follow the user's preferred languages.
+  - `GET /api/phrase-groups` only accepts `favorite=true` for now (400 otherwise) and returns every
+    favorite without paging; 1.8 adds history, `q` and `cursor`.
+  - The Phrasebook page reuses `TranslationResult`. `FavoriteButton` is keyed by group id so a new
+    translation doesn't inherit the previous star.
 
 - 2026-10-10: 1.7 done.
   - `buildNewGroup` drops a "correction" that equals the input.
