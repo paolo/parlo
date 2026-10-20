@@ -27,4 +27,12 @@ export interface PhraseRepository {
   /** Inserts the group and its phrases in one transaction. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
   findById(userId: string, id: string): Promise<PhraseGroupDTO | null>;
+  /** Returns the updated group, or null when the user has no group with that id. */
+  setFavorite(
+    userId: string,
+    id: string,
+    isFavorite: boolean,
+  ): Promise<PhraseGroupDTO | null>;
+  /** The user's starred groups, newest first. */
+  listFavorites(userId: string): Promise<PhraseGroupDTO[]>;
 }
