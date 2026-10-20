@@ -4,6 +4,7 @@ import { Badge, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import { CorrectionAlert } from "../CorrectionAlert";
+import { FavoriteButton } from "../FavoriteButton";
 import { LANG_FLAGS, LANG_LABELS, LANG_ORDER } from "../langs";
 import { PhraseCard } from "../PhraseCard";
 
@@ -13,16 +14,22 @@ export function TranslationResult({ group }: { group: PhraseGroupDTO }) {
   );
   return (
     <Stack>
-      {root && (
-        <Group gap="xs">
-          <Text size="sm" c="dimmed">
-            Detected
-          </Text>
-          <Badge variant="outline">
-            {LANG_FLAGS[root.lang]} {LANG_LABELS[root.lang]}
-          </Badge>
-        </Group>
-      )}
+      <Group justify="space-between">
+        {root ? (
+          <Group gap="xs">
+            <Text size="sm" c="dimmed">
+              Detected
+            </Text>
+            <Badge variant="outline">
+              {LANG_FLAGS[root.lang]} {LANG_LABELS[root.lang]}
+            </Badge>
+          </Group>
+        ) : (
+          <span />
+        )}
+        {/* Keyed so a new translation doesn't inherit the previous one's star. */}
+        <FavoriteButton key={group.id} group={group} />
+      </Group>
       {root && group.correction && (
         <CorrectionAlert
           original={root.correctedFrom ?? root.text}
