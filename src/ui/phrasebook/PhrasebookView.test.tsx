@@ -7,7 +7,9 @@ import { PhrasebookView } from "./PhrasebookView";
 function mockFavorites(items: unknown[]) {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => Response.json({ items })),
+    vi.fn(async (url: string) =>
+      Response.json(url === "/api/profile" ? { languages: [] } : { items }),
+    ),
   );
 }
 

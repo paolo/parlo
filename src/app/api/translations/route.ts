@@ -1,13 +1,14 @@
 import { z } from "zod";
 import {
   getPhraseRepository,
+  getProfileRepository,
   getTranslator,
   getUsageLimiter,
 } from "@/server/container";
 import { jsonError, withSession } from "@/server/http/responses";
 import { parseJson } from "@/server/http/validation";
 import { buildNewGroup } from "@/server/phrases/service";
-import { DEFAULT_LEVELS } from "@/server/profile/defaults";
+import { isProfileComplete } from "@/server/profile/service";
 import { TranslationFailedError } from "@/server/translation/types";
 
 export const MAX_PHRASE_LENGTH = 500;
@@ -24,6 +25,10 @@ export const POST = withSession(async (req, { userId }) => {
   const parsed = await parseJson(req, bodySchema);
   if ("response" in parsed) return parsed.response;
   const { text } = parsed.data;
+
+  const languages = await getProfileRepository().getProfile(userId);
+  if (!isProfileComplete(languages))
+    return jsonError(409, "profile_incomplete");
 
   const limiter = getUsageLimiter();
   const decision = await limiter.check(userId);
@@ -42,26 +47,26 @@ export const POST = withSession(async (req, { userId }) => {
     );
   }
 
-  // Task 1.9 replaces the defaults with the user's stored levels.
-  const levels = DEFAULT_LEVELS;
-
-  let result: Awaited<
-    ReturnType<ReturnType<typeof getTranslator>["translate"]>
-  >;
+  let group: ReturnType<typeof buildNewGroup>;
   try {
-    result = await getTranslator().translate({ text, levels });
+    const result = await getTranslator().translate({ text, languages });
+    const profileLangs = languages.map((l) => l.lang);
+    if (
+      result.detectedLang === "other" ||
+      !profileLangs.includes(result.detectedLang)
+    ) {
+      return jsonError(422, "unsupported_language", {
+        languages: profileLangs,
+      });
+    }
+    group = buildNewGroup(userId, text, result, languages);
   } catch (error) {
     if (!(error instanceof TranslationFailedError)) throw error;
     console.error("Translation failed", error);
     return jsonError(502, "translation_failed");
   }
-  if (result.detectedLang === "other") {
-    return jsonError(422, "unsupported_language");
-  }
 
-  const group = await getPhraseRepository().insertGroup(
-    buildNewGroup(userId, text, result),
-  );
+  const saved = await getPhraseRepository().insertGroup(group);
   await limiter.record(userId);
-  return Response.json({ group }, { status: 201 });
+  return Response.json({ group: saved }, { status: 201 });
 });

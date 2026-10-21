@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
+import type { ProfileLanguage } from "@/server/profile/types";
+import type { Lang } from "../shared/languages";
 import { apiFetch } from "./api";
 
 export interface UsageResponse {
@@ -12,6 +14,7 @@ export interface UsageResponse {
 
 export const queryKeys = {
   usage: ["usage"] as const,
+  profile: ["profile"] as const,
   phraseGroups: ["phrase-groups"] as const,
   favorites: ["phrase-groups", { favorite: true }] as const,
 };
@@ -57,5 +60,24 @@ export function useSetFavorite() {
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
+  });
+}
+
+export function useProfile() {
+  return useQuery({
+    queryKey: queryKeys.profile,
+    queryFn: () => apiFetch<{ languages: ProfileLanguage[] }>("/api/profile"),
+  });
+}
+
+export function useSaveProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (languages: { lang: Lang; region?: string }[]) =>
+      apiFetch<{ languages: ProfileLanguage[] }>("/api/profile", {
+        method: "PUT",
+        body: JSON.stringify({ languages }),
+      }),
+    onSuccess: (data) => queryClient.setQueryData(queryKeys.profile, data),
   });
 }

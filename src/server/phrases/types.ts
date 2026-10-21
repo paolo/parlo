@@ -1,4 +1,4 @@
-import type { Lang } from "../db/schema";
+import type { Lang } from "../../shared/languages";
 
 export interface PhraseDTO {
   lang: Lang;
@@ -13,7 +13,8 @@ export interface PhraseGroupDTO {
   isFavorite: boolean;
   notes: string | null;
   correction: { text: string; explanation: string; accepted: boolean } | null;
-  phrases: Record<Lang, PhraseDTO>;
+  /** The root first, then the rest in catalog order. */
+  phrases: PhraseDTO[];
 }
 
 export interface NewPhraseGroup {

@@ -3,6 +3,8 @@ import { getDb } from "./db/client";
 import { getEnv } from "./env";
 import { DrizzlePhraseRepository } from "./phrases/repository";
 import type { PhraseRepository } from "./phrases/types";
+import { DrizzleProfileRepository } from "./profile/repository";
+import type { ProfileRepository } from "./profile/types";
 import { HaikuTranslator } from "./translation/haiku";
 import type { Translator } from "./translation/types";
 import { PostgresUsageLimiter, type UsageLimiter } from "./usage/limiter";
@@ -33,4 +35,11 @@ let phraseRepository: PhraseRepository | undefined;
 export function getPhraseRepository(): PhraseRepository {
   phraseRepository ??= new DrizzlePhraseRepository(getDb());
   return phraseRepository;
+}
+
+let profileRepository: ProfileRepository | undefined;
+
+export function getProfileRepository(): ProfileRepository {
+  profileRepository ??= new DrizzleProfileRepository(getDb());
+  return profileRepository;
 }

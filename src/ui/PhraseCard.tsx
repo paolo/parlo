@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import type { PhraseDTO } from "@/server/phrases/types";
-import { LANG_FLAGS, LANG_LABELS } from "./langs";
+import { LangLabel } from "./LangLabel";
 
 export function PhraseCard({ phrase }: { phrase: PhraseDTO }) {
   return (
@@ -25,7 +25,7 @@ export function PhraseCard({ phrase }: { phrase: PhraseDTO }) {
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs">
             <Text size="sm" fw={600}>
-              {LANG_FLAGS[phrase.lang]} {LANG_LABELS[phrase.lang]}
+              <LangLabel lang={phrase.lang} />
             </Text>
             {phrase.isRoot && (
               <Badge size="xs" variant="light">
@@ -48,7 +48,9 @@ export function PhraseCard({ phrase }: { phrase: PhraseDTO }) {
             )}
           </CopyButton>
         </Group>
-        <Text size="lg">{phrase.text}</Text>
+        <Text size="lg" dir="auto">
+          {phrase.text}
+        </Text>
       </Stack>
     </Paper>
   );

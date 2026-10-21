@@ -3,15 +3,23 @@
 import { Badge, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
+import type { Lang } from "../../shared/languages";
 import { CorrectionAlert } from "../CorrectionAlert";
 import { FavoriteButton } from "../FavoriteButton";
-import { LANG_FLAGS, LANG_LABELS, LANG_ORDER } from "../langs";
+import { LangLabel } from "../LangLabel";
 import { PhraseCard } from "../PhraseCard";
+import { orderPhrases } from "../phrases";
 
-export function TranslationResult({ group }: { group: PhraseGroupDTO }) {
-  const root = LANG_ORDER.map((lang) => group.phrases[lang]).find(
-    (p) => p?.isRoot,
-  );
+export function TranslationResult({
+  group,
+  profileLangs = [],
+}: {
+  group: PhraseGroupDTO;
+  /** The viewer's languages in profile order; the cards follow it. */
+  profileLangs?: Lang[];
+}) {
+  const phrases = orderPhrases(group.phrases, profileLangs);
+  const root = phrases.find((p) => p.isRoot);
   return (
     <Stack>
       <Group justify="space-between">
@@ -21,7 +29,7 @@ export function TranslationResult({ group }: { group: PhraseGroupDTO }) {
               Detected
             </Text>
             <Badge variant="outline">
-              {LANG_FLAGS[root.lang]} {LANG_LABELS[root.lang]}
+              <LangLabel lang={root.lang} />
             </Badge>
           </Group>
         ) : (
@@ -36,13 +44,10 @@ export function TranslationResult({ group }: { group: PhraseGroupDTO }) {
           correction={group.correction}
         />
       )}
-      <SimpleGrid cols={{ base: 1, sm: 3 }}>
-        {LANG_ORDER.map(
-          (lang) =>
-            group.phrases[lang] && (
-              <PhraseCard key={lang} phrase={group.phrases[lang]} />
-            ),
-        )}
+      <SimpleGrid cols={{ base: 1, sm: Math.min(phrases.length, 3) || 1 }}>
+        {phrases.map((phrase) => (
+          <PhraseCard key={phrase.lang} phrase={phrase} />
+        ))}
       </SimpleGrid>
       {group.notes && (
         <Group gap="xs" wrap="nowrap" align="flex-start">

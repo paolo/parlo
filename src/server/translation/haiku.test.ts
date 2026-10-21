@@ -1,20 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it, vi } from "vitest";
+import { buildProfile } from "../profile/service";
 import { HaikuTranslator, TRANSLATION_MODEL } from "./haiku";
 import { TranslationFailedError } from "./types";
 
-const levels = { es: "native", en: "advanced", fr: "intermediate" } as const;
+const languages = buildProfile([
+  { lang: "es", region: "BO" },
+  { lang: "en" },
+  { lang: "fr" },
+]);
 const output = {
   detectedLang: "en",
   correction: {
     text: "I was late for the train",
     explanation: "«Me late» no es inglés.",
   },
-  translations: {
-    es: "Llegué tarde al tren",
-    en: "I was late for the train",
-    fr: "J'étais en retard pour le train",
-  },
+  translations: [
+    { lang: "es", text: "Llegué tarde al tren" },
+    { lang: "en", text: "I was late for the train" },
+    { lang: "fr", text: "J'étais en retard pour le train" },
+  ],
   notes: null,
 };
 
@@ -32,7 +37,7 @@ describe("HaikuTranslator", () => {
     await expect(
       new HaikuTranslator(client).translate({
         text: "me late the train",
-        levels,
+        languages,
       }),
     ).resolves.toEqual(output);
   });
@@ -42,7 +47,7 @@ describe("HaikuTranslator", () => {
       stop_reason: "end_turn",
       parsed_output: output,
     });
-    await new HaikuTranslator(client).translate({ text: "hola", levels });
+    await new HaikuTranslator(client).translate({ text: "hola", languages });
     const params = (parse.mock.calls[0] as unknown[])[0] as Record<
       string,
       unknown
@@ -66,7 +71,7 @@ describe("HaikuTranslator", () => {
     });
     await new HaikuTranslator(client, "medium").translate({
       text: "hola",
-      levels,
+      languages,
     });
     const params = (parse.mock.calls[0] as unknown[])[0] as Record<
       string,
@@ -81,7 +86,7 @@ describe("HaikuTranslator", () => {
       parsed_output: null,
     });
     await expect(
-      new HaikuTranslator(client).translate({ text: "hola", levels }),
+      new HaikuTranslator(client).translate({ text: "hola", languages }),
     ).rejects.toBeInstanceOf(TranslationFailedError);
   });
 
@@ -91,7 +96,7 @@ describe("HaikuTranslator", () => {
       parsed_output: null,
     });
     await expect(
-      new HaikuTranslator(client).translate({ text: "hola", levels }),
+      new HaikuTranslator(client).translate({ text: "hola", languages }),
     ).rejects.toBeInstanceOf(TranslationFailedError);
   });
 
@@ -101,7 +106,7 @@ describe("HaikuTranslator", () => {
     });
     const client = { messages: { parse } } as unknown as Anthropic;
     const error = await new HaikuTranslator(client)
-      .translate({ text: "hola", levels })
+      .translate({ text: "hola", languages })
       .catch((e) => e);
     expect(error).toBeInstanceOf(TranslationFailedError);
     expect(error.cause).toBeInstanceOf(Anthropic.APIError);

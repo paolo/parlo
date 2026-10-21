@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getDb } from "@/server/db/client";
+import { languageLevel } from "@/server/db/schema";
+import { DrizzleProfileRepository } from "@/server/profile/repository";
+import { buildProfile } from "@/server/profile/service";
 import { FakeTranslator } from "@/server/translation/fake";
 import { createTestUser, resetDb } from "@/test/db";
 import { POST } from "./route";
@@ -10,11 +13,11 @@ vi.mock("@/server/auth/session", () => ({ getSession: async () => session }));
 const translator = new FakeTranslator({
   detectedLang: "es",
   correction: null,
-  translations: {
-    es: "Estoy harto de esperar",
-    en: "I'm fed up with waiting",
-    fr: "J'en ai marre d'attendre",
-  },
+  translations: [
+    { lang: "es", text: "Estoy harto de esperar" },
+    { lang: "en", text: "I'm fed up with waiting" },
+    { lang: "fr", text: "J'en ai marre d'attendre" },
+  ],
   notes: "Expresión coloquial.",
 });
 // Real limiter and repository; only the model is faked.
@@ -36,6 +39,10 @@ describe("POST /api/translations (integration)", () => {
   beforeEach(async () => {
     await resetDb();
     session.userId = (await createTestUser()).id;
+    await new DrizzleProfileRepository(getDb()).replaceProfile(
+      session.userId,
+      buildProfile([{ lang: "es" }, { lang: "en" }, { lang: "fr" }]),
+    );
   });
 
   it("persists one group, three phrases and one usage row", async () => {
@@ -59,5 +66,15 @@ describe("POST /api/translations (integration)", () => {
       text: "Estoy hasta las narices de esperar",
     });
     expect(await db.query.translationUsage.findMany()).toHaveLength(1);
+  });
+
+  it("asks a user without a profile to pick their languages and stores nothing", async () => {
+    await getDb().delete(languageLevel);
+
+    const res = await post("hola");
+
+    expect(res.status).toBe(409);
+    expect(await getDb().query.phraseGroup.findMany()).toHaveLength(0);
+    expect(await getDb().query.translationUsage.findMany()).toHaveLength(0);
   });
 });

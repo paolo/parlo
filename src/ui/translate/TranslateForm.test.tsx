@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { TranslateForm } from "./TranslateForm";
 
@@ -50,5 +50,60 @@ describe("TranslateForm", () => {
     await userEvent.type(screen.getByRole("textbox"), "hola");
     expect(screen.getByText("4/500")).toBeInTheDocument();
     expect(screen.getByRole("textbox")).toHaveAttribute("maxlength", "500");
+  });
+
+  it("invites any of the user's languages", () => {
+    renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+    expect(
+      screen.getByPlaceholderText("Type a phrase in any of your languages…"),
+    ).toBeInTheDocument();
+  });
+
+  describe("shortcut hint", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("names the Ctrl key on non-Mac platforms", () => {
+      vi.spyOn(window.navigator, "platform", "get").mockReturnValue("Win32");
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(screen.getByText("Ctrl")).toBeInTheDocument();
+      expect(screen.queryByText("⌘")).not.toBeInTheDocument();
+    });
+
+    it("shows the Command key on macOS", () => {
+      vi.spyOn(window.navigator, "platform", "get").mockReturnValue("MacIntel");
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(screen.getByText("⌘")).toBeInTheDocument();
+      expect(screen.queryByText("Ctrl")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("clear button", () => {
+    const textbox = () =>
+      screen.getByRole("textbox", { name: "Phrase to translate" });
+
+    it("is hidden while the text area is empty", () => {
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(
+        screen.queryByRole("button", { name: "Clear" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("empties the text area and puts the cursor back in it", async () => {
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+      await userEvent.type(textbox(), "hola");
+
+      await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+      expect(textbox()).toHaveValue("");
+      expect(textbox()).toHaveFocus();
+      expect(
+        screen.queryByRole("button", { name: "Clear" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("0/500")).toBeInTheDocument();
+    });
   });
 });

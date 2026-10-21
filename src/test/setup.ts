@@ -31,3 +31,12 @@ if (!document.fonts) {
     },
   });
 }
+
+// Mantine's Select (Combobox, ScrollArea) needs these; jsdom has neither.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver ??= ResizeObserverStub;
+window.HTMLElement.prototype.scrollIntoView ??= () => {};

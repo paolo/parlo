@@ -3,12 +3,13 @@
 import { Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { errorMessage } from "../errors";
-import { useTranslate } from "../queries";
+import { useProfile, useTranslate } from "../queries";
 import { TranslateForm } from "./TranslateForm";
 import { TranslationResult } from "./TranslationResult";
 
 export function TranslateView() {
   const translate = useTranslate();
+  const profile = useProfile();
 
   function onSubmit(text: string) {
     translate.mutate(text, {
@@ -24,7 +25,12 @@ export function TranslateView() {
   return (
     <Stack gap="lg">
       <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
-      {translate.data && <TranslationResult group={translate.data.group} />}
+      {translate.data && (
+        <TranslationResult
+          group={translate.data.group}
+          profileLangs={profile.data?.languages.map((l) => l.lang)}
+        />
+      )}
     </Stack>
   );
 }

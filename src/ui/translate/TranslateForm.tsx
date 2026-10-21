@@ -1,7 +1,16 @@
 "use client";
 
-import { Button, Group, Kbd, Stack, Text, Textarea } from "@mantine/core";
-import { type FormEvent, type KeyboardEvent, useState } from "react";
+import {
+  Button,
+  CloseButton,
+  Group,
+  Kbd,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
+import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
+import { useIsMac } from "../platform";
 
 export const MAX_PHRASE_LENGTH = 500;
 
@@ -13,10 +22,17 @@ export function TranslateForm({
   pending: boolean;
 }) {
   const [text, setText] = useState("");
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  const isMac = useIsMac();
   const canSubmit = !pending && text.trim().length > 0;
 
   function submit() {
     if (canSubmit) onSubmit(text.trim());
+  }
+
+  function clear() {
+    setText("");
+    textarea.current?.focus();
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -35,8 +51,9 @@ export function TranslateForm({
     <form onSubmit={onFormSubmit}>
       <Stack gap="xs">
         <Textarea
+          ref={textarea}
           aria-label="Phrase to translate"
-          placeholder="Type a phrase in Spanish, English or French…"
+          placeholder="Type a phrase in any of your languages…"
           autosize
           minRows={3}
           maxRows={8}
@@ -45,6 +62,12 @@ export function TranslateForm({
           onChange={(e) => setText(e.currentTarget.value)}
           onKeyDown={onKeyDown}
           autoFocus
+          rightSection={
+            text.length > 0 ? (
+              <CloseButton aria-label="Clear" onClick={clear} />
+            ) : null
+          }
+          styles={{ section: { alignItems: "flex-start", paddingTop: 6 } }}
         />
         <Group justify="space-between">
           <Group gap="xs">
@@ -52,7 +75,8 @@ export function TranslateForm({
               {`${text.length}/${MAX_PHRASE_LENGTH}`}
             </Text>
             <Text size="xs" c="dimmed" visibleFrom="sm">
-              <Kbd size="xs">Ctrl</Kbd> + <Kbd size="xs">Enter</Kbd>
+              <Kbd size="xs">{isMac ? "⌘" : "Ctrl"}</Kbd> +{" "}
+              <Kbd size="xs">Enter</Kbd>
             </Text>
           </Group>
           <Button type="submit" loading={pending} disabled={!canSubmit}>

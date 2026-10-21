@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
+import { LANG_CODES } from "../../shared/languages";
 import type { Db } from "../db/client";
-import { type Lang, phrase, phraseGroup } from "../db/schema";
+import { phrase, phraseGroup } from "../db/schema";
 import type {
   NewPhraseGroup,
   PhraseDTO,
@@ -15,17 +16,20 @@ type GroupRow = typeof phraseGroup.$inferSelect & {
 };
 
 export function toDTO(row: GroupRow): PhraseGroupDTO {
-  const phrases = Object.fromEntries(
-    row.phrases.map((p) => [
-      p.lang,
-      {
+  const phrases = row.phrases
+    .map(
+      (p): PhraseDTO => ({
         lang: p.lang,
         text: p.text,
         isRoot: p.isRoot,
         correctedFrom: p.correctedFrom,
-      } satisfies PhraseDTO,
-    ]),
-  ) as Record<Lang, PhraseDTO>;
+      }),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.isRoot) - Number(a.isRoot) ||
+        LANG_CODES.indexOf(a.lang) - LANG_CODES.indexOf(b.lang),
+    );
   return {
     id: row.id,
     createdAt: row.createdAt.toISOString(),
