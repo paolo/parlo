@@ -79,4 +79,31 @@ describe("TranslateForm", () => {
       expect(screen.queryByText("Ctrl")).not.toBeInTheDocument();
     });
   });
+
+  describe("clear button", () => {
+    const textbox = () =>
+      screen.getByRole("textbox", { name: "Phrase to translate" });
+
+    it("is hidden while the text area is empty", () => {
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(
+        screen.queryByRole("button", { name: "Clear" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("empties the text area and puts the cursor back in it", async () => {
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+      await userEvent.type(textbox(), "hola");
+
+      await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+      expect(textbox()).toHaveValue("");
+      expect(textbox()).toHaveFocus();
+      expect(
+        screen.queryByRole("button", { name: "Clear" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("0/500")).toBeInTheDocument();
+    });
+  });
 });
