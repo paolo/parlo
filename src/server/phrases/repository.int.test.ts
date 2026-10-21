@@ -31,11 +31,11 @@ describe("DrizzlePhraseRepository", () => {
         explanation: "«Me tarde» no existe.",
         accepted: false,
       },
-      phrases: {
-        es: { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
-        en: { lang: "en", text: "I was late", isRoot: false },
-        fr: { lang: "fr", text: "J'étais en retard", isRoot: false },
-      },
+      phrases: [
+        { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
+        { lang: "en", text: "I was late", isRoot: false },
+        { lang: "fr", text: "J'étais en retard", isRoot: false },
+      ],
     });
     expect(typeof group.id).toBe("string");
     expect(new Date(group.createdAt).getTime()).not.toBeNaN();
@@ -77,7 +77,7 @@ describe("DrizzlePhraseRepository", () => {
 
     const starred = await repo().setFavorite(owner.id, id, true);
     expect(starred).toMatchObject({ id, isFavorite: true });
-    expect(starred?.phrases.es.text).toBe("me tarde");
+    expect(starred?.phrases[0].text).toBe("me tarde");
 
     expect((await repo().setFavorite(owner.id, id, false))?.isFavorite).toBe(
       false,
@@ -107,6 +107,22 @@ describe("DrizzlePhraseRepository", () => {
     const favorites = await repo().listFavorites(owner.id);
 
     expect(favorites.map((g) => g.id)).toEqual([newer.id, older.id]);
-    expect(favorites[0].phrases.fr.text).toBe("J'étais en retard");
+    expect(favorites[0].phrases[2].text).toBe("J'étais en retard");
+  });
+
+  it("lists the root first, then the rest in catalog order", async () => {
+    const owner = await createTestUser();
+    const group = await repo().insertGroup({
+      userId: owner.id,
+      notes: null,
+      correction: null,
+      phrases: [
+        { lang: "fr", text: "Bonjour", isRoot: false },
+        { lang: "pt", text: "Olá", isRoot: true },
+        { lang: "en", text: "Hello", isRoot: false },
+      ],
+    });
+
+    expect(group.phrases.map((p) => p.lang)).toEqual(["pt", "en", "fr"]);
   });
 });

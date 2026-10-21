@@ -9,26 +9,26 @@ export function makeGroup(
     isFavorite: false,
     notes: null,
     correction: null,
-    phrases: {
-      es: {
+    phrases: [
+      {
         lang: "es",
         text: "Llueve a cántaros",
         isRoot: true,
         correctedFrom: null,
       },
-      en: {
+      {
         lang: "en",
         text: "It's pouring",
         isRoot: false,
         correctedFrom: null,
       },
-      fr: {
+      {
         lang: "fr",
         text: "Il pleut des cordes",
         isRoot: false,
         correctedFrom: null,
       },
-    },
+    ],
     ...overrides,
   };
 }

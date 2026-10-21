@@ -47,4 +47,18 @@ describe("PhraseCard", () => {
     );
     expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
   });
+
+  it("lets right-to-left text pick its own direction", () => {
+    renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "ar",
+          text: "مرحبا بالعالم",
+          isRoot: false,
+          correctedFrom: null,
+        }}
+      />,
+    );
+    expect(screen.getByText("مرحبا بالعالم")).toHaveAttribute("dir", "auto");
+  });
 });
