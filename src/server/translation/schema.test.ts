@@ -4,15 +4,19 @@ import { translationOutputSchema } from "./schema";
 const valid = {
   detectedLang: "es",
   correction: null,
-  translations: { es: "hola", en: "hi", fr: "salut" },
+  translations: [
+    { lang: "es", text: "hola" },
+    { lang: "en", text: "hi" },
+    { lang: "pt", text: "oi" },
+  ],
   notes: null,
 };
 
 describe("translationOutputSchema", () => {
   it.each([
     "es",
-    "en",
-    "fr",
+    "pt",
+    "fa",
     "other",
   ])("accepts detectedLang %s", (detectedLang) => {
     expect(
@@ -31,18 +35,27 @@ describe("translationOutputSchema", () => {
     expect(parsed.correction?.text).toBe("Llegué tarde al tren");
   });
 
-  it("rejects output missing a translation", () => {
+  it("rejects a translation in an unknown language", () => {
     expect(() =>
       translationOutputSchema.parse({
         ...valid,
-        translations: { es: "hola", en: "hi" },
+        translations: [{ lang: "xx", text: "?" }],
       }),
     ).toThrow();
   });
 
-  it("rejects an unknown language", () => {
+  it("rejects the old keyed-object translations", () => {
     expect(() =>
-      translationOutputSchema.parse({ ...valid, detectedLang: "it" }),
+      translationOutputSchema.parse({
+        ...valid,
+        translations: { es: "hola", en: "hi", fr: "salut" },
+      }),
+    ).toThrow();
+  });
+
+  it("rejects an unknown detected language", () => {
+    expect(() =>
+      translationOutputSchema.parse({ ...valid, detectedLang: "xx" }),
     ).toThrow();
   });
 });

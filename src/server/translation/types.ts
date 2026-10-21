@@ -1,16 +1,17 @@
-import type { Lang, Level } from "../db/schema";
-
-export type Levels = Record<Lang, Level>;
+import type { Lang } from "../../shared/languages";
+import type { ProfileLanguage } from "../profile/types";
 
 export interface TranslateInput {
   text: string;
-  levels: Levels;
+  /** The user's languages in profile order: the native one first. */
+  languages: ProfileLanguage[];
 }
 
 export interface TranslationResult {
   detectedLang: Lang | "other";
   correction: { text: string; explanation: string } | null;
-  translations: Record<Lang, string>;
+  /** One entry for each of the user's languages. */
+  translations: { lang: Lang; text: string }[];
   notes: string | null;
 }
 
