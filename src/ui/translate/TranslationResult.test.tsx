@@ -49,12 +49,13 @@ describe("TranslationResult", () => {
   describe("accepting a correction", () => {
     afterEach(() => vi.unstubAllGlobals());
 
+    const correction = {
+      text: "Llegué tarde",
+      explanation: "«Me tarde» no existe.",
+      accepted: false,
+    };
     const typed = makeGroup({
-      correction: {
-        text: "Llegué tarde",
-        explanation: "«Me tarde» no existe.",
-        accepted: false,
-      },
+      correction,
       phrases: [
         { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
         { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
@@ -68,7 +69,7 @@ describe("TranslationResult", () => {
     });
     const accepted = {
       ...typed,
-      correction: { ...typed.correction!, accepted: true },
+      correction: { ...correction, accepted: true },
       phrases: [
         {
           lang: "es",
