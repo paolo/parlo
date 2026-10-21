@@ -4,11 +4,12 @@ import { Alert, Button, Divider, Loader, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { Fragment } from "react";
 import { errorMessage } from "../errors";
-import { useFavorites, useProfile } from "../queries";
+import { usePhraseGroups, useProfile } from "../queries";
 import { TranslationResult } from "../translate/TranslationResult";
 
 export function PhrasebookView() {
-  const favorites = useFavorites();
+  const favorites = usePhraseGroups({ favorite: true });
+  const items = favorites.data?.pages.flatMap((page) => page.items) ?? [];
   const profile = useProfile();
 
   if (favorites.isPending) return <Loader size="sm" />;
@@ -19,7 +20,7 @@ export function PhrasebookView() {
       </Alert>
     );
   }
-  if (favorites.data.items.length === 0) {
+  if (items.length === 0) {
     return (
       <Stack align="flex-start" gap="xs">
         <Text c="dimmed">
@@ -33,7 +34,7 @@ export function PhrasebookView() {
   }
   return (
     <Stack gap="lg">
-      {favorites.data.items.map((group, i) => (
+      {items.map((group, i) => (
         <Fragment key={group.id}>
           {i > 0 && <Divider />}
           <TranslationResult

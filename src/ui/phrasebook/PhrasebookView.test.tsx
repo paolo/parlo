@@ -8,7 +8,11 @@ function mockFavorites(items: unknown[]) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) =>
-      Response.json(url === "/api/profile" ? { languages: [] } : { items }),
+      Response.json(
+        url === "/api/profile"
+          ? { languages: [] }
+          : { items, nextCursor: null, limit: 100 },
+      ),
     ),
   );
 }
@@ -26,7 +30,7 @@ describe("PhrasebookView", () => {
       screen.getByRole("button", { name: "Remove from phrasebook" }),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(
-      "/api/phrase-groups?favorite=true",
+      "/api/phrase-groups?favorite=true&limit=20",
       expect.anything(),
     );
   });
