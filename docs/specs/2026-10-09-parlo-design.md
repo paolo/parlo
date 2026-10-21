@@ -84,6 +84,8 @@ src/
 
 ## 4. Data model
 
+> Superseded in part by [`2026-10-20-language-profile-design.md`](2026-10-20-language-profile-design.md): 13 languages, `language_level` gains `region` and `position`, `phrase_group.phrases` is a list.
+
 Better Auth owns `user`, `session`, `account` and `verification`. We add a nullable
 `daily_limit integer` column to `user` (via Better Auth `additionalFields`).
 
@@ -125,6 +127,8 @@ translation_usage
 Usage is tracked separately from history: deleting a group never gives quota back.
 
 ## 5. Translation flow
+
+> Superseded in part by [`2026-10-20-language-profile-design.md`](2026-10-20-language-profile-design.md) §5: the translator takes the user's three languages and returns a `translations` list.
 
 1. `POST /api/translations { text }`: 1–500 characters, trimmed.
 2. Authenticate, then `UsageLimiter.check(userId)`. If the user is over a limit, return 429 (§7).

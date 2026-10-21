@@ -1,6 +1,6 @@
 # Parlo
 
-**Say it like a local, in Spanish, English and French.**
+**Say it like a local, in your own languages.**
 
 Live: **https://parlo-flax.vercel.app** (sign in with Google)
 
@@ -9,7 +9,8 @@ the three every day. Word-for-word translators miss what I actually need: the co
 the idiom a native would use, and a gentle "that sounds off, here's why" when my French (or
 sometimes even my Spanish) isn't quite right. Parlo is that tool.
 
-Type a phrase in any of the three languages. Parlo:
+Pick your three languages (13 are supported, each with an optional region such as Spanish from
+Bolivia), then type a phrase in any of them. Parlo:
 
 - **detects the language** and translates the **intended meaning** into the other two, keeping tone,
   slang and idioms ("estoy hasta las narices" becomes "I'm fed up" / "j'en ai marre", not noses);
@@ -18,7 +19,7 @@ Type a phrase in any of the three languages. Parlo:
   train") and common slips ("I could of") all get caught;
 - adds **notes** when something is worth knowing (regional usage, an idiom with no direct
   equivalent);
-- **saves every phrase as a linked trio** (ES/EN/FR) with the version you typed marked as the
+- **saves every phrase as a linked trio** in your three languages with the version you typed marked as the
   original, so your history can later be browsed in any language.
 
 Translation runs on **Claude Haiku 5.5** with structured outputs.
@@ -40,11 +41,11 @@ Translation runs on **Claude Haiku 5.5** with structured outputs.
 
 Designed and planned, not built within the timebox (the pages say "Coming next"):
 
-- **History**: browse saved phrases in ES, EN or FR, accept a correction, star or delete. The data
+- **History**: browse saved phrases in any of your languages, accept a correction, star or delete. The data
   is already stored.
 - **Phrasebook**: favorites plus search.
-- **Profile**: language levels per user. The prompt already uses levels to pick the explanation
-  language and depth; until this page exists, everyone defaults to "intermediate".
+- **Profile levels**: your languages and regions are editable, but levels per language are not yet;
+  your native language gets the explanations and the other two default to "intermediate".
 
 Known limitations:
 

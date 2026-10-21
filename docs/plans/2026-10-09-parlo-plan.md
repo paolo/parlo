@@ -51,7 +51,8 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [x] |
 | 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] (favorites slice done) |
-| 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] (post-submission) |
+| 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] (post-submission; builds on 1.11) |
+| 1 | 1.11 Language profile | `language-profile` | Opus 5.5 / Sonnet 5.5 | – | [x] [plan](2026-10-20-language-profile-plan.md) (browser walkthrough pending) |
 | 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [x] |
 | 2 | 2.x Hardening | per task | see below | – | [ ] |
 | 3 | 3.x Style variants | `style-variants` | Opus 5.5 | – | [ ] |
@@ -68,7 +69,7 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 
 - Model ID `claude-haiku-5-5`, called through `@anthropic-ai/sdk` with structured outputs
   (`messages.parse` and Zod). No raw `fetch` to the API.
-- Languages exactly `es | en | fr`; levels exactly `native | advanced | intermediate | beginner`;
+- Languages: the 13 codes of the language catalog (`src/shared/languages.ts`; see the language profile spec), three per user; levels exactly `native | advanced | intermediate | beginner`;
   default level `intermediate`.
 - Input 1–500 characters after trimming.
 - `DAILY_TRANSLATION_LIMIT` default 50, overridable per user by `user.daily_limit`;
@@ -487,6 +488,11 @@ and notes; the usage badge increments; tests pass.
 only favorites and search filters it.
 
 ### Task 1.9: Language levels — [ ]
+
+> Updated by the language profile work (1.11): the `language_level` table now also holds `region` and
+> `position` (0 = native, set by default), `Levels` no longer exists (the translator takes a list of
+> `ProfileLanguage`), and explanations always come in the native language. This task only adds editing
+> of `level` for the two learning languages on top of that.
 
 **Branch** `language-levels` · **Model** Sonnet 5.5 · **Est.** 10m
 
