@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NewPhraseGroup, PhraseGroupDTO } from "@/server/phrases/types";
+import { buildProfile } from "@/server/profile/service";
 import { FakeTranslator } from "@/server/translation/fake";
 import {
   TranslationFailedError,
@@ -13,11 +14,13 @@ vi.mock("@/server/auth/session", () => ({ getSession }));
 const deps = vi.hoisted(() => ({
   limiter: { check: vi.fn(), record: vi.fn(), usage: vi.fn() },
   repository: { insertGroup: vi.fn(), findById: vi.fn() },
+  profiles: { getProfile: vi.fn(), replaceProfile: vi.fn() },
   translator: undefined as unknown,
 }));
 vi.mock("@/server/container", () => ({
   getUsageLimiter: () => deps.limiter,
   getPhraseRepository: () => deps.repository,
+  getProfileRepository: () => deps.profiles,
   getTranslator: () => deps.translator,
 }));
 
@@ -27,14 +30,19 @@ const result: TranslationResult = {
     text: "I'm going to miss the train",
     explanation: "«Me late» no es inglés.",
   },
-  translations: {
-    es: "Voy a perder el tren",
-    en: "I'm going to miss the train",
-    fr: "Je vais rater le train",
-  },
+  translations: [
+    { lang: "es", text: "Voy a perder el tren" },
+    { lang: "en", text: "I'm going to miss the train" },
+    { lang: "fr", text: "Je vais rater le train" },
+  ],
   notes: null,
 };
 
+const esEnFr = buildProfile([
+  { lang: "es", region: "BO" },
+  { lang: "en" },
+  { lang: "fr" },
+]);
 const savedGroup = { id: "g1" } as PhraseGroupDTO;
 
 function post(body: unknown) {
@@ -56,6 +64,7 @@ describe("POST /api/translations", () => {
     getSession.mockResolvedValue({ userId: "u1" });
     deps.limiter.check.mockResolvedValue({ ok: true });
     deps.repository.insertGroup.mockResolvedValue(savedGroup);
+    deps.profiles.getProfile.mockResolvedValue(esEnFr);
     translator = new FakeTranslator(result);
     deps.translator = translator;
   });
@@ -66,6 +75,7 @@ describe("POST /api/translations", () => {
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ group: savedGroup });
     expect(translator.calls[0].text).toBe("me late the train");
+    expect(translator.calls[0].languages).toEqual(esEnFr);
     const saved = deps.repository.insertGroup.mock
       .calls[0][0] as NewPhraseGroup;
     expect(saved.userId).toBe("u1");
@@ -122,9 +132,73 @@ describe("POST /api/translations", () => {
     deps.translator = new FakeTranslator({ ...result, detectedLang: "other" });
     const res = await post({ text: "ciao bella" });
     expect(res.status).toBe(422);
-    expect(await res.json()).toEqual({ error: "unsupported_language" });
+    expect(await res.json()).toEqual({
+      error: "unsupported_language",
+      languages: ["es", "en", "fr"],
+    });
     expect(deps.repository.insertGroup).not.toHaveBeenCalled();
     expect(deps.limiter.record).not.toHaveBeenCalled();
+  });
+
+  it("returns 422 naming the user's languages for a supported language they did not pick", async () => {
+    deps.translator = new FakeTranslator({ ...result, detectedLang: "it" });
+    const res = await post({ text: "ciao bella" });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({
+      error: "unsupported_language",
+      languages: ["es", "en", "fr"],
+    });
+    expect(deps.repository.insertGroup).not.toHaveBeenCalled();
+    expect(deps.limiter.record).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no profile", []],
+    ["two languages", esEnFr.slice(0, 2)],
+  ])("returns 409 with %s, before the limiter or the model", async (_name, profile) => {
+    deps.profiles.getProfile.mockResolvedValue(profile);
+    const res = await post({ text: "hola" });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: "profile_incomplete" });
+    expect(deps.limiter.check).not.toHaveBeenCalled();
+    expect(translator.calls).toHaveLength(0);
+    expect(deps.limiter.record).not.toHaveBeenCalled();
+  });
+
+  it("returns 502 and stores nothing when the translations do not cover the profile", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    deps.translator = new FakeTranslator({
+      ...result,
+      translations: result.translations.slice(0, 2),
+    });
+    const res = await post({ text: "me late the train" });
+    expect(res.status).toBe(502);
+    expect(deps.repository.insertGroup).not.toHaveBeenCalled();
+    expect(deps.limiter.record).not.toHaveBeenCalled();
+  });
+
+  it("creates phrases in the languages of a pt/en/fr profile", async () => {
+    deps.profiles.getProfile.mockResolvedValue(
+      buildProfile([
+        { lang: "pt", region: "BR" },
+        { lang: "en" },
+        { lang: "fr" },
+      ]),
+    );
+    deps.translator = new FakeTranslator({
+      ...result,
+      detectedLang: "pt",
+      translations: [
+        { lang: "pt", text: "Vou perder o trem" },
+        { lang: "en", text: "I'm going to miss the train" },
+        { lang: "fr", text: "Je vais rater le train" },
+      ],
+    });
+    const res = await post({ text: "vou perder o trem" });
+    expect(res.status).toBe(201);
+    const saved = deps.repository.insertGroup.mock
+      .calls[0][0] as NewPhraseGroup;
+    expect(saved.phrases.map((p) => p.lang)).toEqual(["pt", "en", "fr"]);
   });
 
   it("returns 502 when the model fails and records no usage", async () => {
