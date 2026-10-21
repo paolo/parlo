@@ -43,6 +43,12 @@ export interface PhraseRepository {
     id: string,
     isFavorite: boolean,
   ): Promise<PhraseGroupDTO | null>;
+  /**
+   * Replaces the root phrase with the group's stored correction, keeping the typed text in
+   * `correctedFrom`. Returns null when the user has no group with that id; throws
+   * CorrectionNotAcceptableError when there is nothing to accept.
+   */
+  acceptCorrection(userId: string, id: string): Promise<PhraseGroupDTO | null>;
   /** Returns false when the user has no group with that id. */
   deleteGroup(userId: string, id: string): Promise<boolean>;
   /** One page of the user's groups, newest first; `favorite` keeps only the starred ones. */
@@ -63,5 +69,13 @@ export class PhrasebookFullError extends Error {
   constructor(readonly limit: number) {
     super(`The phrasebook is full (${limit})`);
     this.name = "PhrasebookFullError";
+  }
+}
+
+/** The group has no correction to accept, or its correction was already accepted. */
+export class CorrectionNotAcceptableError extends Error {
+  constructor(readonly code: "no_correction" | "already_accepted") {
+    super(`The correction cannot be accepted (${code})`);
+    this.name = "CorrectionNotAcceptableError";
   }
 }

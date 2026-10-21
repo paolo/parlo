@@ -11,7 +11,7 @@ import type {
   PhrasePage,
   PhraseRepository,
 } from "./types";
-import { PhrasebookFullError } from "./types";
+import { CorrectionNotAcceptableError, PhrasebookFullError } from "./types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -111,6 +111,42 @@ export class DrizzlePhraseRepository implements PhraseRepository {
         oldest.map((g) => g.id),
       ),
     );
+  }
+
+  async acceptCorrection(
+    userId: string,
+    id: string,
+  ): Promise<PhraseGroupDTO | null> {
+    if (!UUID.test(id)) return null;
+    const found = await this.db.transaction(async (tx) => {
+      // The row lock makes a double click wait for the first accept, then see it as already accepted.
+      const [group] = await tx
+        .select()
+        .from(phraseGroup)
+        .where(and(eq(phraseGroup.id, id), eq(phraseGroup.userId, userId)))
+        .for("update");
+      if (!group) return false;
+      if (!group.correctionText || !group.correctionExplanation) {
+        throw new CorrectionNotAcceptableError("no_correction");
+      }
+      if (group.correctionAccepted) {
+        throw new CorrectionNotAcceptableError("already_accepted");
+      }
+      const [root] = await tx
+        .select()
+        .from(phrase)
+        .where(and(eq(phrase.groupId, id), eq(phrase.isRoot, true)));
+      await tx
+        .update(phrase)
+        .set({ correctedFrom: root.text, text: group.correctionText })
+        .where(eq(phrase.id, root.id));
+      await tx
+        .update(phraseGroup)
+        .set({ correctionAccepted: true })
+        .where(eq(phraseGroup.id, id));
+      return true;
+    });
+    return found ? this.findById(userId, id) : null;
   }
 
   async deleteGroup(userId: string, id: string): Promise<boolean> {

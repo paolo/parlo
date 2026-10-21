@@ -4,6 +4,7 @@ import { getDb } from "@/server/db/client";
 import { createTestUser, resetDb } from "@/test/db";
 import { DrizzlePhraseRepository } from "./repository";
 import {
+  CorrectionNotAcceptableError,
   type NewPhraseGroup,
   PhrasebookFullError,
   type PhraseLimits,
@@ -353,6 +354,93 @@ describe("DrizzlePhraseRepository", () => {
       expect(
         (await repo(capped).setFavorite(owner.id, mine.id, true))?.isFavorite,
       ).toBe(true);
+    });
+  });
+
+  describe("acceptCorrection", () => {
+    it("makes the correction the root text and keeps the typed text", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      const group = await repo().acceptCorrection(owner.id, id);
+
+      expect(group?.correction).toMatchObject({
+        text: "Llegué tarde",
+        accepted: true,
+      });
+      expect(group?.phrases).toEqual([
+        {
+          lang: "es",
+          text: "Llegué tarde",
+          isRoot: true,
+          correctedFrom: "me tarde",
+        },
+        { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
+        {
+          lang: "fr",
+          text: "J'étais en retard",
+          isRoot: false,
+          correctedFrom: null,
+        },
+      ]);
+      expect(await repo().findById(owner.id, id)).toEqual(group);
+    });
+
+    it("refuses a second accept and leaves the group as it was", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+      const accepted = await repo().acceptCorrection(owner.id, id);
+
+      await expect(repo().acceptCorrection(owner.id, id)).rejects.toMatchObject(
+        { code: "already_accepted" },
+      );
+      await expect(
+        repo().acceptCorrection(owner.id, id),
+      ).rejects.toBeInstanceOf(CorrectionNotAcceptableError);
+
+      expect(await repo().findById(owner.id, id)).toEqual(accepted);
+      expect(accepted?.phrases[0].correctedFrom).toBe("me tarde");
+    });
+
+    it("applies once when two accepts race", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      const results = await Promise.allSettled([
+        repo().acceptCorrection(owner.id, id),
+        repo().acceptCorrection(owner.id, id),
+      ]);
+
+      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      const stored = await repo().findById(owner.id, id);
+      expect(stored?.phrases[0]).toMatchObject({
+        text: "Llegué tarde",
+        correctedFrom: "me tarde",
+      });
+    });
+
+    it("refuses a group saved without a correction", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup({
+        ...newGroup(owner.id),
+        correction: null,
+      });
+
+      await expect(repo().acceptCorrection(owner.id, id)).rejects.toMatchObject(
+        { code: "no_correction" },
+      );
+    });
+
+    it("returns null for a stranger's group and a malformed id", async () => {
+      const owner = await createTestUser();
+      const stranger = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      expect(await repo().acceptCorrection(stranger.id, id)).toBeNull();
+      expect(await repo().acceptCorrection(owner.id, "not-a-uuid")).toBeNull();
+      expect((await repo().findById(owner.id, id))?.correction?.accepted).toBe(
+        false,
+      );
     });
   });
 });
