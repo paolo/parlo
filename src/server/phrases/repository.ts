@@ -19,7 +19,7 @@ export function toDTO(row: GroupRow): PhraseGroupDTO {
     row.phrases.map((p) => [
       p.lang,
       {
-        lang: p.lang,
+        lang: p.lang as Lang, // the enum is wider than the legacy trio until groups become lists
         text: p.text,
         isRoot: p.isRoot,
         correctedFrom: p.correctedFrom,

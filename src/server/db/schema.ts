@@ -2,16 +2,19 @@ import { relations, sql } from "drizzle-orm";
 import {
   bigserial,
   boolean,
+  check,
   index,
   integer,
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { LANG_CODES } from "../../shared/languages";
 
 export const LANGS = ["es", "en", "fr"] as const;
 export type Lang = (typeof LANGS)[number];
@@ -24,7 +27,9 @@ export const LEVELS = [
 ] as const;
 export type Level = (typeof LEVELS)[number];
 
-export const langEnum = pgEnum("lang", LANGS);
+// The database enum already holds every catalog language; `LANGS`/`Lang` above narrow to the original
+// trio until the translate flow is rewired to the catalog.
+export const langEnum = pgEnum("lang", LANG_CODES);
 export const levelEnum = pgEnum("level", LEVELS);
 
 const timestamps = {
@@ -157,8 +162,16 @@ export const languageLevel = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     lang: langEnum("lang").notNull(),
     level: levelEnum("level").notNull(),
+    // ISO 3166-1 alpha-2; null falls back to the language's default region.
+    region: text("region"),
+    // 0 = native language, 1 and 2 = learning languages.
+    position: smallint("position").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.lang] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.lang] }),
+    uniqueIndex("language_level_user_position_idx").on(t.userId, t.position),
+    check("language_level_position_range", sql`${t.position} between 0 and 2`),
+  ],
 );
 
 export const translationUsage = pgTable(
