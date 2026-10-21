@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { TranslateForm } from "./TranslateForm";
 
@@ -58,5 +58,25 @@ describe("TranslateForm", () => {
     expect(
       screen.getByPlaceholderText("Type a phrase in any of your languages…"),
     ).toBeInTheDocument();
+  });
+
+  describe("shortcut hint", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("names the Ctrl key on non-Mac platforms", () => {
+      vi.spyOn(window.navigator, "platform", "get").mockReturnValue("Win32");
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(screen.getByText("Ctrl")).toBeInTheDocument();
+      expect(screen.queryByText("⌘")).not.toBeInTheDocument();
+    });
+
+    it("shows the Command key on macOS", () => {
+      vi.spyOn(window.navigator, "platform", "get").mockReturnValue("MacIntel");
+      renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+      expect(screen.getByText("⌘")).toBeInTheDocument();
+      expect(screen.queryByText("Ctrl")).not.toBeInTheDocument();
+    });
   });
 });

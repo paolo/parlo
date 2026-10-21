@@ -2,6 +2,7 @@
 
 import { Button, Group, Kbd, Stack, Text, Textarea } from "@mantine/core";
 import { type FormEvent, type KeyboardEvent, useState } from "react";
+import { useIsMac } from "../platform";
 
 export const MAX_PHRASE_LENGTH = 500;
 
@@ -13,6 +14,7 @@ export function TranslateForm({
   pending: boolean;
 }) {
   const [text, setText] = useState("");
+  const isMac = useIsMac();
   const canSubmit = !pending && text.trim().length > 0;
 
   function submit() {
@@ -52,7 +54,8 @@ export function TranslateForm({
               {`${text.length}/${MAX_PHRASE_LENGTH}`}
             </Text>
             <Text size="xs" c="dimmed" visibleFrom="sm">
-              <Kbd size="xs">Ctrl</Kbd> + <Kbd size="xs">Enter</Kbd>
+              <Kbd size="xs">{isMac ? "⌘" : "Ctrl"}</Kbd> +{" "}
+              <Kbd size="xs">Enter</Kbd>
             </Text>
           </Group>
           <Button type="submit" loading={pending} disabled={!canSubmit}>
