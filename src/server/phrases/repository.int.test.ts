@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
 import { createTestUser, resetDb } from "@/test/db";
@@ -104,7 +105,10 @@ describe("DrizzlePhraseRepository", () => {
       await repo().setFavorite(userId, id, true);
     }
 
-    const favorites = await repo().listFavorites(owner.id);
+    const { items: favorites } = await repo().listGroups(owner.id, {
+      favorite: true,
+      limit: 20,
+    });
 
     expect(favorites.map((g) => g.id)).toEqual([newer.id, older.id]);
     expect(favorites[0].phrases[2].text).toBe("J'étais en retard");
@@ -124,5 +128,98 @@ describe("DrizzlePhraseRepository", () => {
     });
 
     expect(group.phrases.map((p) => p.lang)).toEqual(["pt", "en", "fr"]);
+  });
+
+  describe("listGroups", () => {
+    async function seed(userId: string, count: number) {
+      const ids: string[] = [];
+      for (let i = 0; i < count; i++) {
+        ids.push((await repo().insertGroup(newGroup(userId))).id);
+      }
+      return ids;
+    }
+
+    async function allPages(userId: string, limit: number, favorite?: boolean) {
+      const pages = [];
+      let cursor: string | undefined;
+      do {
+        const page = await repo().listGroups(userId, {
+          limit,
+          cursor,
+          favorite,
+        });
+        pages.push(page);
+        cursor = page.nextCursor ?? undefined;
+      } while (cursor);
+      return pages;
+    }
+
+    it("pages newest first with no duplicates and a null cursor on the last page", async () => {
+      const owner = await createTestUser();
+      const ids = await seed(owner.id, 5);
+
+      const pages = await allPages(owner.id, 2);
+
+      expect(pages.map((p) => p.items.length)).toEqual([2, 2, 1]);
+      expect(pages.flatMap((p) => p.items.map((g) => g.id))).toEqual(
+        [...ids].reverse(),
+      );
+      expect(pages[2].nextCursor).toBeNull();
+      expect(pages[0].nextCursor).not.toBeNull();
+    });
+
+    it("has no next page when the items exactly fill the page", async () => {
+      const owner = await createTestUser();
+      await seed(owner.id, 2);
+
+      const page = await repo().listGroups(owner.id, { limit: 2 });
+
+      expect(page.items).toHaveLength(2);
+      expect(page.nextCursor).toBeNull();
+    });
+
+    it("neither skips nor repeats groups created within the same millisecond", async () => {
+      const owner = await createTestUser();
+      const [c, a, b] = await seed(owner.id, 3);
+      // Same millisecond, different microseconds: a JS Date cannot tell a and b apart.
+      for (const [id, at] of [
+        [c, "2026-01-01 10:00:00.005000+00"],
+        [a, "2026-01-01 10:00:00.000900+00"],
+        [b, "2026-01-01 10:00:00.000100+00"],
+      ]) {
+        await getDb().execute(
+          sql`update phrase_group set created_at = ${at}::timestamptz where id = ${id}`,
+        );
+      }
+
+      const pages = await allPages(owner.id, 1);
+
+      expect(pages.flatMap((p) => p.items.map((g) => g.id))).toEqual([c, a, b]);
+    });
+
+    it("never returns another user's groups", async () => {
+      const owner = await createTestUser();
+      const stranger = await createTestUser();
+      await seed(stranger.id, 3);
+      const [mine] = await seed(owner.id, 1);
+
+      const page = await repo().listGroups(owner.id, { limit: 20 });
+
+      expect(page.items.map((g) => g.id)).toEqual([mine]);
+    });
+
+    it("lists only starred groups, with the same paging, when favorite is set", async () => {
+      const owner = await createTestUser();
+      const ids = await seed(owner.id, 4);
+      await repo().setFavorite(owner.id, ids[0], true);
+      await repo().setFavorite(owner.id, ids[2], true);
+
+      const pages = await allPages(owner.id, 1, true);
+
+      expect(pages.flatMap((p) => p.items.map((g) => g.id))).toEqual([
+        ids[2],
+        ids[0],
+      ]);
+    });
   });
 });

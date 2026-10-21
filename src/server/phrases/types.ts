@@ -24,6 +24,12 @@ export interface NewPhraseGroup {
   phrases: { lang: Lang; text: string; isRoot: boolean }[];
 }
 
+export interface PhrasePage {
+  items: PhraseGroupDTO[];
+  /** Pass back as `cursor` for the next page; null on the last page. */
+  nextCursor: string | null;
+}
+
 export interface PhraseRepository {
   /** Inserts the group and its phrases in one transaction. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
@@ -34,8 +40,11 @@ export interface PhraseRepository {
     id: string,
     isFavorite: boolean,
   ): Promise<PhraseGroupDTO | null>;
-  /** The user's starred groups, newest first. */
-  listFavorites(userId: string): Promise<PhraseGroupDTO[]>;
+  /** One page of the user's groups, newest first; `favorite` keeps only the starred ones. */
+  listGroups(
+    userId: string,
+    options: { favorite?: boolean; limit: number; cursor?: string },
+  ): Promise<PhrasePage>;
 }
 
 /** Per-user caps: how many groups history keeps and how many can be starred. */

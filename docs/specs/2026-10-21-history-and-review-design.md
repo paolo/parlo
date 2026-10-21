@@ -65,7 +65,8 @@ they keep phrases they want to learn. Review mode is what should make it stand o
 `GET /api/phrase-groups` replaces the current favorites-only handler.
 
 - Query: `favorite=true` (optional), `limit` (default 20, 1 to 100), `cursor` (optional, opaque).
-- Response: `{ items: PhraseGroupDTO[], nextCursor: string | null }`.
+- Response: `{ items: PhraseGroupDTO[], nextCursor: string | null, limit: number }`, where `limit` is the cap that
+  applies to the list (`HISTORY_LIMIT`, or `PHRASEBOOK_LIMIT` with `favorite=true`) so the UI can state it.
 - Order: `created_at desc, id desc`, the existing index. The cursor encodes the last item's `(created_at, id)`
   (base64url JSON); the query is a keyset condition `(created_at, id) < (cursor)`. A malformed cursor is a
   400 `invalid_input`.

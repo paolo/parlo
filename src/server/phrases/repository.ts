@@ -1,11 +1,13 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { LANG_CODES } from "../../shared/languages";
 import type { Db } from "../db/client";
 import { phrase, phraseGroup } from "../db/schema";
+import { decodeCursor, encodeCursor } from "./cursor";
 import type {
   NewPhraseGroup,
   PhraseDTO,
   PhraseGroupDTO,
+  PhrasePage,
   PhraseRepository,
 } from "./types";
 
@@ -92,15 +94,40 @@ export class DrizzlePhraseRepository implements PhraseRepository {
     return updated.length > 0 ? this.findById(userId, id) : null;
   }
 
-  async listFavorites(userId: string): Promise<PhraseGroupDTO[]> {
+  async listGroups(
+    userId: string,
+    {
+      favorite = false,
+      limit,
+      cursor,
+    }: { favorite?: boolean; limit: number; cursor?: string },
+  ): Promise<PhrasePage> {
+    const position = cursor ? decodeCursor(cursor) : null;
     const rows = await this.db.query.phraseGroup.findMany({
       where: and(
         eq(phraseGroup.userId, userId),
-        eq(phraseGroup.isFavorite, true),
+        favorite ? eq(phraseGroup.isFavorite, true) : undefined,
+        position
+          ? sql`(${phraseGroup.createdAt}, ${phraseGroup.id}) < (${position.createdAt}::timestamptz, ${position.id}::uuid)`
+          : undefined,
       ),
       orderBy: [desc(phraseGroup.createdAt), desc(phraseGroup.id)],
+      limit: limit + 1,
       with: { phrases: true },
+      extras: {
+        createdAtRaw: sql<string>`${phraseGroup.createdAt}::text`.as(
+          "created_at_raw",
+        ),
+      },
     });
-    return rows.map(toDTO);
+    const page = rows.slice(0, limit);
+    const last = page.at(-1);
+    return {
+      items: page.map(toDTO),
+      nextCursor:
+        rows.length > limit && last
+          ? encodeCursor({ createdAt: last.createdAtRaw, id: last.id })
+          : null,
+    };
   }
 }
