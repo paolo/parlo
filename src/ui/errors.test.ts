@@ -36,6 +36,15 @@ describe("errorMessage", () => {
       errorMessage(new ApiError(409, { error: "profile_incomplete" })),
     ).toBe("Pick your three languages first.");
     expect(
+      errorMessage(new ApiError(409, { error: "phrasebook_full", limit: 100 })),
+    ).toBe("Your phrasebook is full (100). Remove one to add another.");
+    expect(errorMessage(new ApiError(409, { error: "already_accepted" }))).toBe(
+      "That correction was already applied.",
+    );
+    expect(errorMessage(new ApiError(409, { error: "no_correction" }))).toBe(
+      "There is no correction to apply.",
+    );
+    expect(
       errorMessage(new ApiError(502, { error: "translation_failed" })),
     ).toMatch(/try again/i);
     expect(errorMessage(new ApiError(401, { error: "unauthorized" }))).toMatch(

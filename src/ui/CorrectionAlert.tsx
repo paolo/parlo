@@ -22,7 +22,11 @@ export function CorrectionAlert({
       color="yellow"
       variant="light"
       icon={<IconBulb />}
-      title="This could sound more natural"
+      title={
+        correction.accepted
+          ? "Correction applied"
+          : "This could sound more natural"
+      }
     >
       <Stack gap="xs">
         <Group gap="xs" wrap="nowrap">

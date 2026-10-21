@@ -57,4 +57,18 @@ describe("CorrectionAlert", () => {
       screen.queryByRole("button", { name: /use corrected/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("says the correction was applied, without a button, once accepted", () => {
+    renderWithProviders(
+      <CorrectionAlert
+        original="x"
+        correction={{ ...correction, accepted: true }}
+        onAccept={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Correction applied")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /use corrected/i }),
+    ).not.toBeInTheDocument();
+  });
 });

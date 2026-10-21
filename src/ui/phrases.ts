@@ -1,4 +1,4 @@
-import type { PhraseDTO } from "@/server/phrases/types";
+import type { PhraseDTO, PhraseGroupDTO } from "@/server/phrases/types";
 import type { Lang } from "../shared/languages";
 
 /**
@@ -15,4 +15,15 @@ export function orderPhrases(
     return index === -1 ? profileLangs.length : index;
   };
   return [...phrases].sort((a, b) => rank(a) - rank(b));
+}
+
+/** The phrase in `lang`, or the root (marked as a fallback) for groups that never had that language. */
+export function pickPhrase(
+  group: PhraseGroupDTO,
+  lang: Lang,
+): { phrase: PhraseDTO; fallback: boolean } {
+  const match = group.phrases.find((p) => p.lang === lang);
+  if (match) return { phrase: match, fallback: false };
+  const root = group.phrases.find((p) => p.isRoot) ?? group.phrases[0];
+  return { phrase: root, fallback: true };
 }

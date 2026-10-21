@@ -1,15 +1,35 @@
+import { z } from "zod";
 import { getPhraseRepository } from "@/server/container";
-import { jsonError, withSession } from "@/server/http/responses";
+import { getEnv } from "@/server/env";
+import { withSession } from "@/server/http/responses";
+import { parseQuery } from "@/server/http/validation";
+import { decodeCursor } from "@/server/phrases/cursor";
 
-// Only the phrasebook's listing for now; task 1.8 adds the full history with search and paging.
+const querySchema = z.object({
+  favorite: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z
+    .string()
+    .refine((value) => decodeCursor(value) !== null, "Invalid cursor")
+    .optional(),
+});
+
 export const GET = withSession(async (req, { userId }) => {
-  const favorite = new URL(req.url).searchParams.get("favorite");
-  if (favorite !== "true") {
-    return jsonError(400, "invalid_input", {
-      fields: { favorite: ["Only favorite=true is supported"] },
-    });
-  }
+  const parsed = parseQuery(req, querySchema);
+  if ("response" in parsed) return parsed.response;
+  const { favorite, limit, cursor } = parsed.data;
+
+  const page = await getPhraseRepository().listGroups(userId, {
+    favorite,
+    limit,
+    cursor,
+  });
+  const { HISTORY_LIMIT, PHRASEBOOK_LIMIT } = getEnv();
   return Response.json({
-    items: await getPhraseRepository().listFavorites(userId),
+    ...page,
+    limit: favorite ? PHRASEBOOK_LIMIT : HISTORY_LIMIT,
   });
 });

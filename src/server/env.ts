@@ -9,6 +9,8 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1),
   DAILY_TRANSLATION_LIMIT: z.coerce.number().int().positive().default(50),
   BURST_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  HISTORY_LIMIT: z.coerce.number().int().positive().default(500),
+  PHRASEBOOK_LIMIT: z.coerce.number().int().positive().default(100),
 });
 
 export type Env = z.infer<typeof envSchema>;

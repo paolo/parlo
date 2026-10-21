@@ -37,4 +37,29 @@ describe("parseEnv", () => {
       /DAILY_TRANSLATION_LIMIT/,
     );
   });
+
+  it("defaults the history and phrasebook limits", () => {
+    const env = parseEnv(base);
+    expect(env.HISTORY_LIMIT).toBe(500);
+    expect(env.PHRASEBOOK_LIMIT).toBe(100);
+  });
+
+  it("coerces the history and phrasebook limits", () => {
+    const env = parseEnv({
+      ...base,
+      HISTORY_LIMIT: "20",
+      PHRASEBOOK_LIMIT: "5",
+    });
+    expect(env.HISTORY_LIMIT).toBe(20);
+    expect(env.PHRASEBOOK_LIMIT).toBe(5);
+  });
+
+  it.each([
+    ["HISTORY_LIMIT", "0"],
+    ["PHRASEBOOK_LIMIT", "abc"],
+  ])("rejects %s=%s", (name, value) => {
+    expect(() => parseEnv({ ...base, [name]: value })).toThrow(
+      new RegExp(name),
+    );
+  });
 });
