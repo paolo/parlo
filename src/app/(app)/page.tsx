@@ -7,8 +7,8 @@ export default function TranslatePage() {
       <div>
         <Title order={2}>Translate</Title>
         <Text c="dimmed">
-          Say it once. Parlo gives it back in Spanish, English and French, the
-          way people actually say it.
+          Say it once. Parlo gives it back in your three languages, the way
+          people actually say it.
         </Text>
       </div>
       <TranslateView />

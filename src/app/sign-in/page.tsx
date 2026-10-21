@@ -8,9 +8,7 @@ export default function SignInPage() {
         <Stack>
           <div>
             <Title order={2}>Parlo</Title>
-            <Text c="dimmed">
-              Say it like a local, in Spanish, English and French.
-            </Text>
+            <Text c="dimmed">Say it like a local, in your own languages.</Text>
           </div>
           <SignInForm
             showPasswordForm={process.env.NODE_ENV !== "production"}

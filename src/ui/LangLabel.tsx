@@ -1,9 +1,29 @@
-import { LANGUAGES, type Lang, languageFlag } from "../shared/languages";
+import { Text } from "@mantine/core";
+import {
+  LANGUAGES,
+  type Lang,
+  languageFlag,
+  regionName,
+} from "../shared/languages";
 
-export function LangLabel({ lang }: { lang: Lang }) {
+/** Flag and language name, never the flag alone; a region other than the default is named too. */
+export function LangLabel({
+  lang,
+  region,
+}: {
+  lang: Lang;
+  region?: string | null;
+}) {
+  const { endonym, defaultRegion } = LANGUAGES[lang];
   return (
     <>
-      {languageFlag(lang, null)} {LANGUAGES[lang].endonym}
+      {languageFlag(lang, region ?? null)} {endonym}
+      {region && region !== defaultRegion && (
+        <Text span c="dimmed">
+          {" · "}
+          {regionName(region)}
+        </Text>
+      )}
     </>
   );
 }

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Parlo",
   description:
-    "Translate phrases between Spanish, English and French, the way people actually say them.",
+    "Translate phrases between your three languages, the way people actually say them.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

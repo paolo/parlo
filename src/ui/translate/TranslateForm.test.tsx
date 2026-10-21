@@ -51,4 +51,12 @@ describe("TranslateForm", () => {
     expect(screen.getByText("4/500")).toBeInTheDocument();
     expect(screen.getByRole("textbox")).toHaveAttribute("maxlength", "500");
   });
+
+  it("invites any of the user's languages", () => {
+    renderWithProviders(<TranslateForm onSubmit={vi.fn()} pending={false} />);
+
+    expect(
+      screen.getByPlaceholderText("Type a phrase in any of your languages…"),
+    ).toBeInTheDocument();
+  });
 });

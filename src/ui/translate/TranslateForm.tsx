@@ -36,7 +36,7 @@ export function TranslateForm({
       <Stack gap="xs">
         <Textarea
           aria-label="Phrase to translate"
-          placeholder="Type a phrase in Spanish, English or French…"
+          placeholder="Type a phrase in any of your languages…"
           autosize
           minRows={3}
           maxRows={8}

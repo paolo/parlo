@@ -25,8 +25,16 @@ describe("errorMessage", () => {
 
   it("maps known API errors to friendly text", () => {
     expect(
-      errorMessage(new ApiError(422, { error: "unsupported_language" })),
-    ).toMatch(/spanish, english or french/i);
+      errorMessage(
+        new ApiError(422, {
+          error: "unsupported_language",
+          languages: ["es", "en", "fr"],
+        }),
+      ),
+    ).toContain("Español, English, Français");
+    expect(
+      errorMessage(new ApiError(409, { error: "profile_incomplete" })),
+    ).toBe("Pick your three languages first.");
     expect(
       errorMessage(new ApiError(502, { error: "translation_failed" })),
     ).toMatch(/try again/i);
