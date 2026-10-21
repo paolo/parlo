@@ -62,6 +62,20 @@ describe("buildNewGroup", () => {
     expect(group.phrases.find((p) => p.lang === "en")?.text).toBe("I miss you");
   });
 
+  it("does not need the model to repeat the phrase's own language", () => {
+    const group = buildNewGroup(
+      "u1",
+      "hola",
+      { ...result, translations: result.translations.slice(1) },
+      esEnFr,
+    );
+    expect(group.phrases).toEqual([
+      { lang: "es", text: "hola", isRoot: true },
+      { lang: "en", text: "I'm fed up with waiting", isRoot: false },
+      { lang: "fr", text: "J'en ai marre d'attendre", isRoot: false },
+    ]);
+  });
+
   it("keeps the user's original input as the root text, even if the model reworded it", () => {
     const group = buildNewGroup(
       "u1",
