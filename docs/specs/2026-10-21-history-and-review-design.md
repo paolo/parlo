@@ -12,8 +12,10 @@ Phrasebook is a plain list of starred groups. This work makes saved phrases usab
 1. **History** lists everything the user translated, newest first, with paging and delete.
 2. **Limits** keep the stored data bounded from day one (an MVP choice: limits are easy to raise later and
    painful to lower once people have data).
-3. **Review mode** turns the Phrasebook into something to study: flashcards in a language the user picks.
-4. **Search** (a later phase, §7) makes saved phrases findable.
+3. **Accepting a correction** lets the user keep the suggested wording as the stored phrase. Today a
+   correction is only shown; the phrase stored is always what the user typed.
+4. **Review mode** turns the Phrasebook into something to study: flashcards in a language the user picks.
+5. **Search** (a later phase, §7) makes saved phrases findable.
 
 The people using it are immigrants in Canada who translate between three languages; the Phrasebook is where
 they keep phrases they want to learn. Review mode is what should make it stand out.
@@ -21,6 +23,8 @@ they keep phrases they want to learn. Review mode is what should make it stand o
 ### Goals
 
 - History page with cursor paging, a per-language view and single-item delete.
+- A "Use corrected" action that replaces the stored phrase with the suggested correction, on the Translate
+  result, in History and in the Phrasebook.
 - Phrasebook page with the same paging, plus a Review entry point.
 - Configurable limits, defaulting to 500 history groups and 100 starred groups per user.
 - Review mode v1: a client-side flashcard session with self-grading, no model calls.
@@ -30,7 +34,7 @@ they keep phrases they want to learn. Review mode is what should make it stand o
 - Listen (text to speech), speaking or pronunciation scoring, typed answers, style variants and spaced
   repetition. They come later, each as its own feature.
 - Paid tiers or plan-based limits.
-- Accepting a suggested correction from History (stays in the living plan under 1.8).
+- Undoing an accepted correction (the original text stays recorded, so it can be added later).
 - Search in the first plan (§7 describes it so the API does not paint it into a corner).
 
 ### Anti-goals
@@ -52,6 +56,8 @@ they keep phrases they want to learn. Review mode is what should make it stand o
 - Review mode v1: pick the practice language (default: the user's second language, so French for the
   author; English or any profile language can be chosen), read the card, reveal the other versions, then
   self-grade. No Listen in v1.
+- Accepting a correction is part of this work: one click replaces the stored phrase with the correction,
+  it costs no model call and no quota, and the original typed text is kept on the phrase.
 - The existing 50 translations a day and 10 per minute stay as they are.
 
 ## 3. List API and paging
@@ -69,6 +75,25 @@ they keep phrases they want to learn. Review mode is what should make it stand o
 
 `DELETE /api/phrase-groups/:id` → 204; 404 if the group is not the caller's. Deleting never restores daily
 quota (existing rule).
+
+### Accepting a correction
+
+`PATCH /api/phrase-groups/:id` takes exactly one of `{ isFavorite: boolean }` or `{ acceptCorrection: true }`
+(anything else is a 400). Accepting:
+
+- uses the correction stored on the group (the client never sends the text);
+- in one transaction sets the root phrase's `corrected_from` to its current text, its `text` to the
+  correction text, and the group's `correction_accepted` to true;
+- leaves the other phrases alone: they were already translated from the intended meaning;
+- returns `{ group }`; 404 when the group is not the caller's; 409 `{ error: "no_correction" }` when the group
+  has no correction; 409 `{ error: "already_accepted" }` when it was accepted before.
+
+UI: `CorrectionAlert` already takes an `onAccept` handler and an `accepting` flag; it gets wired up wherever
+a group is shown (Translate result, History, Phrasebook). Before accepting, the alert is as today ("This
+could sound more natural", original struck through, suggestion, explanation, **Use corrected**). After
+accepting, the root card shows the corrected text, the alert title becomes "Correction applied", the
+original stays visible struck through, and the button is gone. A failed accept shows a notification and
+leaves everything as it was.
 
 ## 4. Limits
 
@@ -142,6 +167,13 @@ The list API above is shaped so that it only adds a condition.
 
 ## 9. Testing
 
+- Accepting (int): the root text becomes the correction and `corrected_from` the typed text; other phrases
+  unchanged; a second accept is refused with `already_accepted`; a group without a correction is refused with
+  `no_correction`; another user's group is not found; a failure leaves the group untouched.
+- Accepting (route): `{ acceptCorrection: true }` and `{ isFavorite: true }` both work, an empty body, both
+  keys together or `{ acceptCorrection: false }` are 400, error codes as above.
+- Accepting (UI): clicking "Use corrected" sends the PATCH, then the root card shows the corrected text and
+  the alert reads "Correction applied" without the button; an error leaves the button in place.
 - Repository (int): keyset paging returns pages in order with no duplicates or gaps across a page boundary,
   including groups created in the same millisecond (tie on `created_at`); `nextCursor` is null on the last
   page; other users' groups never appear; delete removes only the caller's group; pruning removes the oldest
@@ -167,3 +199,4 @@ The list API above is shaped so that it only adds a condition.
 - Group display on History reuses the translate result's look, in a more compact form.
 - Re-queue distance of 3 cards, and the summary content.
 - The practice language is not remembered between sessions.
+- The exact wording of the "Correction applied" state.
