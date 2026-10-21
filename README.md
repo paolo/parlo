@@ -30,7 +30,12 @@ Translation runs on **Claude Haiku 5.5** with structured outputs.
   and server).
 - Translate: language detection, three-way translation, corrections with explanations, notes, copy
   buttons, and a Ctrl/⌘+Enter shortcut.
-- Every translation is persisted (group, three phrases, correction, notes) in Postgres (Neon).
+- Every translation is persisted (group, three phrases, correction, notes) in Postgres (Neon). A
+  suggested correction can be accepted with one click, which replaces the stored phrase.
+- **History**: every saved phrase, newest first, 20 at a time, viewable in all your languages or one,
+  with delete. It keeps your last 500 phrases (`HISTORY_LIMIT`); starred ones are never pruned.
+- **Phrasebook**: your starred phrases (up to `PHRASEBOOK_LIMIT`, default 100) and **Review mode**,
+  a flashcard session in the language you choose, with no model calls.
 - Rate limiting per user: a **daily quota** (default 50, overridable per user) and a **burst limit**
   (10/min). There's a usage badge in the header, and friendly messages for 429s, unsupported
   languages and model failures. Failed attempts don't use quota.
@@ -39,11 +44,10 @@ Translation runs on **Claude Haiku 5.5** with structured outputs.
 
 ## What's incomplete
 
-Designed and planned, not built within the timebox (the pages say "Coming next"):
+Designed and planned, not built yet:
 
-- **History**: browse saved phrases in any of your languages, accept a correction, star or delete. The data
-  is already stored.
-- **Phrasebook**: favorites plus search.
+- **Search** in History and the Phrasebook.
+- **Review mode extras**: listening, typed answers, spaced repetition.
 - **Profile levels**: your languages and regions are editable, but levels per language are not yet;
   your native language gets the explanations and the other two default to "intermediate".
 

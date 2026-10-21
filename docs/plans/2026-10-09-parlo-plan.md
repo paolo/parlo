@@ -50,9 +50,10 @@ Library, Docker Postgres, Biome, GitHub Actions, Vercel.
 | 1 | 1.5 Translator (Haiku 5.5) | `translator` | Opus 5.5 | 15m | [x] |
 | 1 | 1.6 Usage limits | `usage-limits` | Sonnet 5.5 | 10m | [x] |
 | 1 | 1.7 Translate flow | `translate-flow` | Sonnet 5.5 | 20m | [x] |
-| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [ ] (favorites slice done) |
+| 1 | 1.8 History and phrasebook | `history-phrasebook` | Sonnet 5.5 | 15m | [x] favorites slice, then listing, delete and accepting corrections in 1.12 (search still open) |
 | 1 | 1.9 Language levels | `language-levels` | Sonnet 5.5 | 10m | [ ] (post-submission; builds on 1.11) |
 | 1 | 1.11 Language profile | `language-profile` | Opus 5.5 / Sonnet 5.5 | – | [x] [plan](2026-10-20-language-profile-plan.md) (browser walkthrough pending) |
+| 1 | 1.12 History, limits, corrections and review | `history-and-review` | Opus 5.5 / Sonnet 5.5 | – | [x] [plan](2026-10-21-history-and-review-plan.md) (browser walkthrough pending) |
 | 1 | 1.10 Submission README | `submission-notes` | Haiku 5.5 | 5m | [x] |
 | 2 | 2.x Hardening | per task | see below | – | [ ] |
 | 3 | 3.x Style variants | `style-variants` | Opus 5.5 | – | [ ] |
