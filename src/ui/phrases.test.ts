@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PhraseDTO } from "@/server/phrases/types";
-import { orderPhrases } from "./phrases";
+import { makeGroup } from "@/test/fixtures";
+import { orderPhrases, pickPhrase } from "./phrases";
 
 const phrase = (lang: PhraseDTO["lang"], isRoot = false): PhraseDTO => ({
   lang,
@@ -36,5 +37,22 @@ describe("orderPhrases", () => {
     );
 
     expect(langs(ordered)).toEqual(["fr", "es", "en"]);
+  });
+});
+
+describe("pickPhrase", () => {
+  it("returns the phrase in the requested language", () => {
+    const { phrase, fallback } = pickPhrase(makeGroup(), "fr");
+
+    expect(phrase.text).toBe("Il pleut des cordes");
+    expect(fallback).toBe(false);
+  });
+
+  it("falls back to the root when the group lacks the language", () => {
+    const { phrase, fallback } = pickPhrase(makeGroup(), "pt");
+
+    expect(phrase.text).toBe("Llueve a cántaros");
+    expect(phrase.isRoot).toBe(true);
+    expect(fallback).toBe(true);
   });
 });
