@@ -104,7 +104,8 @@ New environment variables, validated in `src/server/env.ts` next to the existing
 - **History pruning:** after a translation is saved, if the user has more than `HISTORY_LIMIT` groups, delete
   the oldest groups that are not starred until the count is `HISTORY_LIMIT` (or only starred groups remain;
   `PHRASEBOOK_LIMIT` is below `HISTORY_LIMIT` in the defaults, but the code must not loop or delete starred
-  groups if an operator configures it the other way round). Pruning happens in the same transaction as the
+  groups if an operator configures it the other way round). The group that was just saved is never pruned
+  either, so a user whose other groups are all starred keeps what they just translated. Pruning happens in the same transaction as the
   insert.
 - **Phrasebook cap:** `PATCH /api/phrase-groups/:id { isFavorite: true }` returns 409
   `{ error: "phrasebook_full", limit }` when the user already has `PHRASEBOOK_LIMIT` starred groups and the

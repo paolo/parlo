@@ -33,7 +33,10 @@ export function getTranslator(): Translator {
 let phraseRepository: PhraseRepository | undefined;
 
 export function getPhraseRepository(): PhraseRepository {
-  phraseRepository ??= new DrizzlePhraseRepository(getDb());
+  phraseRepository ??= new DrizzlePhraseRepository(getDb(), {
+    historyLimit: getEnv().HISTORY_LIMIT,
+    phrasebookLimit: getEnv().PHRASEBOOK_LIMIT,
+  });
   return phraseRepository;
 }
 

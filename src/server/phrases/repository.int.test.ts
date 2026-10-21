@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
 import { createTestUser, resetDb } from "@/test/db";
 import { DrizzlePhraseRepository } from "./repository";
-import type { NewPhraseGroup } from "./types";
+import {
+  type NewPhraseGroup,
+  PhrasebookFullError,
+  type PhraseLimits,
+} from "./types";
 
 const newGroup = (userId: string): NewPhraseGroup => ({
   userId,
@@ -18,7 +22,9 @@ const newGroup = (userId: string): NewPhraseGroup => ({
 
 describe("DrizzlePhraseRepository", () => {
   beforeEach(resetDb);
-  const repo = () => new DrizzlePhraseRepository(getDb());
+  const repo = (
+    limits: PhraseLimits = { historyLimit: 500, phrasebookLimit: 100 },
+  ) => new DrizzlePhraseRepository(getDb(), limits);
 
   it("inserts a group with its three phrases and returns it", async () => {
     const owner = await createTestUser();
@@ -220,6 +226,133 @@ describe("DrizzlePhraseRepository", () => {
         ids[2],
         ids[0],
       ]);
+    });
+  });
+
+  describe("deleteGroup", () => {
+    it("deletes the owner's group and its phrases", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      expect(await repo().deleteGroup(owner.id, id)).toBe(true);
+
+      expect(await repo().findById(owner.id, id)).toBeNull();
+      expect(await getDb().query.phrase.findMany()).toHaveLength(0);
+    });
+
+    it("returns false and deletes nothing for a stranger's group or a malformed id", async () => {
+      const owner = await createTestUser();
+      const stranger = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      expect(await repo().deleteGroup(stranger.id, id)).toBe(false);
+      expect(await repo().deleteGroup(owner.id, "not-a-uuid")).toBe(false);
+
+      expect(await repo().findById(owner.id, id)).not.toBeNull();
+    });
+  });
+
+  describe("history pruning", () => {
+    const small = { historyLimit: 3, phrasebookLimit: 100 };
+    const listIds = async (userId: string) =>
+      (await repo().listGroups(userId, { limit: 100 })).items.map((g) => g.id);
+
+    it("removes the oldest group once the limit is passed and keeps the newest", async () => {
+      const owner = await createTestUser();
+      const ids: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+      }
+
+      expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[1]]);
+    });
+
+    it("spares a starred group and removes the oldest unstarred one instead", async () => {
+      const owner = await createTestUser();
+      const first = await repo(small).insertGroup(newGroup(owner.id));
+      await repo(small).setFavorite(owner.id, first.id, true);
+      const ids = [first.id];
+      for (let i = 0; i < 3; i++) {
+        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+      }
+
+      expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[0]]);
+    });
+
+    it("deletes nothing when only starred groups and the new one are left, even over the limit", async () => {
+      const owner = await createTestUser();
+      for (let i = 0; i < 3; i++) {
+        const g = await repo().insertGroup(newGroup(owner.id));
+        await repo().setFavorite(owner.id, g.id, true);
+      }
+      await repo({ historyLimit: 2, phrasebookLimit: 100 }).insertGroup(
+        newGroup(owner.id),
+      );
+
+      // Over the limit, but the only unstarred group is the one just saved: all four stay.
+      expect(await listIds(owner.id)).toHaveLength(4);
+      const starred = await repo().listGroups(owner.id, {
+        favorite: true,
+        limit: 100,
+      });
+      expect(starred.items).toHaveLength(3);
+    });
+
+    it("never prunes another user's groups", async () => {
+      const owner = await createTestUser();
+      const other = await createTestUser();
+      for (let i = 0; i < 3; i++)
+        await repo(small).insertGroup(newGroup(other.id));
+      for (let i = 0; i < 4; i++)
+        await repo(small).insertGroup(newGroup(owner.id));
+
+      expect(await listIds(other.id)).toHaveLength(3);
+    });
+  });
+
+  describe("phrasebook cap", () => {
+    const capped = { historyLimit: 500, phrasebookLimit: 2 };
+
+    it("refuses a third star with the limit, but allows re-starring and unstarring", async () => {
+      const owner = await createTestUser();
+      const [a, b, c] = [
+        await repo(capped).insertGroup(newGroup(owner.id)),
+        await repo(capped).insertGroup(newGroup(owner.id)),
+        await repo(capped).insertGroup(newGroup(owner.id)),
+      ];
+      await repo(capped).setFavorite(owner.id, a.id, true);
+      await repo(capped).setFavorite(owner.id, b.id, true);
+
+      await expect(
+        repo(capped).setFavorite(owner.id, c.id, true),
+      ).rejects.toEqual(expect.objectContaining({ limit: 2 }));
+      await expect(
+        repo(capped).setFavorite(owner.id, c.id, true),
+      ).rejects.toBeInstanceOf(PhrasebookFullError);
+
+      expect(
+        (await repo(capped).setFavorite(owner.id, a.id, true))?.isFavorite,
+      ).toBe(true);
+      expect(
+        (await repo(capped).setFavorite(owner.id, a.id, false))?.isFavorite,
+      ).toBe(false);
+      expect(
+        (await repo(capped).setFavorite(owner.id, c.id, true))?.isFavorite,
+      ).toBe(true);
+    });
+
+    it("counts only the user's own stars", async () => {
+      const owner = await createTestUser();
+      const other = await createTestUser();
+      for (let i = 0; i < 2; i++) {
+        const g = await repo(capped).insertGroup(newGroup(other.id));
+        await repo(capped).setFavorite(other.id, g.id, true);
+      }
+      const mine = await repo(capped).insertGroup(newGroup(owner.id));
+
+      expect(
+        (await repo(capped).setFavorite(owner.id, mine.id, true))?.isFavorite,
+      ).toBe(true);
     });
   });
 });

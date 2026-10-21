@@ -34,12 +34,17 @@ export interface PhraseRepository {
   /** Inserts the group and its phrases in one transaction. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
   findById(userId: string, id: string): Promise<PhraseGroupDTO | null>;
-  /** Returns the updated group, or null when the user has no group with that id. */
+  /**
+   * Returns the updated group, or null when the user has no group with that id. Throws
+   * PhrasebookFullError when starring would pass the user's cap.
+   */
   setFavorite(
     userId: string,
     id: string,
     isFavorite: boolean,
   ): Promise<PhraseGroupDTO | null>;
+  /** Returns false when the user has no group with that id. */
+  deleteGroup(userId: string, id: string): Promise<boolean>;
   /** One page of the user's groups, newest first; `favorite` keeps only the starred ones. */
   listGroups(
     userId: string,
@@ -51,4 +56,12 @@ export interface PhraseRepository {
 export interface PhraseLimits {
   historyLimit: number;
   phrasebookLimit: number;
+}
+
+/** The user already has as many starred groups as the phrasebook holds. */
+export class PhrasebookFullError extends Error {
+  constructor(readonly limit: number) {
+    super(`The phrasebook is full (${limit})`);
+    this.name = "PhrasebookFullError";
+  }
 }
