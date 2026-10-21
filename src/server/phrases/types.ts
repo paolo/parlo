@@ -37,3 +37,9 @@ export interface PhraseRepository {
   /** The user's starred groups, newest first. */
   listFavorites(userId: string): Promise<PhraseGroupDTO[]>;
 }
+
+/** Per-user caps: how many groups history keeps and how many can be starred. */
+export interface PhraseLimits {
+  historyLimit: number;
+  phrasebookLimit: number;
+}
