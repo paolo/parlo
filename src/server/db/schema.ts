@@ -16,9 +16,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { LANG_CODES } from "../../shared/languages";
 
-export const LANGS = ["es", "en", "fr"] as const;
-export type Lang = (typeof LANGS)[number];
-
 export const LEVELS = [
   "native",
   "advanced",
@@ -27,8 +24,6 @@ export const LEVELS = [
 ] as const;
 export type Level = (typeof LEVELS)[number];
 
-// The database enum already holds every catalog language; `LANGS`/`Lang` above narrow to the original
-// trio until the translate flow is rewired to the catalog.
 export const langEnum = pgEnum("lang", LANG_CODES);
 export const levelEnum = pgEnum("level", LEVELS);
 
