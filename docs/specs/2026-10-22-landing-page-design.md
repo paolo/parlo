@@ -35,7 +35,7 @@ taught by apps), never through flags, maple leaves or politics.
 
 - Translating the page itself. Headline, buttons and all app UI stay in English; only the phrases are in other
   languages.
-- Extra sections (pricing, feature lists, testimonials, FAQ). The page is one screen plus a footer line.
+- Extra sections (pricing, feature lists, testimonials, FAQ). The page is one screen.
 - Per-screen restyling of the signed-in app. The look is defined once in the Mantine theme (§3), so the app
   inherits the new palette and surfaces, but no app screen gets bespoke styling in this work beyond fixing
   anything the theme change visibly breaks.
