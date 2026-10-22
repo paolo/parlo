@@ -42,7 +42,7 @@ describe("PHRASE_SETS", () => {
       expect(LANGUAGES.es.regions).toContain(set.esRegion);
     }
     const regions = new Set(PHRASE_SETS.map((set) => set.esRegion));
-    expect(regions).toEqual(new Set(["ES", "BO"]));
+    expect(regions).toEqual(new Set(["MX", "BO"]));
   });
 
   it("has unique ids", () => {
@@ -67,11 +67,11 @@ describe("NATIVE_CYCLE", () => {
 });
 
 describe("conversationAt", () => {
-  it("starts with the first set in Spanish, from Spain", () => {
+  it("starts with the first set in Spanish, from Mexico", () => {
     const { set, native, region } = conversationAt(0);
     expect(set).toBe(PHRASE_SETS[0]);
     expect(native).toBe("es");
-    expect(region).toBe("ES");
+    expect(region).toBe("MX");
   });
 
   it("takes the Spanish flag from the phrase set", () => {

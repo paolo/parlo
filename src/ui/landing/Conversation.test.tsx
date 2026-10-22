@@ -24,12 +24,12 @@ describe("Conversation", () => {
     expect(
       screen.getAllByRole("img").map((el) => el.getAttribute("aria-label")),
     ).toEqual([
-      "Spanish (Spain)",
+      "Spanish (Mexico)",
       "English (United Kingdom)",
       "French (France)",
     ]);
     expect(screen.getAllByRole("img").map((el) => el.textContent)).toEqual([
-      "🇪🇸",
+      "🇲🇽",
       "🇬🇧",
       "🇫🇷",
     ]);

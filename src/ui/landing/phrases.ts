@@ -16,7 +16,7 @@ export interface PhraseSet {
   id: string;
   canadian: boolean;
   /** The Spanish-speaking country the Spanish phrase is at home in; its flag is shown beside the phrase. */
-  esRegion: "ES" | "BO";
+  esRegion: "MX" | "BO";
   /** Short English gloss of the shared meaning, for assistive technology. */
   meaning: string;
   /** One idiomatic phrase per language: the meaning carried across, never a literal translation. */
@@ -27,7 +27,7 @@ export interface PhraseSet {
 export const PHRASE_SETS: readonly PhraseSet[] = [
   {
     id: "very-cold",
-    esRegion: "ES",
+    esRegion: "MX",
     canadian: true,
     meaning: "It is very cold outside",
     phrases: {
@@ -59,7 +59,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "works-for-me",
-    esRegion: "ES",
+    esRegion: "MX",
     canadian: true,
     meaning: "Agreed, that works for me",
     phrases: {
@@ -107,13 +107,13 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "keep-a-secret",
-    esRegion: "ES",
+    esRegion: "MX",
     canadian: false,
     meaning: "Do not reveal the secret",
     phrases: {
       fr: "Ne vends pas la mèche",
       en: "Don't spill the beans",
-      es: "No vayas a soltar prenda",
+      es: "No vayas a soltar la sopa",
       pt: "Não dê com a língua nos dentes",
       uk: "Не розпускай язика",
       zh: "别说漏嘴",
@@ -139,13 +139,13 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "easy",
-    esRegion: "ES",
+    esRegion: "MX",
     canadian: false,
     meaning: "It is very easy",
     phrases: {
       fr: "C'est du gâteau",
       en: "It's a piece of cake",
-      es: "Está chupado",
+      es: "Es pan comido",
       pt: "É moleza",
       uk: "Це раз плюнути",
       zh: "小菜一碟",
