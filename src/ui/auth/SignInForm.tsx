@@ -9,10 +9,10 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { IconBrandGoogle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { authClient } from "@/ui/auth-client";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -53,16 +53,7 @@ export function SignInForm({
 
   return (
     <Stack>
-      <Button
-        leftSection={<IconBrandGoogle size={18} />}
-        variant="default"
-        size="md"
-        onClick={() =>
-          authClient.signIn.social({ provider: "google", callbackURL: "/" })
-        }
-      >
-        Continue with Google
-      </Button>
+      <GoogleSignInButton />
 
       {showPasswordForm && (
         <form onSubmit={onSubmit}>
