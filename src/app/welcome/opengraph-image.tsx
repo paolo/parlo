@@ -14,21 +14,13 @@ const colors = {
   page: light["--mantine-color-body"] as string,
   text: light["--mantine-color-text"] as string,
   dimmed: light["--mantine-color-dimmed"] as string,
-  accent: full.colors.parlo[6] as string,
   surface: "#ffffff",
 };
 
 const TAIL = { left: "36px 36px 36px 8px", right: "36px 36px 8px 36px" };
 
-function Bubble({
-  label,
-  text,
-  side,
-}: {
-  label: string;
-  text: string;
-  side: "left" | "right";
-}) {
+// No flags here: ImageResponse fetches emoji artwork over the network at build time, so the preview shows phrases only.
+function Bubble({ text, side }: { text: string; side: "left" | "right" }) {
   return (
     <div
       style={{
@@ -46,9 +38,6 @@ function Bubble({
           boxShadow: "0 8px 28px rgba(60, 70, 140, 0.14)",
         }}
       >
-        <div style={{ fontSize: 22, fontWeight: 700, color: colors.accent }}>
-          {label}
-        </div>
         <div style={{ fontSize: 38, fontWeight: 700, color: colors.text }}>
           {text}
         </div>
@@ -97,13 +86,9 @@ export default async function Image() {
           width: 540,
         }}
       >
-        <Bubble
-          label={native.toUpperCase()}
-          text={set.phrases[native]}
-          side="left"
-        />
-        <Bubble label="EN" text={set.phrases.en} side="right" />
-        <Bubble label="FR" text={set.phrases.fr} side="left" />
+        <Bubble text={set.phrases[native]} side="left" />
+        <Bubble text={set.phrases.en} side="right" />
+        <Bubble text={set.phrases.fr} side="left" />
       </div>
     </div>,
     size,
