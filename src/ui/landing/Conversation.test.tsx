@@ -18,13 +18,21 @@ function phrases(step: number) {
 describe("Conversation", () => {
   afterEach(() => vi.useRealTimers());
 
-  it("shows the first conversation: native, English, French, in that order", () => {
+  it("shows the first conversation: native, English, French, in that order, each with a flag", () => {
     renderWithProviders(<Conversation />);
     const first = phrases(0);
-    const labels = screen
-      .getAllByText(/^(ES|EN|FR)$/)
-      .map((el) => el.textContent);
-    expect(labels).toEqual(["ES", "EN", "FR"]);
+    expect(
+      screen.getAllByRole("img").map((el) => el.getAttribute("aria-label")),
+    ).toEqual([
+      "Spanish (Spain)",
+      "English (United Kingdom)",
+      "French (France)",
+    ]);
+    expect(screen.getAllByRole("img").map((el) => el.textContent)).toEqual([
+      "🇪🇸",
+      "🇬🇧",
+      "🇫🇷",
+    ]);
     const shown = [first.native, first.en, first.fr].map((text) =>
       screen.getByText(text),
     );
@@ -35,6 +43,19 @@ describe("Conversation", () => {
       expect(a?.compareDocumentPosition(b as Node)).toBe(
         Node.DOCUMENT_POSITION_FOLLOWING,
       );
+    }
+  });
+
+  it("shows no two-letter language codes", () => {
+    renderWithProviders(<Conversation />);
+    expect(screen.queryByText(/^(ES|EN|FR|PT|UK|ZH|HI|PA)$/)).toBeNull();
+  });
+
+  it("gives every bubble a minimum width so short phrases do not shrink it", () => {
+    renderWithProviders(<Conversation />);
+    for (const text of [phrases(0).native, phrases(0).en, phrases(0).fr]) {
+      const bubble = screen.getByText(text).closest(".mantine-Paper-root");
+      expect(bubble).toHaveStyle({ minWidth: "60%" });
     }
   });
 
@@ -58,15 +79,19 @@ describe("Conversation", () => {
     renderWithProviders(<Conversation />);
     await userEvent.click(screen.getByRole("button"));
     expect(await screen.findByText(phrases(1).native)).toBeInTheDocument();
-    expect(screen.getByText("PT")).toBeInTheDocument();
-    expect(screen.queryByText("ES")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Portuguese (Brazil)" }),
+    ).toHaveTextContent("🇧🇷");
+    expect(screen.queryByRole("img", { name: /^Spanish/ })).toBeNull();
   });
 
   it.each(["{Enter}", " "])("advances with the %j key", async (key) => {
     renderWithProviders(<Conversation />);
     screen.getByRole("button").focus();
     await userEvent.keyboard(key);
-    expect(await screen.findByText("PT")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("img", { name: "Portuguese (Brazil)" }),
+    ).toBeInTheDocument();
   });
 
   it("advances by itself after the interval", () => {
@@ -79,14 +104,22 @@ describe("Conversation", () => {
     act(() => {
       vi.advanceTimersByTime(500);
     });
-    expect(screen.getByText("PT")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Portuguese (Brazil)" }),
+    ).toBeInTheDocument();
   });
 
   it("marks Mandarin as Simplified Chinese", async () => {
     renderWithProviders(<Conversation />);
     for (let i = 0; i < 3; i++) {
       await userEvent.click(screen.getByRole("button"));
-      await screen.findByText(["PT", "UK", "ZH"][i] as string);
+      await screen.findByRole("img", {
+        name: [
+          "Portuguese (Brazil)",
+          "Ukrainian (Ukraine)",
+          "Mandarin Chinese (China)",
+        ][i] as string,
+      });
     }
     expect(screen.getByText(phrases(3).native)).toHaveAttribute(
       "lang",

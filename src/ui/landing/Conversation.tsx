@@ -3,6 +3,12 @@
 import { Stack, UnstyledButton } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { type KeyboardEvent, useEffect, useState } from "react";
+import {
+  LANGUAGES,
+  type Lang,
+  regionFlag,
+  regionName,
+} from "@/shared/languages";
 import { PhraseBubble } from "./PhraseBubble";
 import { conversationAt } from "./phrases";
 import { useRotation } from "./useRotation";
@@ -12,6 +18,14 @@ const FADE_MS = 200;
 /** Mandarin is Simplified; everything else is already a valid language tag. */
 function htmlLang(code: string) {
   return code === "zh" ? "zh-Hans" : code;
+}
+
+/** The flag and its spoken name for a language as spoken in a country, e.g. Spanish in Bolivia. */
+function flagFor(lang: Lang, region: string) {
+  return {
+    flag: regionFlag(region),
+    flagName: `${LANGUAGES[lang].name} (${regionName(region)})`,
+  };
 }
 
 export function Conversation() {
@@ -35,7 +49,7 @@ export function Conversation() {
     return () => clearTimeout(id);
   }, [step, shown, reducedMotion]);
 
-  const { set, native } = conversationAt(shown);
+  const { set, native, region } = conversationAt(shown);
   const { phrases } = set;
 
   function onKeyDown(event: KeyboardEvent) {
@@ -69,12 +83,22 @@ export function Conversation() {
       >
         <PhraseBubble
           lang={htmlLang(native)}
-          label={native.toUpperCase()}
+          {...flagFor(native, region)}
           text={phrases[native]}
           side="left"
         />
-        <PhraseBubble lang="en" label="EN" text={phrases.en} side="right" />
-        <PhraseBubble lang="fr" label="FR" text={phrases.fr} side="left" />
+        <PhraseBubble
+          lang="en"
+          {...flagFor("en", LANGUAGES.en.defaultRegion)}
+          text={phrases.en}
+          side="right"
+        />
+        <PhraseBubble
+          lang="fr"
+          {...flagFor("fr", LANGUAGES.fr.defaultRegion)}
+          text={phrases.fr}
+          side="left"
+        />
       </Stack>
     </UnstyledButton>
   );
