@@ -30,6 +30,13 @@ describe("PHRASE_SETS", () => {
     }
   });
 
+  it("has eight sets, a mix of Canadian and general ones", () => {
+    expect(PHRASE_SETS).toHaveLength(8);
+    const canadian = PHRASE_SETS.filter((set) => set.canadian).length;
+    expect(canadian).toBeGreaterThanOrEqual(3);
+    expect(PHRASE_SETS.length - canadian).toBeGreaterThanOrEqual(3);
+  });
+
   it("has unique ids", () => {
     const ids = PHRASE_SETS.map((set) => set.id);
     expect(new Set(ids).size).toBe(ids.length);
