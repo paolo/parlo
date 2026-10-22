@@ -105,6 +105,11 @@ describe("theme", () => {
       expect(result.border).toContain("#8E918F");
     });
 
+    // Mantine uses `border` as the whole `border` shorthand, so a bare color draws nothing.
+    it("draws a solid 1px-style border, not just a color", () => {
+      expect(result.border).toMatch(/^calc\(.*\) solid light-dark\(/);
+    });
+
     it("leaves other variants to Mantine", () => {
       const filled = full.variantColorResolver({
         variant: "filled",

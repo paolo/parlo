@@ -3,6 +3,7 @@ import {
   createTheme,
   defaultVariantColorsResolver,
   Paper,
+  rem,
   Title,
 } from "@mantine/core";
 
@@ -12,7 +13,8 @@ const GOOGLE = {
   background: "light-dark(#FFFFFF, #131314)",
   hover: "light-dark(#F1F3F4, #1F1F20)",
   color: "light-dark(#1F1F1F, #E3E3E3)",
-  border: "light-dark(#747775, #8E918F)",
+  // Mantine uses this as the whole `border` shorthand, so it needs the width and style too.
+  border: `${rem(1)} solid light-dark(#747775, #8E918F)`,
 };
 
 export const theme = createTheme({
