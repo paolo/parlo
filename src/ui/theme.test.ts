@@ -77,6 +77,44 @@ describe("theme", () => {
     });
   });
 
+  // Filled buttons put text on the primary shade. Shade 4 (dark scheme) is too light for white text, and it
+  // cannot be darkened because the same shade is the accent used as text on the dark page. Mantine's
+  // autoContrast only looks at the light shade, so the filled variant picks its text color per scheme.
+  describe("filled primary buttons", () => {
+    const parlo = full.colors.parlo;
+
+    it("shows why: white is fine on shade 6 but fails on shade 4, where black passes", () => {
+      expect(
+        contrastRatio("#ffffff", parlo[6] as string),
+      ).toBeGreaterThanOrEqual(AA);
+      expect(contrastRatio("#ffffff", parlo[4] as string)).toBeLessThan(AA);
+      expect(
+        contrastRatio("#000000", parlo[4] as string),
+      ).toBeGreaterThanOrEqual(AA);
+    });
+
+    it.each([
+      ["the primary color", full.primaryColor],
+      ["parlo", "parlo"],
+    ])("uses white text in light and black in dark for %s", (_name, color) => {
+      const result = full.variantColorResolver({
+        variant: "filled",
+        theme: full,
+        color,
+      });
+      expect(result.color).toMatch(/^light-dark\(.*white.*,.*black.*\)$/);
+    });
+
+    it("leaves other colors alone", () => {
+      const result = full.variantColorResolver({
+        variant: "filled",
+        theme: full,
+        color: "red",
+      });
+      expect(result.color).not.toContain("light-dark");
+    });
+  });
+
   describe("surfaces", () => {
     it("gives Paper a white light surface and a dark[6] dark surface", () => {
       const paper = theme.components?.Paper;

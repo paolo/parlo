@@ -15,6 +15,9 @@ const GOOGLE = {
   border: `${rem(1)} solid light-dark(#747775, #8E918F)`,
 };
 
+const FILLED_PRIMARY_TEXT =
+  "light-dark(var(--mantine-color-white), var(--mantine-color-black))";
+
 export const theme = createTheme({
   primaryColor: "parlo",
   primaryShade: { light: 6, dark: 4 },
@@ -53,10 +56,21 @@ export const theme = createTheme({
     fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
     fontWeight: "800",
   },
-  variantColorResolver: (input) =>
-    input.variant === "google"
-      ? { ...GOOGLE, hoverColor: GOOGLE.color }
-      : defaultVariantColorsResolver(input),
+  variantColorResolver: (input) => {
+    if (input.variant === "google") {
+      return { ...GOOGLE, hoverColor: GOOGLE.color };
+    }
+    const result = defaultVariantColorsResolver(input);
+    if (input.variant === "filled" && input.color === "parlo") {
+      // Shade 4 (the dark scheme's primary) is too light for white text; see theme.test.ts.
+      return {
+        ...result,
+        color: FILLED_PRIMARY_TEXT,
+        hoverColor: FILLED_PRIMARY_TEXT,
+      };
+    }
+    return result;
+  },
   // 16px inputs: iOS Safari zooms into anything smaller when it gets focus.
   components: {
     Textarea: { defaultProps: { size: "md" } },
