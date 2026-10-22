@@ -27,11 +27,16 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects the landing route itself to /sign-in when signed out", () => {
+  it("redirects /welcome to / when signed out, so the rewrite target is not a page of its own", () => {
     const response = proxy(request("/welcome"));
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/sign-in",
-    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/");
+  });
+
+  it("redirects /welcome to / when signed in too", () => {
+    const response = proxy(request("/welcome", SESSION_COOKIE));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/");
   });
 
   it("lets a signed-in visitor through to the app at /", () => {
@@ -58,7 +63,12 @@ describe("proxy", () => {
       expect(matcher.test(path)).toBe(false);
     });
 
-    it.each(["/", "/phrasebook", "/history"])("guards %s", (path) => {
+    it.each([
+      "/",
+      "/welcome",
+      "/phrasebook",
+      "/history",
+    ])("guards %s", (path) => {
       expect(matcher.test(path)).toBe(true);
     });
   });

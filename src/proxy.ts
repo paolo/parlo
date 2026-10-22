@@ -5,6 +5,10 @@ import { type NextRequest, NextResponse } from "next/server";
 // Real authorization happens in every route handler via withSession.
 // The one exception is the root: signed-out visitors get the landing page, rewritten so the URL stays "/".
 export function proxy(request: NextRequest) {
+  // /welcome only exists as the rewrite target below; visiting it directly goes to the real address.
+  if (request.nextUrl.pathname === "/welcome") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
   if (!getSessionCookie(request)) {
     if (request.nextUrl.pathname === "/") {
       return NextResponse.rewrite(new URL("/welcome", request.url));
