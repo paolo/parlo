@@ -20,7 +20,7 @@ export function PhraseBubble({ lang, label, text, side }: PhraseBubbleProps) {
     <Group justify={side === "left" ? "flex-start" : "flex-end"} wrap="nowrap">
       {/* Two lines of phrase plus the label: enough that rotating phrases never change the height. */}
       <Paper shadow="sm" px="md" py="sm" maw="80%" bdrs={TAIL_RADIUS[side]}>
-        <Stack gap={0} mih={60} justify="center">
+        <Stack gap={0} mih={74} justify="center">
           <Text size="xs" fw={700} c="parlo">
             {label}
           </Text>
