@@ -66,7 +66,7 @@ Content, top to bottom, centered column:
 
    Each bubble has a flag emoji above the phrase, using the app's own flags (`languageFlag` /
    `regionFlag` in `src/shared/languages.ts`): English 🇬🇧, French 🇫🇷, Ukrainian 🇺🇦, Mandarin 🇨🇳, Hindi and
-   Punjabi 🇮🇳, **Portuguese shown with Brazil's 🇧🇷**, and **Spanish shown with Spain's 🇪🇸 or Bolivia's 🇧🇴**,
+   Punjabi 🇮🇳, **Portuguese shown with Brazil's 🇧🇷**, and **Spanish shown with Mexico's 🇲🇽 or Bolivia's 🇧🇴**,
    whichever country the phrase is at home in (each phrase set records it as `esRegion`). Each flag has an
    accessible name such as "Spanish (Bolivia)". Flag emoji do not render on Windows, where they appear as two
    letters; that is accepted, and the app already relies on them. The three bubbles are the same meaning in
@@ -169,7 +169,8 @@ languages, uses only codes from `src/shared/languages.ts`, and has no empty stri
 ## 7. Calls made without the author
 
 - The Spanish flag follows the phrase (`esRegion`) instead of alternating blindly, so a Bolivian flag is never
-  shown on wording that only Spain uses. Which phrases are Bolivian is the author's to confirm.
+  shown on wording only Mexico uses. Mexico is the largest Spanish-speaking community in Canada; Bolivia is the
+  author's own touch. Which phrases are Bolivian is the author's to confirm.
 - The link-preview image has no flags or labels: generating emoji at build needs a network fetch.
 
 - Rotation interval of about 5 seconds and the crossfade style.
