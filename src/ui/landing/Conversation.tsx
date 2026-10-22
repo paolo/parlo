@@ -9,11 +9,9 @@ import {
   regionFlag,
   regionName,
 } from "@/shared/languages";
-import { PhraseBubble } from "./PhraseBubble";
+import { PhraseBubble, SLIDE_MS } from "./PhraseBubble";
 import { conversationAt } from "./phrases";
 import { useRotation } from "./useRotation";
-
-const FADE_MS = 200;
 
 /** Mandarin is Simplified; everything else is already a valid language tag. */
 function htmlLang(code: string) {
@@ -45,7 +43,7 @@ export function Conversation() {
     const id = setTimeout(() => {
       setShown(step);
       setVisible(true);
-    }, FADE_MS);
+    }, SLIDE_MS);
     return () => clearTimeout(id);
   }, [step, shown, reducedMotion]);
 
@@ -72,32 +70,31 @@ export function Conversation() {
       maw={460}
       w="100%"
       mx="auto"
+      // Bubbles slide past the column's edge; clipping keeps that from widening the page.
+      style={{ overflowX: "clip" }}
       {...pauseProps}
     >
-      <Stack
-        gap="sm"
-        style={{
-          opacity: visible ? 1 : 0,
-          transition: reducedMotion ? undefined : `opacity ${FADE_MS}ms ease`,
-        }}
-      >
+      <Stack gap="sm">
         <PhraseBubble
           lang={htmlLang(native)}
           {...flagFor(native, region)}
           text={phrases[native]}
           side="left"
+          exited={!visible}
         />
         <PhraseBubble
           lang="en"
           {...flagFor("en", LANGUAGES.en.defaultRegion)}
           text={phrases.en}
           side="right"
+          exited={!visible}
         />
         <PhraseBubble
           lang="fr"
           {...flagFor("fr", LANGUAGES.fr.defaultRegion)}
           text={phrases.fr}
           side="left"
+          exited={!visible}
         />
       </Stack>
     </UnstyledButton>

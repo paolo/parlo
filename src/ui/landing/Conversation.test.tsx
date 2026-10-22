@@ -59,6 +59,73 @@ describe("Conversation", () => {
     }
   });
 
+  it("aligns the right-hand bubble's flag and text to the right, the others to the left", () => {
+    renderWithProviders(<Conversation />);
+    const first = phrases(0);
+    expect(screen.getByText(first.en)).toHaveStyle({ textAlign: "right" });
+    expect(
+      screen.getByText(first.en).closest(".mantine-Stack-root"),
+    ).toHaveStyle("--stack-align: flex-end");
+    for (const text of [first.native, first.fr]) {
+      expect(screen.getByText(text)).toHaveStyle({ textAlign: "left" });
+      expect(screen.getByText(text).closest(".mantine-Stack-root")).toHaveStyle(
+        "--stack-align: flex-start",
+      );
+    }
+  });
+
+  it("slides the left bubbles out to the left and the right bubble out to the right, then back in", async () => {
+    renderWithProviders(<Conversation />);
+    const first = phrases(0);
+    const row = (text: string) =>
+      screen.getByText(text).closest("[data-side]") as HTMLElement;
+    expect(row(first.native)).toHaveStyle({ opacity: "1" });
+
+    await userEvent.click(screen.getByRole("button"));
+    expect(row(first.native)).toHaveStyle({
+      transform: "translateX(-48px)",
+      opacity: "0",
+    });
+    expect(row(first.en)).toHaveStyle({
+      transform: "translateX(48px)",
+      opacity: "0",
+    });
+    expect(row(first.fr)).toHaveStyle({ transform: "translateX(-48px)" });
+
+    const next = phrases(1);
+    await screen.findByText(next.native);
+    expect(row(next.native)).toHaveStyle({
+      transform: "translateX(0)",
+      opacity: "1",
+    });
+    expect(row(next.en)).toHaveStyle({ transform: "translateX(0)" });
+  });
+
+  it("does not slide with reduced motion", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    try {
+      renderWithProviders(<Conversation />);
+      await userEvent.click(screen.getByRole("button"));
+      const next = phrases(1);
+      const bubble = (await screen.findByText(next.native)).closest(
+        "[data-side]",
+      );
+      expect(bubble).toHaveStyle({ transform: "translateX(0)", opacity: "1" });
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   it("tags every phrase with its language", () => {
     renderWithProviders(<Conversation />);
     const first = phrases(0);
