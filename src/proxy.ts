@@ -15,6 +15,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except API routes, the sign-in page, Next internals and files with an extension.
-  matcher: ["/((?!api|sign-in|_next/static|_next/image|.*\\..*).*)"],
+  // Everything except API routes, the sign-in page, link preview images (crawlers are signed out),
+  // Next internals and files with an extension.
+  matcher: [
+    "/((?!api|sign-in|.*opengraph-image|_next/static|_next/image|.*\\..*).*)",
+  ],
 };

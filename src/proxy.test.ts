@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { proxy } from "./proxy";
+import { config, proxy } from "./proxy";
 
 const SESSION_COOKIE = "better-auth.session_token=abc";
 
@@ -43,5 +43,23 @@ describe("proxy", () => {
   it("lets a signed-in visitor through on other paths", () => {
     const response = proxy(request("/phrasebook", SESSION_COOKIE));
     expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  // Link crawlers are signed out; if the proxy caught the preview image they would get a redirect, not a picture.
+  describe("matcher", () => {
+    const matcher = new RegExp(`^${config.matcher[0]}$`);
+
+    it.each([
+      "/welcome/opengraph-image",
+      "/opengraph-image",
+      "/sign-in",
+      "/api/phrases",
+    ])("leaves %s alone", (path) => {
+      expect(matcher.test(path)).toBe(false);
+    });
+
+    it.each(["/", "/phrasebook", "/history"])("guards %s", (path) => {
+      expect(matcher.test(path)).toBe(true);
+    });
   });
 });
