@@ -73,7 +73,8 @@ Content, top to bottom, centered column:
    three wordings, and each has a minimum width of 60% of the column (over half of a 320 px phone screen) so a
    short phrase does not make a small bubble. They sit in a column of limited width (about 460 px) that is centered on the
    page, so on desktop the bubbles keep their left/right alternation but never travel to the screen edges.
-   Bubbles are at most about 80% of the column.
+   Bubbles are at most about 80% of the column. In the right-hand bubble the flag and the text are aligned to the
+   right; in the left-hand ones, to the left.
 5. **Google sign-in button:** Google's official light button (white, grey border, full-color "G"), and Google's
    official dark variant in the dark scheme. Label "Continue with Google". It does what the button in
    `SignInForm` does today (`authClient.signIn.social({ provider: "google", callbackURL: "/" })`).
@@ -84,8 +85,10 @@ Content, top to bottom, centered column:
   language moves to the next one in the cycle (es, pt, uk, zh, hi, pa, then around). English and French do not
   rotate. The phrase set advances one extra place each full round of languages, so over 48 steps every set
   appears with every native language (a plain `step % 8` would only ever pair Spanish with half the sets).
-- Transition is a soft crossfade of the three bubbles, not a slide, and the container keeps a fixed height so
-  nothing below it moves.
+- Each bubble slides out to its own side while fading (the first and third to the left, the second to the
+  right, about 48 px over 0.2 s), the phrases swap, and the bubbles slide back in from the same side. The
+  container keeps a fixed height so nothing below it moves, and clips the sideways movement so the page never
+  scrolls horizontally.
 - Rotation pauses while the pointer is over the conversation or focus is inside it, and while the tab is hidden.
 - Tapping or clicking the conversation advances to the next set.
 - With `prefers-reduced-motion`, there is no automatic rotation and no animation; tapping still advances.
