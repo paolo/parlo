@@ -1,7 +1,7 @@
 # Landing Page Implementation Plan
 
 > **For agentic workers:** Execute with superpowers:executing-plans (native, inline; the user chose this mode for
-> Parlo). Steps use checkbox (`- [ ]`) syntax. Tick them as you go.
+> Parlo). Steps use checkbox (`- [x]`) syntax. Tick them as you go.
 
 **Goal:** Show signed-out visitors at `parlo.fun/` a landing page with a rotating three-language phrase and the
 Google sign-in button, with every color and general style decision living in the Mantine theme.
@@ -76,21 +76,21 @@ content must be reviewed first (Task 7 is a gate).
     `src/ui/contrast.ts` (WCAG relative-luminance ratio), used by the theme tests.
 - Consumes: nothing.
 
-- [ ] **Step 1: Write failing tests.** `contrast.test.ts`: black on white is 21; `#777` on white is about 4.48.
+- [x] **Step 1: Write failing tests.** `contrast.test.ts`: black on white is 21; `#777` on white is about 4.48.
   `theme.test.ts` (keep the existing 16px test): `theme.primaryColor` is `"parlo"`; `theme.colors.parlo` has 10
   entries with `[6] === "#4c5fd5"` and `[4] === "#8f9cf5"`; calling `theme.cssVariablesResolver(theme)` gives the
   light body/text/dimmed values above; `contrastRatio` of text on body and of dimmed on body is at least 4.5 in
   both schemes, and of the accent on body at least 4.5 (shade 6 on light body, shade 4 on dark body);
   `theme.variantColorResolver({ variant: "google", theme, color: "gray" })` returns a `background` containing
   `#FFFFFF` and `#131314` and a `color` containing `#1F1F1F` and `#E3E3E3`.
-- [ ] **Step 2:** `npx vitest run --project unit --project ui src/ui/theme src/ui/contrast` — expect FAIL.
-- [ ] **Step 3:** Implement `contrastRatio` and the theme additions. Generate the intermediate `parlo` shades
+- [x] **Step 2:** `npx vitest run --project unit --project ui src/ui/theme src/ui/contrast` — expect FAIL.
+- [x] **Step 3:** Implement `contrastRatio` and the theme additions. Generate the intermediate `parlo` shades
   around the two anchors and fix any shade the contrast tests reject.
-- [ ] **Step 4:** Run the same command — expect PASS; then `npm test` to confirm the existing UI tests still pass.
-- [ ] **Step 5:** Run `npm run dev`, sign in with the development password form, and look at Translate, History,
+- [x] **Step 4:** Run the same command — expect PASS; then `npm test` to confirm the existing UI tests still pass.
+- [x] **Step 5:** Run `npm run dev`, sign in with the development password form, and look at Translate, History,
   Phrasebook, Review and Profile in light and dark. Fix anything the theme change visibly breaks inside the theme
   (not per screen). Note any exception in the plan.
-- [ ] **Step 6:** Commit "Add the Parlo palette to the Mantine theme".
+- [x] **Step 6:** Commit "Add the Parlo palette to the Mantine theme".
 
 ### Task 2: Landing content
 
@@ -107,15 +107,15 @@ content must be reviewed first (Task 7 is a gate).
   - `function conversationAt(step: number): { set: PhraseSet; native: NativeLang }` (wraps both cycles
     independently using the step number)
 
-- [ ] **Step 1: Write failing tests.** Every set has non-empty trimmed strings for all eight languages; every
+- [x] **Step 1: Write failing tests.** Every set has non-empty trimmed strings for all eight languages; every
   language code is a key of `LANGUAGES` in `src/shared/languages.ts`; every phrase is at most 40 characters; ids
   are unique; `conversationAt(0)` is the first set with `es`; `conversationAt(6).native` is `"es"` again;
   `conversationAt(PHRASE_SETS.length).set` is the first set.
-- [ ] **Step 2:** `npx vitest run --project unit src/ui/landing/phrases` — expect FAIL.
-- [ ] **Step 3:** Implement the module with the first set only: fr "Il fait frette", en "It's freezing out", es
+- [x] **Step 2:** `npx vitest run --project unit src/ui/landing/phrases` — expect FAIL.
+- [x] **Step 3:** Implement the module with the first set only: fr "Il fait frette", en "It's freezing out", es
   "Hace un frío que pela", uk "Дубак надворі"; draft pt, zh (Simplified), hi and pa as idioms of the same meaning.
-- [ ] **Step 4:** Run the same command — expect PASS.
-- [ ] **Step 5:** Commit "Add the landing page phrase content".
+- [x] **Step 4:** Run the same command — expect PASS.
+- [x] **Step 5:** Commit "Add the landing page phrase content".
 
 ### Task 3: Rotation hook
 
@@ -127,14 +127,14 @@ content must be reviewed first (Task 7 is a gate).
   with `intervalMs` defaulting to 5000. `step` starts at 0.
 - Consumes: `useReducedMotion`, `useDocumentVisibility` and `useInterval` from `@mantine/hooks`.
 
-- [ ] **Step 1: Write failing tests** with fake timers: advances one step per interval; does not advance while
+- [x] **Step 1: Write failing tests** with fake timers: advances one step per interval; does not advance while
   `pauseProps.onMouseEnter` is active, and resumes after `onMouseLeave`; same for focus and blur; does not advance
   while `document.visibilityState` is `hidden`; does not advance when `prefers-reduced-motion` matches; `advance()`
   moves one step in every case.
-- [ ] **Step 2:** `npx vitest run --project ui src/ui/landing/useRotation` — expect FAIL.
-- [ ] **Step 3:** Implement the hook (stub `matchMedia` and `visibilityState` in the test as needed).
-- [ ] **Step 4:** Run the same command — expect PASS.
-- [ ] **Step 5:** Commit "Add the landing rotation hook".
+- [x] **Step 2:** `npx vitest run --project ui src/ui/landing/useRotation` — expect FAIL.
+- [x] **Step 3:** Implement the hook (stub `matchMedia` and `visibilityState` in the test as needed).
+- [x] **Step 4:** Run the same command — expect PASS.
+- [x] **Step 5:** Commit "Add the landing rotation hook".
 
 ### Task 4: Conversation and bubbles
 
@@ -153,15 +153,15 @@ content must be reviewed first (Task 7 is a gate).
     `advance` on click, Enter and Space; no live region
 - Consumes: `conversationAt`, `useRotation`.
 
-- [ ] **Step 1: Write failing tests** (RTL): initial render shows the first set with labels `ES`, `EN`, `FR` in that
+- [x] **Step 1: Write failing tests** (RTL): initial render shows the first set with labels `ES`, `EN`, `FR` in that
   DOM order; the bubbles carry `lang="es"`, `"en"`, `"fr"` and a Mandarin conversation carries `lang="zh-Hans"`;
   clicking the conversation shows the next conversation (native `pt`); pressing Enter does too; with fake timers
   the conversation changes after 5 s; there is no element with `aria-live`.
-- [ ] **Step 2:** `npx vitest run --project ui src/ui/landing/Conversation` — expect FAIL.
-- [ ] **Step 3:** Implement both components. Server-render step 0 so the first conversation exists without
+- [x] **Step 2:** `npx vitest run --project ui src/ui/landing/Conversation` — expect FAIL.
+- [x] **Step 3:** Implement both components. Server-render step 0 so the first conversation exists without
   JavaScript.
-- [ ] **Step 4:** Run the same command — expect PASS.
-- [ ] **Step 5:** Commit "Add the landing conversation".
+- [x] **Step 4:** Run the same command — expect PASS.
+- [x] **Step 5:** Commit "Add the landing conversation".
 
 ### Task 5: Google button, landing page and routing
 
@@ -183,20 +183,20 @@ content must be reviewed first (Task 7 is a gate).
     no cookie on any other matched path → redirect to `/sign-in` as today; cookie present → `next()`
 - Consumes: `Conversation`, theme variant `google`.
 
-- [ ] **Step 1: Write failing tests.** `GoogleSignInButton.test.tsx`: clicking calls `authClient.signIn.social`
+- [x] **Step 1: Write failing tests.** `GoogleSignInButton.test.tsx`: clicking calls `authClient.signIn.social`
   with `{ provider: "google", callbackURL: "/" }`. `LandingPage.test.tsx`: the headline and subline texts from the
   Global Constraints are present, and there is a "Continue with Google" button. `proxy.test.ts` (build requests
   with `NextRequest`): no cookie at `/` rewrites to `/welcome`; no cookie at `/phrasebook` redirects to
   `/sign-in`; a session cookie at `/` calls through. Keep the existing `SignInForm` tests unchanged (they must
   pass against the new button).
-- [ ] **Step 2:** `npx vitest run --project unit --project ui src/ui/auth src/ui/landing src/proxy` — expect FAIL.
-- [ ] **Step 3:** Implement. Replace the button in `SignInForm.tsx` with `GoogleSignInButton`. Read the Next.js
+- [x] **Step 2:** `npx vitest run --project unit --project ui src/ui/auth src/ui/landing src/proxy` — expect FAIL.
+- [x] **Step 3:** Implement. Replace the button in `SignInForm.tsx` with `GoogleSignInButton`. Read the Next.js
   proxy docs first for the rewrite API and the matcher (the matcher already excludes `sign-in`; do not add
   `welcome` to the exclusions).
-- [ ] **Step 4:** Run the same command, then `npm test` — expect PASS.
-- [ ] **Step 5:** Run `npm run dev`; signed out, `/` shows the landing page at URL `/`; signed in, `/` shows the
+- [x] **Step 4:** Run the same command, then `npm test` — expect PASS.
+- [x] **Step 5:** Run `npm run dev`; signed out, `/` shows the landing page at URL `/`; signed in, `/` shows the
   app; `/phrasebook` signed out redirects to `/sign-in`.
-- [ ] **Step 6:** Commit "Add the landing page" (add the proxy and sign-in changes in their own commits if they
+- [x] **Step 6:** Commit "Add the landing page" (add the proxy and sign-in changes in their own commits if they
   read better).
 
 ### Task 6: Metadata
@@ -210,26 +210,28 @@ content must be reviewed first (Task 7 is a gate).
   phrases across your three languages"), `openGraph` and `twitter` (summary large image) pointing at the image
   from Task 7, and `metadataBase` from the existing `BETTER_AUTH_URL` origin.
 
-- [ ] **Step 1:** Write a test that the exported metadata has the description text and `twitter.card ===
+- [x] **Step 1:** Write a test that the exported metadata has the description text and `twitter.card ===
   "summary_large_image"`.
-- [ ] **Step 2:** Run it — expect FAIL. **Step 3:** Implement. **Step 4:** Run it — expect PASS.
-- [ ] **Step 5:** Commit "Add landing page metadata".
+- [x] **Step 2:** Run it — expect FAIL. **Step 3:** Implement. **Step 4:** Run it — expect PASS.
+- [x] **Step 5:** Commit "Add landing page metadata".
 
 ### Task 7: Remaining content, preview image and release gate
 
 **Files:**
 - Modify: `src/ui/landing/phrases.ts`
-- Create: `src/app/welcome/opengraph-image.png`
+- Create: `src/app/welcome/opengraph-image.tsx` (was a PNG; see Step 3)
 
-- [ ] **Step 1:** Add seven more phrase sets (about half Canadian, e.g. "Give'r", "Ça marche", "Take a rain check"),
+- [x] **Step 1:** Add seven more phrase sets (about half Canadian, e.g. "Give'r", "Ça marche", "Take a rain check"),
   each idiomatic in all eight languages and at most 40 characters. The Task 2 tests must pass.
-- [ ] **Step 2:** Run the app and check the conversation does not change height across all 8×6 combinations at a
+- [x] **Step 2:** Run the app and check the conversation does not change height across all 8×6 combinations at a
   320 px viewport (browser, light and dark), with JavaScript disabled once (first conversation visible), and with
   reduced motion on.
-- [ ] **Step 3:** Produce the 1200×630 `opengraph-image.png` (headline plus the first conversation, light scheme)
-  and confirm the page's `og:image` URL resolves.
+- [x] **Step 3:** Produce the 1200×630 preview image (headline plus the first conversation, light scheme) and
+  confirm the page's `og:image` URL resolves for a signed-out crawler. *Done as `src/app/welcome/opengraph-image.tsx`
+  (generated statically at build from the phrase data and theme colors) instead of a committed PNG, so it cannot go
+  stale; the proxy matcher now excludes it.*
 - [ ] **Step 4: Gate.** Stop and ask the user to review all phrases (or have fluent speakers review) and the
   preview image. Apply their corrections, re-run `npm run lint && npm run typecheck && npm test`, and run
   `npm run build`.
-- [ ] **Step 5:** Commit "Add the remaining landing phrases" and "Add the landing preview image".
+- [ ] **Step 5:** Commit "Add the remaining landing phrases" and "Add the landing preview image" (done).
 - [ ] **Step 6:** After the user approves, `git merge --no-ff landing-page` into `main` with "Merge landing page".
