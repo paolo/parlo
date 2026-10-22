@@ -37,6 +37,14 @@ describe("PHRASE_SETS", () => {
     expect(PHRASE_SETS.length - canadian).toBeGreaterThanOrEqual(3);
   });
 
+  it("tags every set with the Spanish-speaking country its Spanish phrase belongs to", () => {
+    for (const set of PHRASE_SETS) {
+      expect(LANGUAGES.es.regions).toContain(set.esRegion);
+    }
+    const regions = new Set(PHRASE_SETS.map((set) => set.esRegion));
+    expect(regions).toEqual(new Set(["ES", "BO"]));
+  });
+
   it("has unique ids", () => {
     const ids = PHRASE_SETS.map((set) => set.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -59,17 +67,44 @@ describe("NATIVE_CYCLE", () => {
 });
 
 describe("conversationAt", () => {
-  it("starts with the first set in Spanish", () => {
-    const { set, native } = conversationAt(0);
+  it("starts with the first set in Spanish, from Spain", () => {
+    const { set, native, region } = conversationAt(0);
     expect(set).toBe(PHRASE_SETS[0]);
     expect(native).toBe("es");
+    expect(region).toBe("ES");
   });
 
-  it("wraps the native cycle after six steps", () => {
+  it("takes the Spanish flag from the phrase set", () => {
+    const { set, region } = conversationAt(6);
     expect(conversationAt(6).native).toBe("es");
+    expect(region).toBe(set.esRegion);
   });
 
-  it("wraps the phrase sets independently", () => {
-    expect(conversationAt(PHRASE_SETS.length).set).toBe(PHRASE_SETS[0]);
+  it("shows Portuguese with Brazil's flag and other languages with their usual one", () => {
+    expect(conversationAt(1)).toMatchObject({ native: "pt", region: "BR" });
+    expect(conversationAt(2)).toMatchObject({ native: "uk", region: "UA" });
+    expect(conversationAt(3)).toMatchObject({ native: "zh", region: "CN" });
+    expect(conversationAt(4)).toMatchObject({ native: "hi", region: "IN" });
+    expect(conversationAt(5)).toMatchObject({ native: "pa", region: "IN" });
+  });
+
+  it("pairs every phrase set with every native language before repeating", () => {
+    const period = PHRASE_SETS.length * NATIVE_CYCLE.length;
+    const pairs = new Set<string>();
+    for (let step = 0; step < period; step++) {
+      const { set, native } = conversationAt(step);
+      pairs.add(`${set.id}|${native}`);
+    }
+    expect(pairs.size).toBe(period);
+    expect(conversationAt(period).set).toBe(conversationAt(0).set);
+    expect(conversationAt(period).native).toBe(conversationAt(0).native);
+  });
+
+  it("changes the native language on every step", () => {
+    for (let step = 0; step < 100; step++) {
+      expect(conversationAt(step).native).not.toBe(
+        conversationAt(step + 1).native,
+      );
+    }
   });
 });

@@ -1,3 +1,5 @@
+import { LANGUAGES } from "@/shared/languages";
+
 export type NativeLang = "es" | "pt" | "uk" | "zh" | "hi" | "pa";
 
 /** The rotating native language, in the order the landing page cycles through it. */
@@ -13,6 +15,8 @@ export const NATIVE_CYCLE: readonly NativeLang[] = [
 export interface PhraseSet {
   id: string;
   canadian: boolean;
+  /** The Spanish-speaking country the Spanish phrase is at home in; its flag is shown beside the phrase. */
+  esRegion: "ES" | "BO";
   /** Short English gloss of the shared meaning, for assistive technology. */
   meaning: string;
   /** One idiomatic phrase per language: the meaning carried across, never a literal translation. */
@@ -23,6 +27,7 @@ export interface PhraseSet {
 export const PHRASE_SETS: readonly PhraseSet[] = [
   {
     id: "very-cold",
+    esRegion: "ES",
     canadian: true,
     meaning: "It is very cold outside",
     phrases: {
@@ -38,6 +43,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "give-er",
+    esRegion: "BO",
     canadian: true,
     meaning: "Go all out, give it everything",
     phrases: {
@@ -53,6 +59,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "works-for-me",
+    esRegion: "ES",
     canadian: true,
     meaning: "Agreed, that works for me",
     phrases: {
@@ -68,6 +75,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "rain-check",
+    esRegion: "BO",
     canadian: true,
     meaning: "Maybe another time",
     phrases: {
@@ -83,6 +91,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "costs-a-fortune",
+    esRegion: "BO",
     canadian: false,
     meaning: "It is very expensive",
     phrases: {
@@ -98,6 +107,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "keep-a-secret",
+    esRegion: "ES",
     canadian: false,
     meaning: "Do not reveal the secret",
     phrases: {
@@ -113,6 +123,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "wiped-out",
+    esRegion: "BO",
     canadian: false,
     meaning: "I am completely exhausted",
     phrases: {
@@ -128,6 +139,7 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
   {
     id: "easy",
+    esRegion: "ES",
     canadian: false,
     meaning: "It is very easy",
     phrases: {
@@ -143,13 +155,27 @@ export const PHRASE_SETS: readonly PhraseSet[] = [
   },
 ];
 
-/** The conversation shown at a rotation step: both cycles advance together but wrap independently. */
+/** Flags that differ from the language's usual one in the app: Portuguese is shown with Brazil's. */
+const REGION_OVERRIDES: Partial<Record<NativeLang, string>> = { pt: "BR" };
+
+/**
+ * The conversation shown at a rotation step. The native language cycles every step; the phrase set moves one
+ * further each full round of languages, so every set meets every language (this relies on the number of sets
+ * and the number of languages plus one having no common factor, which the tests check).
+ */
 export function conversationAt(step: number): {
   set: PhraseSet;
   native: NativeLang;
+  /** Country whose flag is shown beside the native phrase. */
+  region: string;
 } {
-  const set = PHRASE_SETS[step % PHRASE_SETS.length];
+  const round = Math.floor(step / NATIVE_CYCLE.length);
+  const set = PHRASE_SETS[(step + round) % PHRASE_SETS.length];
   const native = NATIVE_CYCLE[step % NATIVE_CYCLE.length];
   if (!set || !native) throw new Error("No landing phrases configured");
-  return { set, native };
+  const region =
+    native === "es"
+      ? set.esRegion
+      : (REGION_OVERRIDES[native] ?? LANGUAGES[native].defaultRegion);
+  return { set, native, region };
 }
