@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 import { conversationAt } from "@/ui/landing/phrases";
 import { cssVariablesResolver, theme } from "@/ui/theme";
 
-export const alt = "Parlo: three languages, one meaning";
+export const alt = "parlo: three languages, one meaning";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

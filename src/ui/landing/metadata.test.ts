@@ -9,6 +9,7 @@ describe("landingMetadata", () => {
       "Understand and use colloquial phrases across your three languages.",
     );
     expect(String(metadata.title)).toMatch(/three languages/i);
+    expect(String(metadata.title)).toMatch(/^parlo/);
   });
 
   it("gives chat apps a large preview card with the same title and description", () => {

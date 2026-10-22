@@ -26,7 +26,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               size="sm"
               aria-label="Toggle navigation"
             />
-            <Title order={3}>Parlo</Title>
+            <Title order={3}>parlo</Title>
           </Group>
           <Group gap="sm">
             <UsageBadge />

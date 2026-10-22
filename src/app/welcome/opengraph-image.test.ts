@@ -6,6 +6,7 @@ describe("landing preview image", () => {
     expect(size).toEqual({ width: 1200, height: 630 });
     expect(contentType).toBe("image/png");
     expect(alt).toMatch(/three languages/i);
+    expect(alt).toMatch(/^parlo/);
   });
 
   it("renders to PNG bytes", async () => {

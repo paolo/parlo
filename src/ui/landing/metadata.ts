@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const TITLE = "Parlo: say it like a local, in three languages";
+const TITLE = "parlo: say it like a local, in three languages";
 const DESCRIPTION =
   "Understand and use colloquial phrases across your three languages.";
 
