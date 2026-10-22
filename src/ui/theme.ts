@@ -2,9 +2,7 @@ import {
   type CSSVariablesResolver,
   createTheme,
   defaultVariantColorsResolver,
-  Paper,
   rem,
-  Title,
 } from "@mantine/core";
 
 // Light on the left, dark on the right: Google's sign-in button branding.
@@ -65,16 +63,18 @@ export const theme = createTheme({
     TextInput: { defaultProps: { size: "md" } },
     PasswordInput: { defaultProps: { size: "md" } },
     Select: { defaultProps: { size: "md" } },
+    // Plain objects, not Paper.extend(...): this file is also imported by server code (the preview image),
+    // where Mantine components are client references without an `extend`.
     // The page is tinted, so surfaces are white (light) or one step lighter than the page (dark).
-    Paper: Paper.extend({
+    Paper: {
       styles: {
         root: {
           backgroundColor:
             "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
         },
       },
-    }),
-    Title: Title.extend({ styles: { root: { letterSpacing: "-0.02em" } } }),
+    },
+    Title: { styles: { root: { letterSpacing: "-0.02em" } } },
   },
 });
 
