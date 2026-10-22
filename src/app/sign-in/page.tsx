@@ -7,7 +7,7 @@ export default function SignInPage() {
       <Paper withBorder shadow="sm" p="xl" w="100%" maw={420}>
         <Stack>
           <div>
-            <Title order={2}>Parlo</Title>
+            <Title order={2}>parlo</Title>
             <Text c="dimmed">Say it like a local, in your own languages.</Text>
           </div>
           <SignInForm

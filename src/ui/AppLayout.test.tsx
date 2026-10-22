@@ -17,6 +17,14 @@ describe("AppLayout", () => {
     pathname.current = "/";
   });
 
+  it("shows the lowercase wordmark as a heading", () => {
+    renderWithProviders(<AppLayout>content</AppLayout>);
+    expect(
+      screen.getByRole("heading", { level: 3, name: "parlo" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Parlo")).toBeNull();
+  });
+
   it("renders the four main sections as links", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     for (const [name, href] of [

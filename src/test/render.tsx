@@ -2,7 +2,7 @@ import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type RenderOptions, render } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
-import { theme } from "@/ui/theme";
+import { cssVariablesResolver, theme } from "@/ui/theme";
 
 export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   const queryClient = new QueryClient({
@@ -11,7 +11,11 @@ export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MantineProvider theme={theme} env="test">
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          env="test"
+        >
           {children}
         </MantineProvider>
       </QueryClientProvider>
