@@ -1,4 +1,4 @@
-import { Group, Paper, Text } from "@mantine/core";
+import { Group, Paper, Stack, Text } from "@mantine/core";
 
 interface PhraseBubbleProps {
   /** BCP 47 tag of the phrase, so the browser picks the right glyph shapes. */
@@ -19,20 +19,15 @@ export function PhraseBubble({ lang, label, text, side }: PhraseBubbleProps) {
   return (
     <Group justify={side === "left" ? "flex-start" : "flex-end"} wrap="nowrap">
       {/* Two lines of phrase plus the label: enough that rotating phrases never change the height. */}
-      <Paper
-        shadow="sm"
-        px="md"
-        py="sm"
-        maw="80%"
-        mih={84}
-        bdrs={TAIL_RADIUS[side]}
-      >
-        <Text size="xs" fw={700} c="parlo">
-          {label}
-        </Text>
-        <Text fw={700} lang={lang} dir="auto">
-          {text}
-        </Text>
+      <Paper shadow="sm" px="md" py="sm" maw="80%" bdrs={TAIL_RADIUS[side]}>
+        <Stack gap={0} mih={60} justify="center">
+          <Text size="xs" fw={700} c="parlo">
+            {label}
+          </Text>
+          <Text fw={700} lang={lang} dir="auto">
+            {text}
+          </Text>
+        </Stack>
       </Paper>
     </Group>
   );
