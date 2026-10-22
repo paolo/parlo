@@ -25,16 +25,16 @@ describe("AppLayout", () => {
     expect(screen.queryByText("Parlo")).toBeNull();
   });
 
-  it("renders the four main sections as links", () => {
+  it("renders the three main sections as links", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     for (const [name, href] of [
       ["Translate", "/"],
       ["History", "/history"],
       ["Phrasebook", "/phrasebook"],
-      ["Profile", "/profile"],
     ]) {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
+    expect(screen.queryByRole("link", { name: "Profile" })).toBeNull();
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 
