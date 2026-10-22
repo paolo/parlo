@@ -44,6 +44,16 @@ describe("UserMenu", () => {
     expect(await screen.findByText("paolo@test.dev")).toBeInTheDocument();
   });
 
+  it("links to the profile page", async () => {
+    renderWithProviders(<UserMenu />);
+    await userEvent.click(
+      screen.getByRole("button", { name: /account menu/i }),
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: /profile/i }),
+    ).toHaveAttribute("href", "/profile");
+  });
+
   it("signs out and goes to the home page with a full page load", async () => {
     renderWithProviders(<UserMenu />);
     await clickSignOut();

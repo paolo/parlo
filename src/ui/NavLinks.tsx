@@ -1,12 +1,7 @@
 "use client";
 
 import { NavLink } from "@mantine/core";
-import {
-  IconBook,
-  IconHistory,
-  IconLanguage,
-  IconUser,
-} from "@tabler/icons-react";
+import { IconBook, IconHistory, IconLanguage } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,7 +9,6 @@ const links = [
   { href: "/", label: "Translate", icon: IconLanguage },
   { href: "/history", label: "History", icon: IconHistory },
   { href: "/phrasebook", label: "Phrasebook", icon: IconBook },
-  { href: "/profile", label: "Profile", icon: IconUser },
 ] as const;
 
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
