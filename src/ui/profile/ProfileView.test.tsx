@@ -28,13 +28,13 @@ describe("ProfileView", () => {
       await screen.findByLabelText("Native language region", {
         selector: "input",
       }),
-    ).toHaveValue("🇧🇷 Brazil");
+    ).toHaveValue("🇧🇷");
     expect(
       screen.getByLabelText("Second language region", { selector: "input" }),
-    ).toHaveValue("🇬🇧 United Kingdom");
+    ).toHaveValue("🇬🇧");
     expect(
       screen.getByLabelText("Third language region", { selector: "input" }),
-    ).toHaveValue("🇫🇷 France");
+    ).toHaveValue("🇫🇷");
   });
 
   it("saves a changed region", async () => {

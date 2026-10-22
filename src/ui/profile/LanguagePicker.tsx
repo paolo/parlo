@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Select, Stack } from "@mantine/core";
+import { Button, Group, Select, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 import type { ProfileLanguage } from "@/server/profile/types";
@@ -63,15 +63,21 @@ export function LanguagePicker({
   }
 
   return (
-    <Stack maw={420}>
+    <Stack maw={480}>
       {slots.map((slot, index) => {
         const taken = slots.flatMap((s, i) =>
           i !== index && s.lang ? [s.lang] : [],
         );
         const showRegion = slot.lang !== null && (editing || index === 0);
         return (
-          <Stack key={SLOT_NAMES[index]} gap="xs">
+          <Group
+            key={SLOT_NAMES[index]}
+            gap="xs"
+            align="flex-end"
+            wrap="nowrap"
+          >
             <Select
+              flex={1}
               label={SLOT_NAMES[index]}
               placeholder="Choose a language"
               value={slot.lang}
@@ -89,18 +95,26 @@ export function LanguagePicker({
               }
             />
             {showRegion && slot.lang && (
+              // Closed, only the flag shows; the open list names each region.
               <Select
-                label={`${SLOT_NAMES[index]} region`}
+                w={92}
+                aria-label={`${SLOT_NAMES[index]} region`}
                 value={slot.region}
                 allowDeselect={false}
+                comboboxProps={{ width: 240, position: "bottom-end" }}
                 data={LANGUAGES[slot.lang].regions.map((region) => ({
                   value: region,
-                  label: `${regionFlag(region)} ${regionName(region)}`,
+                  label: regionFlag(region),
                 }))}
+                renderOption={({ option }) => (
+                  <span>
+                    {option.label} {regionName(option.value)}
+                  </span>
+                )}
                 onChange={(value) => update(index, { ...slot, region: value })}
               />
             )}
-          </Stack>
+          </Group>
         );
       })}
       <Button
