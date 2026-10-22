@@ -27,7 +27,8 @@ content must be reviewed first (Task 7 is a gate).
 - Conversation order: native (left), English (right), French (left). Column about 460 px, centered; bubbles at most
   about 80% of the column. Rotation about every 5 s; all three bubbles change together; native cycle is
   `es, pt, uk, zh, hi, pa`; English and French never rotate.
-- No flags, maple leaves, emoji, mascot or confetti anywhere.
+- No maple leaves, mascot or confetti. The only flags are the language flags in the bubbles (English 🇬🇧, French 🇫🇷,
+  Portuguese 🇧🇷, Spanish 🇪🇸 or 🇧🇴 per phrase set, others as in `src/shared/languages.ts`).
 - All colors and general styling in `src/ui/theme.ts`. Components use theme tokens and Mantine style props; no
   hard-coded hex values and no new CSS files in components.
 - Palette starting values. Light: body `#f4f5fb`, text `#1d2033`, dimmed `#6b7090`, accent shade 6 `#4c5fd5`,

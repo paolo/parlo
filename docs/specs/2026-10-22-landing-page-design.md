@@ -45,11 +45,12 @@ taught by apps), never through flags, maple leaves or politics.
 ### Anti-goals (a failure even if it technically works)
 
 - Looks like a generic SaaS template.
-- Any political, flag or national-symbol imagery. "Canadian" must come from the phrases only.
+- Any political or national-symbol imagery beyond the language flags in the bubbles (§2). "Canadian" must come
+  from the phrases only.
 - Literal translations in the phrase sets. Every set must be idiomatic in every language, otherwise the page
   contradicts its own pitch.
 - Layout jumping when the phrases rotate (bubbles have different lengths per language).
-- Colorful decoration for its own sake: no confetti, mascot, emoji or flags.
+- Colorful decoration for its own sake: no confetti or mascot; the only flags are the language flags in the bubbles.
 
 ## 2. The page
 
@@ -63,8 +64,14 @@ Content, top to bottom, centered column:
    2. English, on the right;
    3. French, on the left.
 
-   Each bubble has a small language label (the code, e.g. "UK") above the phrase. The three bubbles are the same
-   meaning in three wordings. They sit in a column of limited width (about 460 px) that is centered on the
+   Each bubble has a flag emoji above the phrase, using the app's own flags (`languageFlag` /
+   `regionFlag` in `src/shared/languages.ts`): English 🇬🇧, French 🇫🇷, Ukrainian 🇺🇦, Mandarin 🇨🇳, Hindi and
+   Punjabi 🇮🇳, **Portuguese shown with Brazil's 🇧🇷**, and **Spanish shown with Spain's 🇪🇸 or Bolivia's 🇧🇴**,
+   whichever country the phrase is at home in (each phrase set records it as `esRegion`). Each flag has an
+   accessible name such as "Spanish (Bolivia)". Flag emoji do not render on Windows, where they appear as two
+   letters; that is accepted, and the app already relies on them. The three bubbles are the same meaning in
+   three wordings, and each has a minimum width of 60% of the column (over half of a 320 px phone screen) so a
+   short phrase does not make a small bubble. They sit in a column of limited width (about 460 px) that is centered on the
    page, so on desktop the bubbles keep their left/right alternation but never travel to the screen edges.
    Bubbles are at most about 80% of the column.
 5. **Google sign-in button:** Google's official light button (white, grey border, full-color "G"), and Google's
@@ -75,7 +82,8 @@ Content, top to bottom, centered column:
 
 - Every few seconds (about 5) the *whole conversation* changes together: a new phrase set, and the native
   language moves to the next one in the cycle (es, pt, uk, zh, hi, pa, then around). English and French do not
-  rotate.
+  rotate. The phrase set advances one extra place each full round of languages, so over 48 steps every set
+  appears with every native language (a plain `step % 8` would only ever pair Spanish with half the sets).
 - Transition is a soft crossfade of the three bubbles, not a slide, and the container keeps a fixed height so
   nothing below it moves.
 - Rotation pauses while the pointer is over the conversation or focus is inside it, and while the tab is hidden.
@@ -159,6 +167,10 @@ languages, uses only codes from `src/shared/languages.ts`, and has no empty stri
   and the signed-out/signed-in routing; and a manual pass in a browser for light/dark and a narrow phone width.
 
 ## 7. Calls made without the author
+
+- The Spanish flag follows the phrase (`esRegion`) instead of alternating blindly, so a Bolivian flag is never
+  shown on wording that only Spain uses. Which phrases are Bolivian is the author's to confirm.
+- The link-preview image has no flags or labels: generating emoji at build needs a network fetch.
 
 - Rotation interval of about 5 seconds and the crossfade style.
 - Pause on hover/focus/hidden tab, and tap-to-advance.
