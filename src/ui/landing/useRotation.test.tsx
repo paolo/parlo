@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import type { FocusEvent, PointerEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useRotation } from "./useRotation";
 
@@ -25,6 +26,19 @@ function setVisibility(state: "visible" | "hidden") {
   });
   document.dispatchEvent(new Event("visibilitychange"));
 }
+
+// Just the parts of the events the hook reads.
+const mouse = { pointerType: "mouse" } as PointerEvent<HTMLElement>;
+const touch = { pointerType: "touch" } as PointerEvent<HTMLElement>;
+const focusEvent = (focusVisible: boolean) =>
+  ({
+    currentTarget: {
+      matches: (selector: string) =>
+        focusVisible && selector === ":focus-visible",
+    },
+  }) as unknown as FocusEvent<HTMLElement>;
+const keyboardFocus = focusEvent(true);
+const clickFocus = focusEvent(false);
 
 function tick(ms: number) {
   act(() => {
@@ -59,19 +73,27 @@ describe("useRotation", () => {
     expect(result.current.step).toBe(1);
   });
 
-  it("pauses while the pointer is over it and resumes after", () => {
+  it("pauses while a mouse is over it and resumes after", () => {
     const { result } = renderHook(() => useRotation());
-    act(() => result.current.pauseProps.onMouseEnter());
+    act(() => result.current.pauseProps.onPointerEnter(mouse));
     tick(INTERVAL * 3);
     expect(result.current.step).toBe(0);
-    act(() => result.current.pauseProps.onMouseLeave());
+    act(() => result.current.pauseProps.onPointerLeave());
     tick(INTERVAL);
     expect(result.current.step).toBe(1);
   });
 
-  it("pauses while focus is inside it and resumes after", () => {
+  // Phones emulate hover on tap and send no leave until something else is tapped, which would stop it for good.
+  it("does not pause for a touch", () => {
     const { result } = renderHook(() => useRotation());
-    act(() => result.current.pauseProps.onFocus());
+    act(() => result.current.pauseProps.onPointerEnter(touch));
+    tick(INTERVAL);
+    expect(result.current.step).toBe(1);
+  });
+
+  it("pauses while keyboard focus is inside it and resumes after", () => {
+    const { result } = renderHook(() => useRotation());
+    act(() => result.current.pauseProps.onFocus(keyboardFocus));
     tick(INTERVAL * 3);
     expect(result.current.step).toBe(0);
     act(() => result.current.pauseProps.onBlur());
@@ -79,13 +101,21 @@ describe("useRotation", () => {
     expect(result.current.step).toBe(1);
   });
 
-  it("stays paused until both hover and focus are gone", () => {
+  // A click focuses the element too; pausing on that would leave it stuck after the pointer moves away.
+  it("does not pause for the focus a click leaves behind", () => {
+    const { result } = renderHook(() => useRotation());
+    act(() => result.current.pauseProps.onFocus(clickFocus));
+    tick(INTERVAL);
+    expect(result.current.step).toBe(1);
+  });
+
+  it("stays paused until both the mouse and keyboard focus are gone", () => {
     const { result } = renderHook(() => useRotation());
     act(() => {
-      result.current.pauseProps.onMouseEnter();
-      result.current.pauseProps.onFocus();
+      result.current.pauseProps.onPointerEnter(mouse);
+      result.current.pauseProps.onFocus(keyboardFocus);
     });
-    act(() => result.current.pauseProps.onMouseLeave());
+    act(() => result.current.pauseProps.onPointerLeave());
     tick(INTERVAL * 2);
     expect(result.current.step).toBe(0);
   });
