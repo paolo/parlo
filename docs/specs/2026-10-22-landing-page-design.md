@@ -36,15 +36,16 @@ taught by apps), never through flags, maple leaves or politics.
 - Translating the page itself. Headline, buttons and all app UI stay in English; only the phrases are in other
   languages.
 - Extra sections (pricing, feature lists, testimonials, FAQ). The page is one screen plus a footer line.
-- Restyling the signed-in app. The visual language introduced here is scoped to the landing page; the app keeps
-  its current look and may adopt pieces later as its own feature.
+- Per-screen restyling of the signed-in app. The look is defined once in the Mantine theme (§3), so the app
+  inherits the new palette and surfaces, but no app screen gets bespoke styling in this work beyond fixing
+  anything the theme change visibly breaks.
 - Analytics, cookie banners and a waitlist or email capture. Visitors sign in or leave.
 - A live translation demo on the page. The phrases are fixed content, not model calls.
 
 ### Anti-goals (a failure even if it technically works)
 
 - Looks like a generic SaaS template.
-- Any political, flag or national-symbol imagery. "Canadian" must come from the phrases and one footer line only.
+- Any political, flag or national-symbol imagery. "Canadian" must come from the phrases only.
 - Literal translations in the phrase sets. Every set must be idiomatic in every language, otherwise the page
   contradicts its own pitch.
 - Layout jumping when the phrases rotate (bubbles have different lengths per language).
@@ -69,7 +70,6 @@ Content, top to bottom, centered column:
 5. **Google sign-in button:** Google's official light button (white, grey border, full-color "G"), and Google's
    official dark variant in the dark scheme. Label "Continue with Google". It does what the button in
    `SignInForm` does today (`authClient.signIn.social({ provider: "google", callbackURL: "/" })`).
-6. **Footer line:** "Made in Canada".
 
 ### Rotation
 
@@ -103,11 +103,17 @@ languages, uses only codes from `src/shared/languages.ts`, and has no empty stri
 
 ## 3. Look and feel
 
+- **One theme, whole app.** All color and general styling decisions live in the Mantine theme
+  (`src/ui/theme.ts`): the palette, primary color and shades, the body/text/dimmed colors per scheme, surface
+  colors, heading weight, component defaults and the Google button variant. Components use theme tokens
+  (`c="dimmed"`, `bg="body"`, `color="parlo"`...) and Mantine style props, with as little per-component
+  styling as possible. Changing the theme restyles the landing page and the app together.
 - **Palette (light):** page `#f4f5fb`, text `#1d2033`, secondary text `#6b7090`, bubbles white with a soft
   shadow, accent (language labels, links) `#4c5fd5`.
 - **Palette (dark):** page `#14162a`, text `#eceefb`, secondary `#8d93b8`, bubbles `#21244a` with no shadow,
   accent `#8f9cf5`.
-- These are starting values taken from the approved mockup; contrast must be checked (WCAG AA for text) and the
+- Starting values from the approved mockup, to be expressed as theme colors (the accent scale, a tinted `dark`
+  scale, and the body/text/dimmed variables per scheme); contrast must be checked (WCAG AA for text) and the
   dark scheme follows Mantine's color scheme (`auto`, as the root layout already sets).
 - Typography: Geist (already in the app), heavy weight and tight tracking for the headline. No new font, which
   also avoids a font that lacks Cyrillic, Devanagari, Gurmukhi or Chinese glyphs.
@@ -156,15 +162,14 @@ languages, uses only codes from `src/shared/languages.ts`, and has no empty stri
 
 - Rotation interval of about 5 seconds and the crossfade style.
 - Pause on hover/focus/hidden tab, and tap-to-advance.
-- The footer wording "Made in Canada".
 - Rewrite at `/` instead of a separate public URL for the landing page.
 - Open Graph image and metadata (the author said the page will be shared, but did not ask for this).
 - Keeping Geist rather than adding a display font.
+- Because the palette lives in the app-wide theme, the signed-in app picks up the new colors too. This follows
+  the author's request that the theme, not individual components, carry the look.
 - Content release: the builder drafts all 8 sets in all 8 languages, the content test requires every language
   in every set, and the author gets the draft to review (or have reviewed by fluent speakers) before the page
   goes live. Nothing is published with unreviewed text.
 - The Open Graph image is a committed static PNG, made last, after the content and headline are final. The
   placeholder headline is acceptable until then.
-- "Made in Canada" was in an earlier mockup but not in the last one, so it is a guess. It is one line of text
-  and trivial to remove.
 - Stale-cookie handling and the Google button artwork are settled in §4.
