@@ -16,7 +16,11 @@ export function UsageBadge() {
       label={`Translations used today. Resets at ${resetTime}.`}
       withArrow
     >
-      <Badge variant="light" color={exhausted ? "red" : "gray"} size="lg">
+      <Badge
+        variant={exhausted ? "light" : "default"}
+        color={exhausted ? "red" : undefined}
+        size="lg"
+      >
         {data.usedToday}/{data.dailyLimit}
       </Badge>
     </Tooltip>
