@@ -1,0 +1,13 @@
+/* Show the icon of the theme the button switches to: a sun in dark mode, a moon in light mode. */
+.sun {
+  display: none;
+}
+.moon {
+  display: block;
+}
+:global([data-mantine-color-scheme="dark"]) .sun {
+  display: block;
+}
+:global([data-mantine-color-scheme="dark"]) .moon {
+  display: none;
+}

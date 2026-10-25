@@ -42,6 +42,12 @@ describe("theme", () => {
       expect(theme.headings?.fontFamily).toBe("var(--parlo-font-display)");
     });
 
+    it("makes icon buttons 44px round targets", () => {
+      const props = theme.components?.ActionIcon?.defaultProps;
+      expect(props?.size).toBe(44);
+      expect(props?.radius).toBe("xl");
+    });
+
     it("makes buttons pills with the primary color set, so the resolver decides the fill", () => {
       const props = theme.components?.Button?.defaultProps;
       expect(props?.radius).toBe("xl");
