@@ -29,16 +29,17 @@
   color: var(--parlo-text-placeholder);
 }
 
-/* The clear button sits at the top right of the text area. */
-.section {
-  align-items: flex-start;
-}
-
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--parlo-space-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
 }
 
 .hints {
