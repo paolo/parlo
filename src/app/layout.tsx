@@ -23,13 +23,21 @@ const cyrillic = Onest({
   preload: false,
 });
 
-// Matches --parlo-ground; a viewport entry cannot read CSS variables.
-export const viewport: Viewport = { themeColor: "#15141b" };
+// themeColor matches --parlo-ground; a viewport entry cannot read CSS variables. viewportFit "cover" lets the
+// bottom navigation reach the screen edge and read env(safe-area-inset-bottom) in the installed iOS app.
+export const viewport: Viewport = {
+  themeColor: "#15141b",
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "parlo",
   description:
     "Translate phrases between your three languages, the way people actually say them.",
+  applicationName: "parlo",
+  // Lets "Add to Home Screen" on iOS open parlo full screen, without Safari's bars. The status bar keeps its
+  // default style so it follows the system light or dark setting and never sits over the page.
+  appleWebApp: { capable: true, title: "parlo" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
