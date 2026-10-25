@@ -57,7 +57,7 @@ no prefix, no trailers.
 | 5 App layout and navigation | `redesign-layout` | [x] |
 | 6 Screens | `redesign-screens` (may split per screen) | [x] |
 | 7 Sign-in, landing, preview image | `redesign-public` | [x] |
-| 8 Light scheme | `redesign-light` | [ ] |
+| 8 Light scheme | `redesign-light` | [x] |
 | 9 Final review | n/a | [ ] |
 
 ---
