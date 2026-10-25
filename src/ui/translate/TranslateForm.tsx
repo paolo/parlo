@@ -62,12 +62,13 @@ export function TranslateForm({
           onChange={(e) => setText(e.currentTarget.value)}
           onKeyDown={onKeyDown}
           autoFocus
+          rightSectionWidth={44}
           rightSection={
             text.length > 0 ? (
-              <CloseButton aria-label="Clear" onClick={clear} />
+              <CloseButton size={44} aria-label="Clear" onClick={clear} />
             ) : null
           }
-          styles={{ section: { alignItems: "flex-start", paddingTop: 6 } }}
+          styles={{ section: { alignItems: "flex-start" } }}
         />
         <Group justify="space-between">
           <Group gap="xs">

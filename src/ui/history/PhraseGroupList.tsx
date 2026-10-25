@@ -47,7 +47,7 @@ export function PhraseGroupList({
       ))}
       {groups.hasNextPage && (
         <Button
-          variant="light"
+          variant="default"
           onClick={() => groups.fetchNextPage()}
           loading={groups.isFetchingNextPage}
         >

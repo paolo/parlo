@@ -19,9 +19,9 @@ export function CorrectionAlert({
 }) {
   return (
     <Alert
-      color="yellow"
-      variant="light"
-      icon={<IconBulb />}
+      variant="default"
+      radius="sm"
+      icon={<IconBulb stroke={1.8} />}
       title={
         correction.accepted
           ? "Correction applied"
@@ -38,13 +38,7 @@ export function CorrectionAlert({
         <Text size="sm">{correction.explanation}</Text>
         {onAccept && !correction.accepted && (
           <Group>
-            <Button
-              size="xs"
-              variant="light"
-              color="yellow"
-              onClick={onAccept}
-              loading={accepting}
-            >
+            <Button variant="outline" onClick={onAccept} loading={accepting}>
               Use corrected
             </Button>
           </Group>

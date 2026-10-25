@@ -50,7 +50,7 @@ export function GroupItem({
 
   const single = showIn === "all" ? null : pickPhrase(group, showIn);
   return (
-    <Paper withBorder p="md">
+    <Paper withBorder radius="sm" p="md">
       <Stack gap="sm">
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
@@ -65,7 +65,7 @@ export function GroupItem({
               onClick={open}
               aria-label="Delete phrase"
             >
-              <IconTrash size={16} />
+              <IconTrash size={19} stroke={1.8} />
             </ActionIcon>
           </Tooltip>
         </Group>

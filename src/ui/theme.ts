@@ -18,6 +18,8 @@ const GOOGLE = {
 
 export const theme = createTheme({
   // The accent only colors focus rings, links and checkboxes: a single lilac, so every shade is the same.
+  // Dark text on the light role colors, light text on dark ones.
+  autoContrast: true,
   primaryColor: "english",
   primaryShade: 5,
   colors: {
@@ -70,7 +72,13 @@ export const theme = createTheme({
   // 16px inputs: iOS Safari zooms into anything smaller when it gets focus.
   components: {
     // filled is the primary pill, default the secondary, outline the ghost.
-    Button: { defaultProps: { radius: "xl", size: "md" } },
+    Button: {
+      defaultProps: { radius: "xl", size: "md" },
+      // Everything pressable is at least 44px.
+      styles: { root: { minHeight: "var(--parlo-size-touch)" } },
+    },
+    ActionIcon: { defaultProps: { size: 44, radius: "xl" } },
+    SegmentedControl: { defaultProps: { radius: "xl", size: "md" } },
     Textarea: { defaultProps: { size: "md" } },
     TextInput: { defaultProps: { size: "md" } },
     PasswordInput: { defaultProps: { size: "md" } },

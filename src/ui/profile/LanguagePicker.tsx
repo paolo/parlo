@@ -14,6 +14,7 @@ import {
 import { errorMessage } from "../errors";
 import { Flag } from "../Flag";
 import { useSaveProfile } from "../queries";
+import { ROLES } from "../roles";
 
 const SLOT_NAMES = ["Native language", "Second language", "Third language"];
 
@@ -90,6 +91,7 @@ export function LanguagePicker({
                 slot.lang && (
                   <Flag
                     region={slot.region ?? LANGUAGES[slot.lang].defaultRegion}
+                    ring={ROLES[index]}
                   />
                 )
               }
@@ -113,7 +115,9 @@ export function LanguagePicker({
               // Closed, only the flag shows (the name is hidden, not removed, so the input still has a value); the open list names each region.
               <Select
                 w={92}
-                leftSection={<Flag region={slot.region ?? ""} />}
+                leftSection={
+                  <Flag region={slot.region ?? ""} ring={ROLES[index]} />
+                }
                 leftSectionPointerEvents="none"
                 styles={{ input: { color: "transparent" } }}
                 aria-label={`${SLOT_NAMES[index]} region`}

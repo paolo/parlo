@@ -34,12 +34,16 @@ export function FavoriteButton({ group }: { group: PhraseGroupDTO }) {
     <Tooltip label={label} withArrow>
       <ActionIcon
         variant="subtle"
-        color={isFavorite ? "yellow" : "gray"}
+        color={isFavorite ? "native" : "gray"}
         onClick={toggle}
         disabled={setFavorite.isPending}
         aria-label={label}
       >
-        {isFavorite ? <IconStarFilled size={18} /> : <IconStar size={18} />}
+        {isFavorite ? (
+          <IconStarFilled size={20} />
+        ) : (
+          <IconStar size={20} stroke={1.8} />
+        )}
       </ActionIcon>
     </Tooltip>
   );

@@ -24,7 +24,7 @@ export function HistoryView() {
             <Text c="dimmed">
               Nothing here yet. Translate something and it will show up.
             </Text>
-            <Button component={Link} href="/" variant="light">
+            <Button component={Link} href="/">
               Go to Translate
             </Button>
           </Stack>

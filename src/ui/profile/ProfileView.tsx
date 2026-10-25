@@ -29,7 +29,7 @@ export function ProfileView() {
       <LanguagePicker
         initial={profile.data.languages}
         onSaved={() =>
-          notifications.show({ color: "teal", message: "Languages saved" })
+          notifications.show({ color: "french", message: "Languages saved" })
         }
       />
       <Text size="sm" c="dimmed">

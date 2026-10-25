@@ -39,7 +39,7 @@ export function PhrasebookView() {
               You haven't starred anything yet. Star a translation to keep it
               here.
             </Text>
-            <Button component={Link} href="/" variant="light">
+            <Button component={Link} href="/" variant="default">
               Go to Translate
             </Button>
           </Stack>
