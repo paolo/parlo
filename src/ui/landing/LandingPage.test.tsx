@@ -30,13 +30,15 @@ describe("LandingPage", () => {
     });
   });
 
-  it("starts the same Google flow from the Sign in button", async () => {
+  it("links Sign in to the sign-in page, which offers every way in", () => {
     renderWithProviders(<LandingPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(authClient.signIn.social).toHaveBeenCalledWith({
-      provider: "google",
-      callbackURL: "/",
-    });
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Get started" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the conversation and no footer line", () => {
@@ -47,14 +49,23 @@ describe("LandingPage", () => {
     expect(screen.queryByText(/made in canada/i)).not.toBeInTheDocument();
   });
 
-  it("starts the same flow from Get started and the closing call to action", async () => {
+  it("starts Google from the closing call to action too", async () => {
     renderWithProviders(<LandingPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Get started" }));
     const buttons = screen.getAllByRole("button", {
       name: "Continue with Google",
     });
     await userEvent.click(buttons[buttons.length - 1] as HTMLElement);
-    expect(authClient.signIn.social).toHaveBeenCalledTimes(2);
+    expect(authClient.signIn.social).toHaveBeenCalledWith({
+      provider: "google",
+      callbackURL: "/",
+    });
+  });
+
+  it("has a theme toggle", () => {
+    renderWithProviders(<LandingPage />);
+    expect(
+      screen.getByRole("button", { name: /toggle light and dark theme/i }),
+    ).toBeInTheDocument();
   });
 
   it("lists every supported language", () => {

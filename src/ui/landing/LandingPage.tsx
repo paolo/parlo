@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@mantine/core";
+import Link from "next/link";
 import { GoogleSignInButton } from "@/ui/auth/GoogleSignInButton";
-import { authClient } from "@/ui/auth-client";
 import { LANG_CODES, LANGUAGES } from "../../shared/languages";
 import { Flag } from "../Flag";
+import { ThemeToggle } from "../ThemeToggle";
 import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
 import classes from "./LandingPage.module.css";
@@ -25,10 +26,6 @@ const STEPS = [
   },
 ] as const;
 
-function signIn() {
-  return authClient.signIn.social({ provider: "google", callbackURL: "/" });
-}
-
 export function LandingPage() {
   return (
     <div className={classes.page}>
@@ -36,10 +33,11 @@ export function LandingPage() {
         <div className={classes.bar}>
           <Wordmark size={30} />
           <div className={classes.barActions}>
-            <Button variant="default" onClick={signIn}>
+            <ThemeToggle />
+            {/* The sign-in page offers every way in: Google, and email and password in development. */}
+            <Button component={Link} href="/sign-in">
               Sign in
             </Button>
-            <Button onClick={signIn}>Get started</Button>
           </div>
         </div>
       </header>
