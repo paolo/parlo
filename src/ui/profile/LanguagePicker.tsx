@@ -8,12 +8,11 @@ import {
   LANG_CODES,
   LANGUAGES,
   type Lang,
-  languageFlag,
   PROFILE_SIZE,
-  regionFlag,
   regionName,
 } from "../../shared/languages";
 import { errorMessage } from "../errors";
+import { Flag } from "../Flag";
 import { useSaveProfile } from "../queries";
 
 const SLOT_NAMES = ["Native language", "Second language", "Third language"];
@@ -84,8 +83,24 @@ export function LanguagePicker({
               data={LANG_CODES.filter((code) => !taken.includes(code)).map(
                 (code) => ({
                   value: code,
-                  label: `${languageFlag(code, null)} ${LANGUAGES[code].endonym}`,
+                  label: LANGUAGES[code].endonym,
                 }),
+              )}
+              leftSection={
+                slot.lang && (
+                  <Flag
+                    region={slot.region ?? LANGUAGES[slot.lang].defaultRegion}
+                  />
+                )
+              }
+              leftSectionPointerEvents="none"
+              renderOption={({ option }) => (
+                <span>
+                  <Flag
+                    region={LANGUAGES[option.value as Lang].defaultRegion}
+                  />{" "}
+                  {option.label}
+                </span>
               )}
               onChange={(value) =>
                 update(index, {
@@ -95,20 +110,23 @@ export function LanguagePicker({
               }
             />
             {showRegion && slot.lang && (
-              // Closed, only the flag shows; the open list names each region.
+              // Closed, only the flag shows (the name is hidden, not removed, so the input still has a value); the open list names each region.
               <Select
                 w={92}
+                leftSection={<Flag region={slot.region ?? ""} />}
+                leftSectionPointerEvents="none"
+                styles={{ input: { color: "transparent" } }}
                 aria-label={`${SLOT_NAMES[index]} region`}
                 value={slot.region}
                 allowDeselect={false}
                 comboboxProps={{ width: 240, position: "bottom-end" }}
                 data={LANGUAGES[slot.lang].regions.map((region) => ({
                   value: region,
-                  label: regionFlag(region),
+                  label: regionName(region),
                 }))}
                 renderOption={({ option }) => (
                   <span>
-                    {option.label} {regionName(option.value)}
+                    <Flag region={option.value} /> {option.label}
                   </span>
                 )}
                 onChange={(value) => update(index, { ...slot, region: value })}
