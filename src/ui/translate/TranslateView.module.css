@@ -1,0 +1,39 @@
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--parlo-space-6);
+  align-items: start;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-4);
+}
+
+.empty {
+  display: none;
+  margin: 0;
+  padding: var(--parlo-space-9) var(--parlo-space-6);
+  border: 1.5px dashed var(--parlo-border-strong);
+  border-radius: var(--parlo-radius-card-l);
+  color: var(--parlo-text-muted);
+  text-align: center;
+  text-wrap: balance;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--parlo-space-9);
+  }
+
+  .output {
+    /* Level with the top of the phrase card, below the language strip. */
+    padding-top: calc(var(--parlo-size-touch) + var(--parlo-space-4));
+  }
+
+  .empty {
+    display: block;
+  }
+}

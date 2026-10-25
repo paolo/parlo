@@ -17,10 +17,13 @@ import { roleFor } from "../roles";
 export function TranslationResult({
   group,
   profileLangs = [],
+  layout = "row",
 }: {
   group: PhraseGroupDTO;
   /** The viewer's languages in profile order; the cards follow it. */
   profileLangs?: Lang[];
+  /** "row" puts the cards side by side when there is room; "stack" always one under the other. */
+  layout?: "row" | "stack";
 }) {
   const accept = useAcceptCorrection();
   // Show the saved state once accepted, but only for the group that was accepted.
@@ -63,7 +66,13 @@ export function TranslationResult({
           accepting={accept.isPending}
         />
       )}
-      <SimpleGrid cols={{ base: 1, sm: Math.min(phrases.length, 3) || 1 }}>
+      <SimpleGrid
+        cols={
+          layout === "stack"
+            ? 1
+            : { base: 1, sm: Math.min(phrases.length, 3) || 1 }
+        }
+      >
         {phrases.map((phrase, index) => (
           <PhraseCard
             key={phrase.lang}

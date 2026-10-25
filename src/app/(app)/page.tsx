@@ -7,8 +7,10 @@ export default function TranslatePage() {
     <ProfileGate>
       <Stack>
         <div>
-          <Title order={2}>Translate</Title>
-          <Text c="dimmed">
+          <Title order={2} fz={{ base: 36, md: 64 }} lh={1}>
+            Translate
+          </Title>
+          <Text c="dimmed" size="lg" mt="xs">
             Say it once. Parlo gives it back in your three languages, the way
             people actually say it.
           </Text>

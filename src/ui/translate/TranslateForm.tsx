@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  Button,
-  CloseButton,
-  Group,
-  Kbd,
-  Stack,
-  Text,
-  Textarea,
-} from "@mantine/core";
+import { Button, CloseButton, Kbd, Textarea } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
 import { useIsMac } from "../platform";
+import classes from "./TranslateForm.module.css";
 
 export const MAX_PHRASE_LENGTH = 500;
 
@@ -49,11 +43,16 @@ export function TranslateForm({
 
   return (
     <form onSubmit={onFormSubmit}>
-      <Stack gap="xs">
+      <section className={classes.card}>
+        <span className={classes.caption} aria-hidden="true">
+          Say it like you would at home
+        </span>
         <Textarea
           ref={textarea}
           aria-label="Phrase to translate"
           placeholder="Type a phrase in any of your languages…"
+          variant="unstyled"
+          classNames={{ input: classes.input, section: classes.section }}
           autosize
           minRows={3}
           maxRows={8}
@@ -68,23 +67,25 @@ export function TranslateForm({
               <CloseButton size={44} aria-label="Clear" onClick={clear} />
             ) : null
           }
-          styles={{ section: { alignItems: "flex-start" } }}
         />
-        <Group justify="space-between">
-          <Group gap="xs">
-            <Text size="xs" c="dimmed">
-              {`${text.length}/${MAX_PHRASE_LENGTH}`}
-            </Text>
-            <Text size="xs" c="dimmed" visibleFrom="sm">
+        <div className={classes.footer}>
+          <div className={classes.hints}>
+            <span>{`${text.length}/${MAX_PHRASE_LENGTH}`}</span>
+            <span className={classes.shortcut}>
               <Kbd size="xs">{isMac ? "⌘" : "Ctrl"}</Kbd> +{" "}
               <Kbd size="xs">Enter</Kbd>
-            </Text>
-          </Group>
-          <Button type="submit" loading={pending} disabled={!canSubmit}>
+            </span>
+          </div>
+          <Button
+            type="submit"
+            loading={pending}
+            disabled={!canSubmit}
+            rightSection={<IconArrowRight size={18} stroke={2} />}
+          >
             Translate
           </Button>
-        </Group>
-      </Stack>
+        </div>
+      </section>
     </form>
   );
 }
