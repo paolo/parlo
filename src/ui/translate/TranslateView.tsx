@@ -1,12 +1,14 @@
 "use client";
 
-import { Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { errorMessage } from "../errors";
 import { useProfile, useTranslate } from "../queries";
+import { LanguageStrip } from "./LanguageStrip";
 import { TranslateForm } from "./TranslateForm";
+import classes from "./TranslateView.module.css";
 import { TranslationResult } from "./TranslationResult";
 
+/** Two columns from 900px: the phrase on the left, what it really means on the right. One column on a phone. */
 export function TranslateView() {
   const translate = useTranslate();
   const profile = useProfile();
@@ -23,14 +25,24 @@ export function TranslateView() {
   }
 
   return (
-    <Stack gap="lg">
-      <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
-      {translate.data && (
-        <TranslationResult
-          group={translate.data.group}
-          profileLangs={profile.data?.languages.map((l) => l.lang)}
-        />
-      )}
-    </Stack>
+    <div className={classes.grid}>
+      <div className={classes.input}>
+        {profile.data && <LanguageStrip languages={profile.data.languages} />}
+        <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
+      </div>
+      <div className={classes.output}>
+        {translate.data ? (
+          <TranslationResult
+            group={translate.data.group}
+            profileLangs={profile.data?.languages.map((l) => l.lang)}
+            layout="stack"
+          />
+        ) : (
+          <p className={classes.empty}>
+            Your translations show up here, in your three languages.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

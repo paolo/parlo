@@ -1,0 +1,68 @@
+.card {
+  background: var(--parlo-surface-raised);
+  border: 1px solid var(--parlo-border-subtle);
+  border-radius: var(--parlo-radius-panel);
+  padding: var(--parlo-space-4) var(--parlo-space-5) var(--parlo-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-2);
+}
+
+.caption {
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--parlo-text-muted);
+}
+
+.input {
+  padding: 0;
+  font: 700 28px / 1.15 var(--parlo-font-display);
+  letter-spacing: -0.02em;
+  color: var(--parlo-text);
+}
+
+.input::placeholder {
+  color: var(--parlo-text-placeholder);
+}
+
+/* The clear button sits at the top right of the text area. */
+.section {
+  align-items: flex-start;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--parlo-space-3);
+}
+
+.hints {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-3);
+  font-size: 12px;
+  color: var(--parlo-text-muted);
+}
+
+.shortcut {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .card {
+    border-radius: var(--parlo-radius-card-l);
+    padding: var(--parlo-space-6) var(--parlo-space-6) var(--parlo-space-5);
+    gap: var(--parlo-space-3);
+  }
+
+  .input {
+    font-size: 40px;
+    min-height: 140px;
+  }
+
+  .shortcut {
+    display: inline;
+  }
+}

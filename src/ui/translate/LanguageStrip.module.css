@@ -1,0 +1,45 @@
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  width: fit-content;
+  max-width: 100%;
+  color: var(--parlo-text);
+  text-decoration: none;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  min-height: var(--parlo-size-touch);
+  padding: 0 var(--parlo-space-4) 0 10px;
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-chip);
+  border: 1px solid var(--parlo-border-subtle);
+  font: 600 15px / 1 var(--parlo-font-sans);
+}
+
+.strip:hover .pill {
+  border-color: var(--parlo-border-strong);
+}
+
+.strip > svg {
+  color: var(--parlo-text-muted);
+}
+
+.group {
+  display: inline-flex;
+  gap: var(--parlo-space-1);
+  padding: 0 6px;
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-raised);
+  border: 1px solid var(--parlo-border-subtle);
+}
+
+.group .pill {
+  background: transparent;
+  border: 0;
+  padding-inline: 8px;
+}
