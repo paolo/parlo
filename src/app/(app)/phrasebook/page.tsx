@@ -5,7 +5,7 @@ import { ProfileGate } from "@/ui/profile/ProfileGate";
 export default function PhrasebookPage() {
   return (
     <ProfileGate>
-      <Stack maw={960}>
+      <Stack>
         <div>
           <Title order={2}>Phrasebook</Title>
           <Text c="dimmed">The phrases you've starred to keep.</Text>

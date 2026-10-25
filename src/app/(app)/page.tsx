@@ -5,7 +5,7 @@ import { TranslateView } from "@/ui/translate/TranslateView";
 export default function TranslatePage() {
   return (
     <ProfileGate>
-      <Stack maw={960}>
+      <Stack>
         <div>
           <Title order={2}>Translate</Title>
           <Text c="dimmed">

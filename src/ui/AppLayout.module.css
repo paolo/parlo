@@ -11,14 +11,19 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  background: var(--parlo-ground);
+  border-bottom: 1px solid var(--parlo-border-subtle);
+}
+
+.bar {
+  max-width: 1160px;
+  margin-inline: auto;
+  min-height: 64px;
+  padding: var(--parlo-space-2) var(--parlo-space-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--parlo-space-3);
-  min-height: 64px;
-  padding: var(--parlo-space-2) var(--parlo-space-4);
-  background: var(--parlo-ground);
-  border-bottom: 1px solid var(--parlo-border-subtle);
 }
 
 .home {
@@ -43,8 +48,8 @@
   bottom: 0;
   z-index: 10;
   display: flex;
-  gap: var(--parlo-space-1);
-  padding: var(--parlo-space-2) var(--parlo-space-3)
+  gap: var(--parlo-space-2);
+  padding: var(--parlo-space-2) var(--parlo-space-4)
     calc(var(--parlo-space-2) + env(safe-area-inset-bottom));
   background: var(--parlo-surface);
   border-top: 1px solid var(--parlo-border-subtle);
@@ -55,31 +60,24 @@
 }
 
 .content {
-  max-width: 960px;
+  max-width: 1160px;
   margin-inline: auto;
   padding: var(--parlo-space-5) var(--parlo-space-4) var(--parlo-space-6);
 }
 
+/* Desktop: the links join the header, after the wordmark; the account tools stay on the right. */
 @media (min-width: 900px) {
-  .shell {
-    grid-template-columns: 232px minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-  }
-
-  .header {
-    grid-column: 1 / -1;
+  .bar {
     padding-inline: var(--parlo-space-6);
   }
 
   .nav {
-    position: sticky;
-    top: 64px;
-    align-self: start;
+    position: static;
     inset-inline: auto;
-    bottom: auto;
-    flex-direction: column;
+    flex: 1;
+    margin-inline-start: var(--parlo-space-6);
+    padding: 0;
     gap: var(--parlo-space-1);
-    padding: var(--parlo-space-5) var(--parlo-space-4);
     background: transparent;
     border-top: 0;
   }
@@ -89,6 +87,6 @@
   }
 
   .content {
-    padding: var(--parlo-space-6) var(--parlo-space-6) var(--parlo-space-12);
+    padding: var(--parlo-space-9) var(--parlo-space-6) var(--parlo-space-12);
   }
 }

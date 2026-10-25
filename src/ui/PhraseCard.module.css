@@ -75,7 +75,6 @@
   font: 700 28px / 1.1 var(--parlo-font-display);
   letter-spacing: -0.025em;
   overflow-wrap: break-word;
-  hyphens: auto;
 }
 
 @keyframes rise {
