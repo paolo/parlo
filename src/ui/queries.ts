@@ -102,6 +102,12 @@ export function useProfile() {
   });
 }
 
+/** The region the user picked for a language (Bolivia for Spanish, say), or undefined when it is not one of theirs. */
+export function useProfileRegion(lang: Lang): string | undefined {
+  const { data } = useProfile();
+  return data?.languages.find((l) => l.lang === lang)?.region;
+}
+
 export function useSaveProfile() {
   const queryClient = useQueryClient();
   return useMutation({

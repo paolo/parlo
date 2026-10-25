@@ -84,7 +84,12 @@ describe("TranslationResult", () => {
     it("replaces the root text and marks the alert as applied", async () => {
       vi.stubGlobal(
         "fetch",
-        vi.fn(async () => Response.json({ group: accepted })),
+        // The labels also ask for the profile, to show the region the user picked.
+        vi.fn(async (url: string) =>
+          Response.json(
+            url === "/api/profile" ? { languages: [] } : { group: accepted },
+          ),
+        ),
       );
       renderWithProviders(<TranslationResult group={typed} />);
 
