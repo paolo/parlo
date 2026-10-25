@@ -109,21 +109,6 @@ export const LANGUAGES: Record<Lang, LanguageInfo> = {
   fa: language("fa", "فارسی", "Persian", ["IR", "AF"]),
 };
 
-const REGIONAL_INDICATOR_A = 0x1f1e6;
-
-/** Flag emoji for an ISO 3166-1 alpha-2 code, built from regional indicator symbols. */
-export function regionFlag(region: string): string {
-  return [...region.toUpperCase()]
-    .map((char) =>
-      String.fromCodePoint(REGIONAL_INDICATOR_A + char.charCodeAt(0) - 65),
-    )
-    .join("");
-}
-
-export function languageFlag(lang: Lang, region: string | null): string {
-  return regionFlag(region ?? LANGUAGES[lang].defaultRegion);
-}
-
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
 
 export function regionName(region: string): string {
