@@ -13,20 +13,17 @@ describe("LandingPage", () => {
   it("shows the headline and subline", () => {
     renderWithProviders(<LandingPage />);
     expect(
-      screen.getByRole("heading", { name: "Three languages. One meaning." }),
+      screen.getByRole("heading", { level: 1, name: "Say it like a local." }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Understand what people really say, and say what you mean like they would.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/never word for word/i)).toBeInTheDocument();
   });
 
   it("offers Continue with Google", async () => {
     renderWithProviders(<LandingPage />);
-    await userEvent.click(
-      screen.getByRole("button", { name: "Continue with Google" }),
-    );
+    const [hero] = screen.getAllByRole("button", {
+      name: "Continue with Google",
+    });
+    await userEvent.click(hero);
     expect(authClient.signIn.social).toHaveBeenCalledWith({
       provider: "google",
       callbackURL: "/",
@@ -48,5 +45,22 @@ describe("LandingPage", () => {
       screen.getByRole("button", { name: /another phrase/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/made in canada/i)).not.toBeInTheDocument();
+  });
+
+  it("starts the same flow from Get started and the closing call to action", async () => {
+    renderWithProviders(<LandingPage />);
+    await userEvent.click(screen.getByRole("button", { name: "Get started" }));
+    const buttons = screen.getAllByRole("button", {
+      name: "Continue with Google",
+    });
+    await userEvent.click(buttons[buttons.length - 1] as HTMLElement);
+    expect(authClient.signIn.social).toHaveBeenCalledTimes(2);
+  });
+
+  it("lists every supported language", () => {
+    renderWithProviders(<LandingPage />);
+    expect(screen.getAllByRole("listitem").length).toBeGreaterThanOrEqual(13);
+    expect(screen.getByText("Українська")).toBeInTheDocument();
+    expect(screen.getByText("Punjabi")).toBeInTheDocument();
   });
 });

@@ -42,8 +42,10 @@ describe("theme", () => {
       expect(theme.headings?.fontFamily).toBe("var(--parlo-font-display)");
     });
 
-    it("makes buttons pills", () => {
-      expect(theme.components?.Button?.defaultProps?.radius).toBe("xl");
+    it("makes buttons pills with the primary color set, so the resolver decides the fill", () => {
+      const props = theme.components?.Button?.defaultProps;
+      expect(props?.radius).toBe("xl");
+      expect(props?.color).toBe(theme.primaryColor);
     });
   });
 

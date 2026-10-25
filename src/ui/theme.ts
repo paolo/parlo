@@ -84,7 +84,8 @@ export const theme = createTheme({
   components: {
     // filled is the primary pill, default the secondary, outline the ghost.
     Button: {
-      defaultProps: { radius: "xl", size: "md" },
+      // The color is explicit: without it Mantine leaves the fill to its stylesheet, which ignores the resolver.
+      defaultProps: { radius: "xl", size: "md", color: "english" },
       // Everything pressable is at least 44px.
       styles: { root: { minHeight: "var(--parlo-size-touch)" } },
     },

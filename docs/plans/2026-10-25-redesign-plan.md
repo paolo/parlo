@@ -58,10 +58,10 @@ no prefix, no trailers.
 | 6 Screens | `redesign-screens` (may split per screen) | [x] |
 | 7 Sign-in, landing, preview image | `redesign-public` | [x] |
 | 8 Light scheme | `redesign-light` | [x] |
-| 10 Top navigation and wide layout | `redesign-top-nav` | [ ] |
-| 11 Translate screen, two columns | `redesign-translate` | [ ] |
-| 12 Profile accordion | `redesign-profile` | [ ] |
-| 13 New landing page | `redesign-landing` | [ ] |
+| 10 Top navigation and wide layout | `redesign-top-nav` | [x] |
+| 11 Translate screen, two columns | `redesign-translate` | [x] |
+| 12 Profile accordion | `redesign-profile` | [x] |
+| 13 New landing page | `redesign-landing` | [x] |
 | 9 Final review | n/a | [ ] |
 
 ---
