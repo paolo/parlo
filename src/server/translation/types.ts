@@ -13,6 +13,8 @@ export interface TranslationResult {
   /** One entry for each of the user's languages. */
   translations: { lang: Lang; text: string }[];
   notes: string | null;
+  /** What the model provider billed for this call; absent when the translator cannot tell (tests). */
+  usage?: { model: string; inputTokens: number; outputTokens: number };
 }
 
 export interface Translator {

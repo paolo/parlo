@@ -15,6 +15,13 @@
       "when": 1792558882068,
       "tag": "0001_petite_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792962359400,
+      "tag": "0002_abnormal_roulette",
+      "breakpoints": true
     }
   ]
 }

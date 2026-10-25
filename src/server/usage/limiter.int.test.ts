@@ -30,6 +30,58 @@ describe("PostgresUsageLimiter", () => {
     });
   });
 
+  it("adds up cost, not rows, and keeps the token counts", async () => {
+    const owner = await createTestUser();
+    const limiter = limiterAt(now);
+    await limiter.record(owner.id, "translation", {
+      model: "claude-haiku-5-5",
+      inputTokens: 1200,
+      outputTokens: 400,
+    });
+    await getDb().insert(translationUsage).values({
+      userId: owner.id,
+      action: "voice-check",
+      cost: 5,
+      createdAt: now,
+    });
+
+    expect((await limiter.usage(owner.id)).usedToday).toBe(6);
+    expect(
+      await getDb().query.translationUsage.findFirst({
+        where: eq(translationUsage.action, "translation"),
+      }),
+    ).toMatchObject({
+      cost: 1,
+      model: "claude-haiku-5-5",
+      inputTokens: 1200,
+      outputTokens: 400,
+    });
+  });
+
+  it("refuses a dearer action that no longer fits, and still allows a cheaper one", async () => {
+    const owner = await createTestUser();
+    await getDb()
+      .insert(translationUsage)
+      .values({
+        userId: owner.id,
+        cost: 2,
+        createdAt: new Date("2026-10-10T10:00:00Z"),
+      });
+    // 2 of 3 spent: one more translation fits.
+    expect(await limiterAt(now).check(owner.id)).toEqual({ ok: true });
+    await getDb()
+      .insert(translationUsage)
+      .values({
+        userId: owner.id,
+        cost: 1,
+        createdAt: new Date("2026-10-10T10:01:00Z"),
+      });
+    expect(await limiterAt(now).check(owner.id)).toMatchObject({
+      ok: false,
+      reason: "daily",
+    });
+  });
+
   it("does not count yesterday's usage (UTC)", async () => {
     const owner = await createTestUser();
     await usageAt(owner.id, new Date("2026-10-09T23:59:59Z"));

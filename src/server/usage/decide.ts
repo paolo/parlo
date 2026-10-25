@@ -17,15 +17,19 @@ export function startOfUtcDay(now: Date): Date {
   );
 }
 
-/** Pure rate-limit decision. The daily limit wins when both apply, since it blocks for longer. */
+/**
+ * Pure rate-limit decision. The daily limit wins when both apply, since it blocks for longer.
+ * `todaySpent` is in allowance units and `cost` is what the requested action would add to it.
+ */
 export function decide(input: {
-  todayCount: number;
+  todaySpent: number;
+  cost?: number;
   minuteCount: number;
   dailyLimit: number;
   burstLimit: number;
   now: Date;
 }): LimitDecision {
-  if (input.todayCount >= input.dailyLimit) {
+  if (input.todaySpent + (input.cost ?? 1) > input.dailyLimit) {
     return { ok: false, reason: "daily", resetAt: nextUtcMidnight(input.now) };
   }
   if (input.minuteCount >= input.burstLimit) {
