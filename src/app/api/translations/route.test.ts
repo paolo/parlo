@@ -84,7 +84,28 @@ describe("POST /api/translations", () => {
       text: "me late the train",
       isRoot: true,
     });
-    expect(deps.limiter.record).toHaveBeenCalledWith("u1");
+    expect(deps.limiter.record).toHaveBeenCalledWith(
+      "u1",
+      "translation",
+      undefined,
+    );
+  });
+
+  it("passes the model's token counts on to the ledger", async () => {
+    const usage = {
+      model: "claude-haiku-5-5",
+      inputTokens: 1200,
+      outputTokens: 400,
+    };
+    deps.translator = new FakeTranslator({ ...result, usage });
+
+    await post({ text: "me late the train" });
+
+    expect(deps.limiter.record).toHaveBeenCalledWith(
+      "u1",
+      "translation",
+      usage,
+    );
   });
 
   it.each([

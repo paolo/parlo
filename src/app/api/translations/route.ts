@@ -9,7 +9,10 @@ import { jsonError, withSession } from "@/server/http/responses";
 import { parseJson } from "@/server/http/validation";
 import { buildNewGroup } from "@/server/phrases/service";
 import { isProfileComplete } from "@/server/profile/service";
-import { TranslationFailedError } from "@/server/translation/types";
+import {
+  TranslationFailedError,
+  type TranslationResult,
+} from "@/server/translation/types";
 
 export const MAX_PHRASE_LENGTH = 500;
 
@@ -31,7 +34,7 @@ export const POST = withSession(async (req, { userId }) => {
     return jsonError(409, "profile_incomplete");
 
   const limiter = getUsageLimiter();
-  const decision = await limiter.check(userId);
+  const decision = await limiter.check(userId, "translation");
   if (!decision.ok) {
     const retryAfter = Math.max(
       1,
@@ -48,6 +51,7 @@ export const POST = withSession(async (req, { userId }) => {
   }
 
   let group: ReturnType<typeof buildNewGroup>;
+  let tokens: TranslationResult["usage"];
   try {
     const result = await getTranslator().translate({ text, languages });
     const profileLangs = languages.map((l) => l.lang);
@@ -60,6 +64,7 @@ export const POST = withSession(async (req, { userId }) => {
       });
     }
     group = buildNewGroup(userId, text, result, languages);
+    tokens = result.usage;
   } catch (error) {
     if (!(error instanceof TranslationFailedError)) throw error;
     console.error("Translation failed", error);
@@ -67,6 +72,6 @@ export const POST = withSession(async (req, { userId }) => {
   }
 
   const saved = await getPhraseRepository().insertGroup(group);
-  await limiter.record(userId);
+  await limiter.record(userId, "translation", tokens);
   return Response.json({ group: saved }, { status: 201 });
 });

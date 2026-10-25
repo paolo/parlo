@@ -176,11 +176,20 @@ export const translationUsage = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // What was spent on: see ACTION_COSTS in server/usage/costs.ts.
+    action: text("action").notNull().default("translation"),
+    // Allowance units this row used. Today's usage is the sum of these, not the number of rows.
+    cost: integer("cost").notNull().default(1),
+    // What the model provider billed for the call, so real spend can be added up. Null when not measured.
+    model: text("model"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (t) => [
+    check("translation_usage_cost_positive", sql`${t.cost} > 0`),
     index("translation_usage_user_created_idx").on(t.userId, t.createdAt),
   ],
 );

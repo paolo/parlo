@@ -39,7 +39,14 @@ export class HaikuTranslator implements Translator {
         `No parseable output (stop_reason: ${message.stop_reason})`,
       );
     }
-    return message.parsed_output;
+    return {
+      ...message.parsed_output,
+      usage: message.usage && {
+        model: TRANSLATION_MODEL,
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+      },
+    };
   }
 
   private request(input: TranslateInput) {

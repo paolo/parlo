@@ -42,6 +42,23 @@ describe("HaikuTranslator", () => {
     ).resolves.toEqual(output);
   });
 
+  it("reports the tokens the API billed", async () => {
+    const { client } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: output,
+      usage: { input_tokens: 1234, output_tokens: 321 },
+    });
+    const result = await new HaikuTranslator(client).translate({
+      text: "hola",
+      languages,
+    });
+    expect(result.usage).toEqual({
+      model: "claude-haiku-5-5",
+      inputTokens: 1234,
+      outputTokens: 321,
+    });
+  });
+
   it("calls Haiku 5.5 with low effort, the static system prompt and no sampling params", async () => {
     const { client, parse } = clientReturning({
       stop_reason: "end_turn",
