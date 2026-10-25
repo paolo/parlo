@@ -24,8 +24,8 @@ interface PhraseBubbleProps {
 }
 
 const TAIL_RADIUS = {
-  left: "18px 18px 18px 4px",
-  right: "18px 18px 4px 18px",
+  left: "26px 26px 26px 6px",
+  right: "26px 26px 6px 26px",
 } as const;
 
 export function PhraseBubble({
@@ -67,13 +67,19 @@ export function PhraseBubble({
       >
         <Stack
           gap={0}
-          mih={74}
+          mih={112}
           justify="center"
           align={side === "left" ? "flex-start" : "flex-end"}
         >
           <Flag region={region} alt={flagName} size="1.5rem" />
           <Text
-            fw={700}
+            fw={800}
+            fz={{ base: 22, sm: 28 }}
+            lh={1.1}
+            style={{
+              fontFamily: "var(--parlo-font-display)",
+              letterSpacing: "-0.025em",
+            }}
             lang={lang}
             dir="auto"
             ta={side === "left" ? "left" : "right"}
