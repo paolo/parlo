@@ -11,6 +11,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--parlo-space-1);
+  /* Lets the phrase size itself from the card's width (see the desktop rule below). */
+  container-type: inline-size;
   opacity: 0;
   animation: rise var(--parlo-dur-rise) var(--parlo-ease-out) var(--delay, 0s)
     forwards;
@@ -70,10 +72,10 @@
 
 .phrase {
   margin: 0;
-  padding-right: var(--parlo-space-4);
   font: 700 28px / 1.1 var(--parlo-font-display);
   letter-spacing: -0.025em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 @keyframes rise {
@@ -92,8 +94,9 @@
     border-radius: var(--parlo-radius-card-l);
     padding: 18px 18px 22px 26px;
   }
+  /* Up to 36px in a wide card, smaller in a narrow one so words are not broken in a three-column row. */
   .phrase {
-    font-size: 36px;
+    font-size: clamp(24px, 9cqi, 36px);
   }
 }
 
