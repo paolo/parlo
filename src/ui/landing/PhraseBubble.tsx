@@ -1,5 +1,6 @@
 import { Group, Paper, Stack, Text } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
+import { Flag } from "../Flag";
 
 /** How long a bubble takes to slide out or in; the conversation waits this long before swapping phrases. */
 export const SLIDE_MS = 200;
@@ -8,9 +9,9 @@ const SLIDE_PX = 48;
 interface PhraseBubbleProps {
   /** BCP 47 tag of the phrase, so the browser picks the right glyph shapes. */
   lang: string;
-  /** Flag emoji shown above the phrase. */
-  flag: string;
-  /** What the flag stands for, e.g. "Spanish (Bolivia)", since a flag emoji alone says nothing to a screen reader. */
+  /** ISO 3166-1 alpha-2 region whose flag is shown above the phrase. */
+  region: string;
+  /** What the flag stands for, e.g. "Spanish (Bolivia)", since a flag alone says nothing to a screen reader. */
   flagName: string;
   text: string;
   /** The side the speaker is on; the small-radius corner (the "tail") points that way and the content aligns to it. */
@@ -26,7 +27,7 @@ const TAIL_RADIUS = {
 
 export function PhraseBubble({
   lang,
-  flag,
+  region,
   flagName,
   text,
   side,
@@ -62,9 +63,7 @@ export function PhraseBubble({
           justify="center"
           align={side === "left" ? "flex-start" : "flex-end"}
         >
-          <Text span role="img" aria-label={flagName} size="lg" lh={1.3}>
-            {flag}
-          </Text>
+          <Flag region={region} alt={flagName} size="1.5rem" />
           <Text
             fw={700}
             lang={lang}

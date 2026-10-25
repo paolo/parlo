@@ -3,12 +3,7 @@
 import { Stack, UnstyledButton } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { type KeyboardEvent, useEffect, useState } from "react";
-import {
-  LANGUAGES,
-  type Lang,
-  regionFlag,
-  regionName,
-} from "@/shared/languages";
+import { LANGUAGES, type Lang, regionName } from "@/shared/languages";
 import { PhraseBubble, SLIDE_MS } from "./PhraseBubble";
 import { conversationAt } from "./phrases";
 import { useRotation } from "./useRotation";
@@ -21,7 +16,7 @@ function htmlLang(code: string) {
 /** The flag and its spoken name for a language as spoken in a country, e.g. Spanish in Bolivia. */
 function flagFor(lang: Lang, region: string) {
   return {
-    flag: regionFlag(region),
+    region,
     flagName: `${LANGUAGES[lang].name} (${regionName(region)})`,
   };
 }
