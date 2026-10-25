@@ -8,25 +8,35 @@ export interface ReviewCard {
   front: PhraseDTO;
   /** The group's other phrases, shown on reveal. */
   back: PhraseDTO[];
+  /** The phrase to type, when practicing by typing. */
+  answer?: PhraseDTO;
 }
 
-/** One card per group that has a phrase in the practice language; the rest are counted as skipped. */
+/**
+ * One card per group that has a phrase in the practice language; the rest are counted as skipped. With
+ * `answerLang` (typing), the group also needs a phrase in that language, which becomes the card's `answer`.
+ */
 export function buildCards(
   groups: PhraseGroupDTO[],
   practice: Lang,
   profileLangs: Lang[],
+  answerLang?: Lang,
 ): { cards: ReviewCard[]; skipped: number } {
   const cards: ReviewCard[] = [];
   let skipped = 0;
   for (const group of groups) {
     const front = group.phrases.find((p) => p.lang === practice);
-    if (!front) {
+    const answer = answerLang
+      ? group.phrases.find((p) => p.lang === answerLang)
+      : undefined;
+    if (!front || (answerLang && !answer)) {
       skipped += 1;
       continue;
     }
     cards.push({
       id: group.id,
       front,
+      answer,
       back: orderPhrases(group.phrases, profileLangs).filter(
         (p) => p.lang !== practice,
       ),

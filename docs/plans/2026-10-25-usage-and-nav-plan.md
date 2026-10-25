@@ -26,7 +26,9 @@ typical $0.30 to $0.60. The $10 a month budget covers roughly seven users maxing
   new code writes the new columns: run the migration on Neon before or with the deploy, or translations fail
   until it lands.
   Log token usage per translation so real cost shows up.
-- [ ] 3. Typed answers in Practice.
+- [x] 3. Typed answers in Practice (`practice-typed`): Flip / Type mode, choose the language to type in; checked
+  locally (`answer.ts`): correct, almost (missing accent or small typo) or wrong, with "I was right" to overrule.
+  No model call yet: a model check for valid synonyms would spend allowance and is left for later.
 - [ ] 4. Later: voice, payments, exam prep (each its own spec).
 
 ## Not doing yet

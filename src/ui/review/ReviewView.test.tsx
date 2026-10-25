@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
@@ -181,5 +181,141 @@ describe("ReviewView", () => {
     expect(new Set(urls)).toEqual(
       new Set(["/api/profile", "/api/phrase-groups?favorite=true&limit=100"]),
     );
+  });
+
+  describe("typing", () => {
+    const group = (name: string) => screen.getByRole("radiogroup", { name });
+    async function startTyping() {
+      await screen.findByRole("radiogroup", { name: "How to practice" });
+      await userEvent.click(
+        within(group("How to practice")).getByRole("radio", { name: "Type" }),
+      );
+    }
+    const typeAnswer = async (text: string) => {
+      await userEvent.type(screen.getByRole("textbox"), text);
+      await click("Check");
+    };
+
+    it("asks for the native phrase by default instead of offering Reveal", async () => {
+      mockApi([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      expect(screen.getByText("One")).toBeInTheDocument();
+      expect(screen.getByText("Write it in Español")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Reveal" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("counts a correct answer and moves on", async () => {
+      mockApi([a, b]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await typeAnswer("uno");
+      expect(await screen.findByText("Correct")).toBeInTheDocument();
+      await click("Next");
+
+      expect(await screen.findByText("Two")).toBeInTheDocument();
+      expect(screen.getByText("1 of 2")).toBeInTheDocument();
+    });
+
+    it("calls a missing accent almost, shows the right phrase and lets you count it", async () => {
+      mockApi([card("q", "Qué tal", "How are you", "Ça va")]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await typeAnswer("que tal");
+
+      expect(await screen.findByText("Almost")).toBeInTheDocument();
+      expect(screen.getByText("Qué tal")).toBeInTheDocument();
+      expect(screen.getByText("que tal")).toBeInTheDocument();
+      await click("Count it");
+      expect(
+        await screen.findByText("1 of 1 right on the first try"),
+      ).toBeInTheDocument();
+    });
+
+    it("on a wrong answer shows the phrase, and Again brings the card back", async () => {
+      mockApi([a, b]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await typeAnswer("cero");
+      expect(await screen.findByText("Not quite")).toBeInTheDocument();
+      expect(screen.getByText("Uno")).toBeInTheDocument();
+      await click("Again");
+
+      expect(await screen.findByText("Two")).toBeInTheDocument();
+      expect(screen.getByText("0 of 2")).toBeInTheDocument();
+    });
+
+    it("lets you overrule a wrong answer with I was right", async () => {
+      mockApi([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await typeAnswer("el uno");
+      await click("I was right");
+
+      expect(
+        await screen.findByText("1 of 1 right on the first try"),
+      ).toBeInTheDocument();
+    });
+
+    it("does not check an empty answer", async () => {
+      mockApi([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await click("Check");
+
+      expect(screen.queryByText("Not quite")).not.toBeInTheDocument();
+      expect(screen.getByText("Write it in Español")).toBeInTheDocument();
+    });
+
+    it("types in the chosen language, and the answer language never matches the start", async () => {
+      mockApi([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+
+      await userEvent.click(
+        within(group("Type in")).getByRole("radio", { name: /Français/ }),
+      );
+      expect(screen.getByText("Write it in Français")).toBeInTheDocument();
+      await typeAnswer("un");
+      expect(await screen.findByText("Correct")).toBeInTheDocument();
+
+      // Starting from Español leaves English and Français to type in.
+      await userEvent.click(
+        within(group("Practice in")).getByRole("radio", { name: /Español/ }),
+      );
+      expect(
+        within(group("Type in")).queryByRole("radio", { name: /Español/ }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("skips groups missing the answer language and says so", async () => {
+      const noFrench = makeGroup({
+        id: "nf",
+        phrases: [
+          { lang: "es", text: "Hola", isRoot: true, correctedFrom: null },
+          { lang: "en", text: "Hello", isRoot: false, correctedFrom: null },
+        ],
+      });
+      mockApi([a, noFrench]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await startTyping();
+      await userEvent.click(
+        within(group("Type in")).getByRole("radio", { name: /Français/ }),
+      );
+
+      expect(
+        await screen.findByText(
+          "1 phrase skipped: no English or French version",
+        ),
+      ).toBeInTheDocument();
+    });
   });
 });

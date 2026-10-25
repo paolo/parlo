@@ -22,6 +22,7 @@ import { errorMessage } from "../errors";
 import { LangLabel } from "../LangLabel";
 import { useAllFavorites, useProfile } from "../queries";
 import { PracticeDeck } from "./PracticeDeck";
+import { RevealPanel, TypedPanel } from "./PracticePanels";
 import classes from "./ReviewView.module.css";
 import { buildCards, ReviewSession } from "./session";
 
@@ -29,6 +30,8 @@ export function ReviewView({ random }: { random?: () => number }) {
   const profile = useProfile();
   const favorites = useAllFavorites();
   const [chosen, setChosen] = useState<Lang | null>(null);
+  const [mode, setMode] = useState<Mode>("flip");
+  const [chosenAnswer, setChosenAnswer] = useState<Lang | null>(null);
   const [round, setRound] = useState(0);
 
   if (profile.isPending || favorites.isPending) return <Loader size="sm" />;
@@ -42,26 +45,54 @@ export function ReviewView({ random }: { random?: () => number }) {
   const languages = profile.data.languages;
   const practice = chosen ?? languages[1]?.lang ?? languages[0].lang;
   const starred = favorites.data.items.length;
+  // Typing defaults to the first other language (the native one, unless that is the one being practiced).
+  const others = languages.filter((l) => l.lang !== practice);
+  const answerLang =
+    chosenAnswer && chosenAnswer !== practice ? chosenAnswer : others[0]?.lang;
+  const typing = mode === "type" && answerLang !== undefined;
+  const restart = () => setRound((r) => r + 1);
   return (
     <Stack gap="lg" maw={720}>
       <DeckSummary count={starred} />
       {starred > 0 && (
-        <PracticeLanguage
-          languages={languages}
-          value={practice}
-          onChange={(lang) => {
-            setChosen(lang);
-            setRound((r) => r + 1);
-          }}
-        />
+        <Group gap="lg" align="flex-end">
+          <ModeSelect
+            value={mode}
+            onChange={(next) => {
+              setMode(next);
+              restart();
+            }}
+          />
+          <LanguageSelect
+            label="Practice in"
+            languages={languages}
+            value={practice}
+            onChange={(lang) => {
+              setChosen(lang);
+              restart();
+            }}
+          />
+          {typing && (
+            <LanguageSelect
+              label="Type in"
+              languages={others}
+              value={answerLang}
+              onChange={(lang) => {
+                setChosenAnswer(lang);
+                restart();
+              }}
+            />
+          )}
+        </Group>
       )}
       <Session
-        key={`${practice}-${round}`}
+        key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
         groups={favorites.data.items}
         practice={practice}
+        answerLang={typing ? answerLang : undefined}
         profileLangs={languages.map((l) => l.lang)}
         random={random}
-        onRestart={() => setRound((r) => r + 1)}
+        onRestart={restart}
       />
     </Stack>
   );
@@ -89,11 +120,40 @@ function DeckSummary({ count }: { count: number }) {
 
 const SMALL_DECK = 5;
 
-function PracticeLanguage({
+type Mode = "flip" | "type";
+
+function ModeSelect({
+  value,
+  onChange,
+}: {
+  value: Mode;
+  onChange: (mode: Mode) => void;
+}) {
+  return (
+    <Stack gap={4}>
+      <Text size="sm" c="dimmed">
+        How
+      </Text>
+      <SegmentedControl
+        aria-label="How to practice"
+        value={value}
+        onChange={(next) => onChange(next as Mode)}
+        data={[
+          { value: "flip", label: "Flip" },
+          { value: "type", label: "Type" },
+        ]}
+      />
+    </Stack>
+  );
+}
+
+function LanguageSelect({
+  label,
   languages,
   value,
   onChange,
 }: {
+  label: string;
   languages: ProfileLanguage[];
   value: Lang;
   onChange: (lang: Lang) => void;
@@ -101,14 +161,14 @@ function PracticeLanguage({
   return (
     <Stack gap={4}>
       <Text size="sm" c="dimmed">
-        Practice in
+        {label}
       </Text>
       {/* Scrolls inside the row instead of widening the page on a phone. */}
       <Box
         style={{ overflowX: "auto", maxWidth: "100%", scrollbarWidth: "none" }}
       >
         <SegmentedControl
-          aria-label="Practice in"
+          aria-label={label}
           value={value}
           onChange={(next) => onChange(next as Lang)}
           data={languages.map(({ lang, region }) => ({
@@ -134,35 +194,42 @@ function snapshot(session: ReviewSession) {
 function Session({
   groups,
   practice,
+  answerLang,
   profileLangs,
   random,
   onRestart,
 }: {
   groups: PhraseGroupDTO[];
   practice: Lang;
+  /** Set when practicing by typing: the language of the phrase to write. */
+  answerLang?: Lang;
   profileLangs: Lang[];
   random?: () => number;
   onRestart: () => void;
 }) {
-  const [built] = useState(() => buildCards(groups, practice, profileLangs));
+  const [built] = useState(() =>
+    buildCards(groups, practice, profileLangs, answerLang),
+  );
   const [session] = useState(() => new ReviewSession(built.cards, random));
   // Plain snapshots in state: the session object mutates, React only sees new values.
   const [view, setView] = useState(() => snapshot(session));
-  const [revealed, setRevealed] = useState(false);
   // Counts graded cards, so a card shown again after "Again" is dealt in afresh.
   const [step, setStep] = useState(0);
 
   function grade(result: "gotIt" | "again") {
     session[result]();
     setView(snapshot(session));
-    setRevealed(false);
     setStep((n) => n + 1);
   }
 
+  // Cards need a phrase in the practice language, and in the answer language when typing.
+  const needed = answerLang
+    ? `${LANGUAGES[practice].name} or ${LANGUAGES[answerLang].name}`
+    : LANGUAGES[practice].name;
   const skippedLine = built.skipped > 0 && (
     <Text size="sm" c="dimmed">
       {built.skipped} {built.skipped === 1 ? "phrase" : "phrases"} skipped: no{" "}
-      {LANGUAGES[practice].name} version
+      {needed} version
     </Text>
   );
 
@@ -172,13 +239,11 @@ function Session({
       <div className={classes.empty}>
         <IconStar size={32} stroke={1.8} aria-hidden="true" />
         <Title order={3}>
-          {noVersion
-            ? `No ${LANGUAGES[practice].name} versions yet`
-            : "Your deck is empty"}
+          {noVersion ? `No ${needed} versions yet` : "Your deck is empty"}
         </Title>
         <Text c="dimmed">
           {noVersion
-            ? `None of your starred phrases have a ${LANGUAGES[practice].name} version. Try another language.`
+            ? `None of your starred phrases have a ${needed} version. Try another language.`
             : "Practice uses the phrases you star. Translate something, tap its star, and it joins your deck."}
         </Text>
         {skippedLine}
@@ -235,10 +300,22 @@ function Session({
           profileLangs={profileLangs}
           remaining={view.total - view.done}
           step={step}
-          revealed={revealed}
-          onReveal={() => setRevealed(true)}
-          onGrade={grade}
-        />
+        >
+          {answerLang ? (
+            <TypedPanel
+              card={card}
+              answerLang={answerLang}
+              profileLangs={profileLangs}
+              onGrade={grade}
+            />
+          ) : (
+            <RevealPanel
+              card={card}
+              profileLangs={profileLangs}
+              onGrade={grade}
+            />
+          )}
+        </PracticeDeck>
       )}
     </Stack>
   );
