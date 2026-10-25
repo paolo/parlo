@@ -8,9 +8,9 @@ import { type ShowIn, ShowInSelect } from "../history/ShowInSelect";
 
 type Filter = "all" | "starred";
 
-/** Everything the user has translated, newest first, with the starred phrases one tap away. */
+/** The phrases the user starred, newest first; All shows everything they have translated. */
 export function PhrasebookView() {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("starred");
   const [showIn, setShowIn] = useState<ShowIn>("all");
   const starred = filter === "starred";
 
@@ -22,8 +22,8 @@ export function PhrasebookView() {
           value={filter}
           onChange={(next) => setFilter(next as Filter)}
           data={[
-            { value: "all", label: "All" },
             { value: "starred", label: "Starred" },
+            { value: "all", label: "All" },
           ]}
         />
         <ShowInSelect value={showIn} onChange={setShowIn} />
@@ -44,7 +44,7 @@ export function PhrasebookView() {
           <Stack align="flex-start" gap="xs">
             <Text c="dimmed">
               {starred
-                ? "You haven't starred anything yet. Star a translation to keep it here."
+                ? "You haven't starred anything yet. Star a translation to keep it here and practice it."
                 : "Nothing here yet. Translate something and it will show up."}
             </Text>
             <Button component={Link} href="/">

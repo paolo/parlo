@@ -73,6 +73,13 @@ function mockApi(
   return fetchMock;
 }
 
+/** The Phrasebook opens on Starred; most of these tests are about the full list. */
+async function renderAll() {
+  renderWithProviders(<PhrasebookView />);
+  const filter = screen.getByRole("radiogroup", { name: "Phrases" });
+  await userEvent.click(within(filter).getByRole("radio", { name: "All" }));
+}
+
 describe("PhrasebookView", () => {
   const starred = (id: string, es: string, fr: string) => ({
     ...group(id, es, fr),
@@ -84,7 +91,7 @@ describe("PhrasebookView", () => {
 
   it("lists the groups and the history limit note", async () => {
     mockApi([group("a", "Uno", "Un"), group("b", "Dos", "Deux")]);
-    renderWithProviders(<PhrasebookView />);
+    await renderAll();
 
     expect(await screen.findByText("Uno")).toBeInTheDocument();
     expect(screen.getByText("Dos")).toBeInTheDocument();
@@ -104,7 +111,7 @@ describe("PhrasebookView", () => {
         pageSize: 2,
       },
     );
-    renderWithProviders(<PhrasebookView />);
+    await renderAll();
     await screen.findByText("Uno");
     expect(screen.queryByText("Tres")).not.toBeInTheDocument();
 
@@ -118,7 +125,7 @@ describe("PhrasebookView", () => {
 
   it("shows only one language with the 'Show in' control", async () => {
     mockApi([group("a", "Uno", "Un")]);
-    renderWithProviders(<PhrasebookView />);
+    await renderAll();
     await screen.findByText("Uno");
 
     await userEvent.click(
@@ -132,7 +139,7 @@ describe("PhrasebookView", () => {
 
   it("shows the original with a hint for groups that lack the chosen language", async () => {
     mockApi([legacy]);
-    renderWithProviders(<PhrasebookView />);
+    await renderAll();
     await screen.findByText("Hola viejo");
 
     await userEvent.click(
@@ -147,7 +154,7 @@ describe("PhrasebookView", () => {
 
   it("tells a new user how to fill the history", async () => {
     mockApi([]);
-    renderWithProviders(<PhrasebookView />);
+    await renderAll();
 
     expect(await screen.findByText(/nothing here yet/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
@@ -157,22 +164,28 @@ describe("PhrasebookView", () => {
   });
 
   describe("filtering", () => {
-    it("starts on All and asks for the whole history", async () => {
-      const api = mockApi([group("a", "Uno", "Un")]);
+    it("starts on Starred and asks only for the favorites", async () => {
+      const api = mockApi([
+        group("a", "Uno", "Un"),
+        starred("b", "Dos", "Deux"),
+      ]);
       renderWithProviders(<PhrasebookView />);
-      await screen.findByText("Uno");
 
+      expect(await screen.findByText("Dos")).toBeInTheDocument();
+      expect(screen.queryByText("Uno")).not.toBeInTheDocument();
       const filter = screen.getByRole("radiogroup", { name: "Phrases" });
-      expect(within(filter).getByRole("radio", { name: "All" })).toBeChecked();
+      expect(
+        within(filter).getByRole("radio", { name: "Starred" }),
+      ).toBeChecked();
       expect(api).toHaveBeenCalledWith(
-        "/api/phrase-groups?favorite=false&limit=20",
+        "/api/phrase-groups?favorite=true&limit=20",
         expect.anything(),
       );
     });
 
     it("lists only starred phrases, with the phrasebook limit, under Starred", async () => {
       mockApi([group("a", "Uno", "Un"), starred("b", "Dos", "Deux")]);
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
       expect(screen.getByText("Dos")).toBeInTheDocument();
 
@@ -187,7 +200,7 @@ describe("PhrasebookView", () => {
 
     it("says how to star something when nothing is starred", async () => {
       mockApi([group("a", "Uno", "Un")]);
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
 
       await userEvent.click(screen.getByRole("radio", { name: "Starred" }));
@@ -203,7 +216,7 @@ describe("PhrasebookView", () => {
 
     it("keeps the language choice when the filter changes", async () => {
       mockApi([starred("a", "Uno", "Un")]);
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
       await userEvent.click(
         await screen.findByRole("radio", { name: /Français/ }),
@@ -219,7 +232,7 @@ describe("PhrasebookView", () => {
   describe("deleting", () => {
     it("asks for confirmation, deletes, and removes the item", async () => {
       const api = mockApi([group("a", "Uno", "Un"), group("b", "Dos", "Deux")]);
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
 
       await userEvent.click(
@@ -242,7 +255,7 @@ describe("PhrasebookView", () => {
 
     it("sends nothing when the confirmation is cancelled", async () => {
       const api = mockApi([group("a", "Uno", "Un")]);
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
 
       await userEvent.click(
@@ -262,7 +275,7 @@ describe("PhrasebookView", () => {
 
     it("treats a group that is already gone as deleted, without an error", async () => {
       mockApi([group("a", "Uno", "Un")], { deleteStatus: 404 });
-      renderWithProviders(<PhrasebookView />);
+      await renderAll();
       await screen.findByText("Uno");
 
       await userEvent.click(

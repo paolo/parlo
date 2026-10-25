@@ -9,7 +9,8 @@ export default function PhrasebookPage() {
         <div>
           <Title order={2}>Phrasebook</Title>
           <Text c="dimmed">
-            Everything you've translated, newest first. Star the ones to keep.
+            The phrases you've starred to keep and practice. All shows
+            everything you've translated.
           </Text>
         </div>
         <PhrasebookView />
