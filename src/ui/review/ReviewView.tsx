@@ -2,6 +2,7 @@
 
 import {
   Alert,
+  Box,
   Button,
   Group,
   List,
@@ -74,15 +75,20 @@ function PracticeLanguage({
       <Text size="sm" c="dimmed">
         Practice in
       </Text>
-      <SegmentedControl
-        aria-label="Practice in"
-        value={value}
-        onChange={(next) => onChange(next as Lang)}
-        data={languages.map(({ lang, region }) => ({
-          value: lang,
-          label: <LangLabel lang={lang} region={region} />,
-        }))}
-      />
+      {/* Scrolls inside the row instead of widening the page on a phone. */}
+      <Box
+        style={{ overflowX: "auto", maxWidth: "100%", scrollbarWidth: "none" }}
+      >
+        <SegmentedControl
+          aria-label="Practice in"
+          value={value}
+          onChange={(next) => onChange(next as Lang)}
+          data={languages.map(({ lang, region }) => ({
+            value: lang,
+            label: <LangLabel lang={lang} region={region} showRegion={false} />,
+          }))}
+        />
+      </Box>
     </Stack>
   );
 }

@@ -10,18 +10,21 @@ export function LangLabel({
   region,
   flagSize,
   ring,
+  showRegion = true,
 }: {
   lang: Lang;
   region?: string | null;
   flagSize?: CSSProperties["width"];
   ring?: Role;
+  /** False keeps the flag of the region but drops its name, for tight rows such as a segmented control. */
+  showRegion?: boolean;
 }) {
   const { endonym, defaultRegion } = LANGUAGES[lang];
   return (
     <>
       <Flag region={region ?? defaultRegion} size={flagSize} ring={ring} />{" "}
       {endonym}
-      {region && region !== defaultRegion && (
+      {showRegion && region && region !== defaultRegion && (
         <Text span c="dimmed">
           {" · "}
           {regionName(region)}

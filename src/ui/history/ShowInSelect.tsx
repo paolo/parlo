@@ -1,6 +1,6 @@
 "use client";
 
-import { SegmentedControl } from "@mantine/core";
+import { Box, SegmentedControl } from "@mantine/core";
 import type { Lang } from "../../shared/languages";
 import { LangLabel } from "../LangLabel";
 import { useProfile } from "../queries";
@@ -18,17 +18,22 @@ export function ShowInSelect({
   const profile = useProfile();
   const languages = profile.data?.languages ?? [];
   return (
-    <SegmentedControl
-      aria-label="Show in"
-      value={value}
-      onChange={(next) => onChange(next as ShowIn)}
-      data={[
-        { value: "all", label: "All" },
-        ...languages.map(({ lang, region }) => ({
-          value: lang,
-          label: <LangLabel lang={lang} region={region} />,
-        })),
-      ]}
-    />
+    // Three languages with flags can be wider than a phone: scroll inside the row instead of widening the page.
+    <Box
+      style={{ overflowX: "auto", maxWidth: "100%", scrollbarWidth: "none" }}
+    >
+      <SegmentedControl
+        aria-label="Show in"
+        value={value}
+        onChange={(next) => onChange(next as ShowIn)}
+        data={[
+          { value: "all", label: "All" },
+          ...languages.map(({ lang, region }) => ({
+            value: lang,
+            label: <LangLabel lang={lang} region={region} showRegion={false} />,
+          })),
+        ]}
+      />
+    </Box>
   );
 }
