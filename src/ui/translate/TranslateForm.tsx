@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, CloseButton, Kbd, Textarea } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { Button, Kbd, Textarea } from "@mantine/core";
+import { IconArrowRight, IconX } from "@tabler/icons-react";
 import { type FormEvent, type KeyboardEvent, useRef, useState } from "react";
 import { useIsMac } from "../platform";
 import classes from "./TranslateForm.module.css";
@@ -52,7 +52,7 @@ export function TranslateForm({
           aria-label="Phrase to translate"
           placeholder="Type a phrase in any of your languages…"
           variant="unstyled"
-          classNames={{ input: classes.input, section: classes.section }}
+          classNames={{ input: classes.input }}
           autosize
           minRows={3}
           maxRows={8}
@@ -61,12 +61,6 @@ export function TranslateForm({
           onChange={(e) => setText(e.currentTarget.value)}
           onKeyDown={onKeyDown}
           autoFocus
-          rightSectionWidth={44}
-          rightSection={
-            text.length > 0 ? (
-              <CloseButton size={44} aria-label="Clear" onClick={clear} />
-            ) : null
-          }
         />
         <div className={classes.footer}>
           <div className={classes.hints}>
@@ -76,14 +70,27 @@ export function TranslateForm({
               <Kbd size="xs">Enter</Kbd>
             </span>
           </div>
-          <Button
-            type="submit"
-            loading={pending}
-            disabled={!canSubmit}
-            rightSection={<IconArrowRight size={18} stroke={2} />}
-          >
-            Translate
-          </Button>
+          <div className={classes.actions}>
+            {/* Beside the Translate button, not inside the text: a button over the text covers what is typed. */}
+            {text.length > 0 && (
+              <Button
+                variant="subtle"
+                color="gray"
+                leftSection={<IconX size={18} stroke={2} />}
+                onClick={clear}
+              >
+                Clear
+              </Button>
+            )}
+            <Button
+              type="submit"
+              loading={pending}
+              disabled={!canSubmit}
+              rightSection={<IconArrowRight size={18} stroke={2} />}
+            >
+              Translate
+            </Button>
+          </div>
         </div>
       </section>
     </form>

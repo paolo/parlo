@@ -27,12 +27,18 @@ export function TranslateView() {
   return (
     <div className={classes.grid}>
       <div className={classes.input}>
-        {profile.data && <LanguageStrip languages={profile.data.languages} />}
+        {profile.data && (
+          <LanguageStrip
+            languages={profile.data.languages}
+            detected={translate.data?.group.phrases.find((p) => p.isRoot)?.lang}
+          />
+        )}
         <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
       </div>
       <div className={classes.output}>
         {translate.data ? (
           <TranslationResult
+            key={translate.data.group.id}
             group={translate.data.group}
             profileLangs={profile.data?.languages.map((l) => l.lang)}
             layout="stack"

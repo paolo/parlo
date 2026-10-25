@@ -16,6 +16,7 @@ import { errorMessage } from "../errors";
 import { useProfile } from "../queries";
 import { signOut } from "../signOut";
 import { LanguagePicker } from "./LanguagePicker";
+import { ThemeSetting } from "./ThemeSetting";
 
 export function ProfileView() {
   const profile = useProfile();
@@ -60,6 +61,7 @@ export function ProfileView() {
       <Text size="sm" c="dimmed">
         Levels per language are coming next.
       </Text>
+      <ThemeSetting />
       <Button variant="default" onClick={signOut} w="fit-content">
         Sign out
       </Button>

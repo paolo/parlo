@@ -10,11 +10,14 @@ export function CorrectionAlert({
   original,
   correction,
   onAccept,
+  onClose,
   accepting = false,
 }: {
   original: string;
   correction: Correction;
   onAccept?: () => void;
+  /** Hides the alert; without it there is no close button. */
+  onClose?: () => void;
   accepting?: boolean;
 }) {
   return (
@@ -22,6 +25,10 @@ export function CorrectionAlert({
       variant="default"
       radius="sm"
       icon={<IconBulb stroke={1.8} />}
+      withCloseButton={onClose !== undefined}
+      onClose={onClose}
+      closeButtonLabel="Hide correction"
+      styles={{ closeButton: { "--cb-size": "44px" } }}
       title={
         correction.accepted
           ? "Correction applied"

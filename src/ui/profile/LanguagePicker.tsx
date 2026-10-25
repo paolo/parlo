@@ -45,7 +45,11 @@ export function LanguagePicker({
       region: initial?.[i]?.region ?? null,
     })),
   );
-  const [open, setOpen] = useState<number | null>(0);
+  // Open the first slot that still needs a language; with all three chosen (editing) everything starts closed.
+  const [open, setOpen] = useState<number | null>(() => {
+    const missing = slots.findIndex((s) => s.lang === null);
+    return missing === -1 ? null : missing;
+  });
   const save = useSaveProfile();
 
   function update(index: number, slot: Slot) {

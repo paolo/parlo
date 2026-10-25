@@ -16,7 +16,10 @@
 }
 
 .input {
-  padding: 0;
+  /* Square, with a little room each side: a rounded input clips the first letter of a display-font phrase. */
+  border-radius: 0;
+  padding: 0 4px;
+  margin-inline: -4px;
   font: 700 28px / 1.15 var(--parlo-font-display);
   letter-spacing: -0.02em;
   color: var(--parlo-text);
@@ -26,16 +29,17 @@
   color: var(--parlo-text-placeholder);
 }
 
-/* The clear button sits at the top right of the text area. */
-.section {
-  align-items: flex-start;
-}
-
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--parlo-space-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
 }
 
 .hints {

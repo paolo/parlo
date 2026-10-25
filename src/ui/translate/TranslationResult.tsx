@@ -1,8 +1,17 @@
 "use client";
 
-import { Badge, Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconBulb, IconInfoCircle } from "@tabler/icons-react";
+import { useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { Lang } from "../../shared/languages";
 import { CorrectionAlert } from "../CorrectionAlert";
@@ -26,14 +35,19 @@ export function TranslationResult({
   layout?: "row" | "stack";
 }) {
   const accept = useAcceptCorrection();
+  // Null until the user chooses: a suggestion not yet applied is shown, an applied one stays out of the way.
+  const [correctionShown, setCorrectionShown] = useState<boolean | null>(null);
   // Show the saved state once accepted, but only for the group that was accepted.
   const current =
     accept.data?.group.id === group.id ? accept.data.group : group;
   const phrases = orderPhrases(current.phrases, profileLangs);
   const root = phrases.find((p) => p.isRoot);
+  const showCorrection =
+    correctionShown ??
+    (current.correction ? !current.correction.accepted : false);
   return (
     <Stack>
-      <Group justify="space-between">
+      <Group justify="space-between" wrap="nowrap">
         {root ? (
           <Group gap="xs">
             <Text size="sm" c="dimmed">
@@ -46,15 +60,33 @@ export function TranslationResult({
         ) : (
           <span />
         )}
-        {/* Keyed so a new translation doesn't inherit the previous one's star. */}
-        <FavoriteButton key={group.id} group={current} />
+        <Group gap="xs" wrap="nowrap">
+          {root && current.correction && !showCorrection && (
+            // An icon button the size of the star beside it, so the two line up and never wrap.
+            <Tooltip label="Show correction" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label="Show correction"
+                onClick={() => setCorrectionShown(true)}
+              >
+                <IconBulb size={20} stroke={1.8} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {/* Keyed so a new translation doesn't inherit the previous one's star. */}
+          <FavoriteButton key={group.id} group={current} />
+        </Group>
       </Group>
-      {root && current.correction && (
+      {root && current.correction && showCorrection && (
         <CorrectionAlert
           original={root.correctedFrom ?? root.text}
           correction={current.correction}
+          onClose={() => setCorrectionShown(false)}
           onAccept={() =>
             accept.mutate(current.id, {
+              // Once applied the box has done its job: tuck it away (it can be shown again).
+              onSuccess: () => setCorrectionShown(false),
               onError: (error) =>
                 notifications.show({
                   color: "red",

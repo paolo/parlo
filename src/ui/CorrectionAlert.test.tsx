@@ -71,4 +71,27 @@ describe("CorrectionAlert", () => {
       screen.queryByRole("button", { name: /use corrected/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("has a close button only when it can be hidden", async () => {
+    const onClose = vi.fn();
+    const { unmount } = renderWithProviders(
+      <CorrectionAlert original="x" correction={correction} />,
+    );
+    expect(
+      screen.queryByRole("button", { name: "Hide correction" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(
+      <CorrectionAlert
+        original="x"
+        correction={correction}
+        onClose={onClose}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Hide correction" }),
+    );
+    expect(onClose).toHaveBeenCalled();
+  });
 });
