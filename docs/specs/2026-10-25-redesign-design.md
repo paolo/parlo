@@ -138,3 +138,29 @@ Shared pieces go in `src/ui/` with a `.module.css`, next to the existing compone
 
 - Final decision on desktop navigation (rail vs. top tabs) after seeing the phone layout. Default: rail.
 - Whether to keep Geist Mono if any code view uses it. Default: drop it if grep shows no use.
+
+## 10. Second design pass (desktop layout, profile, landing)
+
+After the first merge the author shared the full canvas from the design session (a Claude Design artifact with
+phone screens, a desktop Translate screen, a Profile screen and a long landing page) and asked to apply its layout
+while keeping the app's own page names (Translate, History, Phrasebook; the design calls them Translate, Saved,
+Practice).
+
+- **Navigation:** on desktop the three links move into the header as pills (active = the inverse pill), and the left
+  rail goes away. Phone keeps the fixed bottom bar, its active item also the inverse pill. Profile stays reachable
+  from the avatar menu.
+- **Width:** the content column grows from 960 to 1160px on desktop.
+- **Translate:** two columns from 900px: the phrase card on the left (large display-font textarea, one primary
+  pill), the translations stacked on the right. A strip shows the viewer's three languages (ringed flags, a link to
+  Profile). The "Literally" line stays out: there is no data for it.
+- **Profile:** the design's accordion: an account header, then one expandable row per language slot (role label,
+  ringed flag, name and country), each opening to language chips and country chips. The app's rules stay: any of
+  13 languages in any slot, three distinct languages, region only where the app asks for it, the same Save.
+- **Landing:** the design's page replaces the current one: header with Sign in and a Google button, hero with the
+  rotating three-card conversation (the existing phrase sets, no literal line), a "practice" section with a small
+  interactive card deck, a section on the languages the app supports, a closing call to action and a footer. Copy
+  follows the design except where it would promise something the app does not do (Apple and email sign-in are left
+  out: the app only has Google; the Privacy, Terms and Contact placeholders are left out). Google sign-in and the
+  link preview keep working as today.
+- **Out of scope:** speech input, listen buttons, the "Literally" line, the design's separate Practice screen
+  (the app's Review stays as it is, restyled by the first pass).

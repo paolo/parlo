@@ -58,6 +58,10 @@ no prefix, no trailers.
 | 6 Screens | `redesign-screens` (may split per screen) | [x] |
 | 7 Sign-in, landing, preview image | `redesign-public` | [x] |
 | 8 Light scheme | `redesign-light` | [x] |
+| 10 Top navigation and wide layout | `redesign-top-nav` | [ ] |
+| 11 Translate screen, two columns | `redesign-translate` | [ ] |
+| 12 Profile accordion | `redesign-profile` | [ ] |
+| 13 New landing page | `redesign-landing` | [ ] |
 | 9 Final review | n/a | [ ] |
 
 ---
@@ -181,3 +185,26 @@ One pass per screen, each its own commit group (and its own branch if large), in
 - [ ] One fresh reviewer on the combined diff against the Review Focus list.
 - [ ] Update this plan's progress table, the spec's open items, and the landing spec's superseded notes.
 - [ ] After author approval, deploy by merging (each merge already deployed; confirm production).
+
+---
+
+## Second design pass (spec §10)
+
+Source: the author's canvas (`claude.ai/artifact/H1eoEyhrKa8HLCQ1kxR6Bb`, files `Desktop`, `Profile`, `Landing`,
+`Main`). Same rules as above: tokens only, 44px targets, one primary action per screen, tests kept, a branch per
+task merged with `--no-ff`. Verify layout with the headless-Chrome measurement used for the layout fixes (phone
+390px: no horizontal overflow, nav at the bottom edge; desktop 1280px).
+
+### Task 10: Top navigation and wide layout
+- [ ] One `<nav>` inside the header: fixed bottom bar on phones, a row of pills in the header from 900px.
+- [ ] Active item = inverse pill in both; remove the rail; content max width 1160px; drop per-page `maw={960}`.
+### Task 11: Translate screen, two columns
+- [ ] Phrase card (surface, 32px radius, display-font textarea), languages strip linking to Profile, primary
+  Translate pill with arrow; results stacked in the right column from 900px; one column on phones.
+- [ ] `TranslationResult` takes a `layout` ("row" for History/Phrasebook, "stack" for Translate).
+### Task 12: Profile accordion
+- [ ] Account header, slot rows that expand to language and country chips, Save primary pill; tests rewritten
+  for the new controls; first-login flow (no initial profile) unchanged in behavior.
+### Task 13: New landing page
+- [ ] Header, hero (existing rotating conversation), practice deck demo, supported languages, closing band,
+  footer; Google sign-in everywhere; keep link preview metadata; tests updated.
