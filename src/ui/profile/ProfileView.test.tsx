@@ -1,8 +1,18 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
+import { signOut } from "../signOut";
 import { ProfileView } from "./ProfileView";
+
+const authClient = vi.hoisted(() => ({
+  useSession: () => ({
+    data: { user: { name: "Paolo", email: "paolo@test.dev", image: null } },
+  }),
+  signOut: vi.fn(),
+}));
+vi.mock("@/ui/auth-client", () => ({ authClient }));
+vi.mock("../signOut", () => ({ signOut: vi.fn() }));
 
 const stored = [
   { lang: "pt", region: "BR", level: "native", position: 0 },
@@ -20,21 +30,27 @@ function mockApi() {
 describe("ProfileView", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("shows the stored languages with an editable region each", async () => {
+  it("shows who is signed in", async () => {
+    mockApi();
+    renderWithProviders(<ProfileView />);
+
+    expect(await screen.findByText("Paolo")).toBeInTheDocument();
+    expect(screen.getByText("paolo@test.dev")).toBeInTheDocument();
+  });
+
+  it("shows the stored languages with their regions", async () => {
     mockApi();
     renderWithProviders(<ProfileView />);
 
     expect(
-      await screen.findByLabelText("Native language region", {
-        selector: "input",
-      }),
-    ).toHaveValue("Brazil");
+      await screen.findByRole("button", { name: /Native language/ }),
+    ).toHaveTextContent("Português · Brazil");
     expect(
-      screen.getByLabelText("Second language region", { selector: "input" }),
-    ).toHaveValue("United Kingdom");
+      screen.getByRole("button", { name: /Second language/ }),
+    ).toHaveTextContent("English · United Kingdom");
     expect(
-      screen.getByLabelText("Third language region", { selector: "input" }),
-    ).toHaveValue("France");
+      screen.getByRole("button", { name: /Third language/ }),
+    ).toHaveTextContent("Français · France");
   });
 
   it("saves a changed region", async () => {
@@ -42,12 +58,12 @@ describe("ProfileView", () => {
     renderWithProviders(<ProfileView />);
 
     await userEvent.click(
-      await screen.findByLabelText("Second language region", {
-        selector: "input",
-      }),
+      await screen.findByRole("button", { name: /Second language/ }),
     );
     await userEvent.click(
-      await screen.findByRole("option", { name: /Canada/ }),
+      within(
+        screen.getByRole("group", { name: "Second language region" }),
+      ).getByRole("button", { name: /Canada/ }),
     );
     await userEvent.click(
       screen.getByRole("button", { name: "Save languages" }),
@@ -66,5 +82,15 @@ describe("ProfileView", () => {
         }),
       }),
     );
+  });
+
+  it("signs out from the page", async () => {
+    mockApi();
+    renderWithProviders(<ProfileView />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Sign out" }),
+    );
+    expect(signOut).toHaveBeenCalled();
   });
 });

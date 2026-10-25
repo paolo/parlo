@@ -1,0 +1,144 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-4);
+}
+
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+}
+
+.slot {
+  --color: var(--parlo-native);
+  background: var(--parlo-surface);
+  border: 1px solid var(--parlo-border-subtle);
+  border-radius: 20px;
+  padding: var(--parlo-space-2);
+}
+.slot[data-role="english"] {
+  --color: var(--parlo-english);
+}
+.slot[data-role="french"] {
+  --color: var(--parlo-french);
+}
+
+.head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-3);
+  min-height: 60px;
+  padding: var(--parlo-space-2) var(--parlo-space-3) var(--parlo-space-2) 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--parlo-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.empty {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px dashed var(--color);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* The role name in its own color: the -strong token, so it reads in both schemes. */
+.role {
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--parlo-native-strong);
+}
+.slot[data-role="english"] .role {
+  color: var(--parlo-english-strong);
+}
+.slot[data-role="french"] .role {
+  color: var(--parlo-french-strong);
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chevron {
+  flex: none;
+  color: var(--parlo-text-muted);
+  transition: transform 0.3s var(--parlo-ease-out);
+}
+.head[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+  padding: var(--parlo-space-2) var(--parlo-space-2) var(--parlo-space-3);
+  animation: open 0.4s var(--parlo-ease-out) both;
+}
+
+.chips {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--parlo-space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  min-height: var(--parlo-size-touch);
+  padding: 0 14px;
+  border: 1.5px solid var(--parlo-border-strong);
+  border-radius: var(--parlo-radius-pill);
+  background: transparent;
+  color: var(--parlo-text);
+  font: 600 14px / 1 var(--parlo-font-sans);
+  cursor: pointer;
+  transition: transform var(--parlo-dur-fast);
+}
+.chip[data-country] {
+  padding-left: 8px;
+}
+.chip:active {
+  transform: scale(0.97);
+}
+.chip[aria-pressed="true"] {
+  border-color: var(--color);
+  background: var(--parlo-surface-chip);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--parlo-text-muted);
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

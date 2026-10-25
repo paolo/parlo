@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Group, Select, Stack } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useState } from "react";
 import type { ProfileLanguage } from "@/server/profile/types";
 import {
@@ -15,6 +16,7 @@ import { errorMessage } from "../errors";
 import { Flag } from "../Flag";
 import { useSaveProfile } from "../queries";
 import { ROLES } from "../roles";
+import classes from "./LanguagePicker.module.css";
 
 const SLOT_NAMES = ["Native language", "Second language", "Third language"];
 
@@ -23,6 +25,11 @@ interface Slot {
   region: string | null;
 }
 
+/**
+ * Three rows, one per language slot, each opening to chips for the language and, where it matters, the country.
+ * The first slot is the native language and always asks for a region; the learning slots ask for one when an
+ * existing profile is being edited.
+ */
 export function LanguagePicker({
   initial,
   onSaved,
@@ -38,6 +45,7 @@ export function LanguagePicker({
       region: initial?.[i]?.region ?? null,
     })),
   );
+  const [open, setOpen] = useState<number | null>(0);
   const save = useSaveProfile();
 
   function update(index: number, slot: Slot) {
@@ -63,82 +71,110 @@ export function LanguagePicker({
   }
 
   return (
-    <Stack maw={480}>
-      {slots.map((slot, index) => {
-        const taken = slots.flatMap((s, i) =>
-          i !== index && s.lang ? [s.lang] : [],
-        );
-        const showRegion = slot.lang !== null && (editing || index === 0);
-        return (
-          <Group
-            key={SLOT_NAMES[index]}
-            gap="xs"
-            align="flex-end"
-            wrap="nowrap"
-          >
-            <Select
-              flex={1}
-              label={SLOT_NAMES[index]}
-              placeholder="Choose a language"
-              value={slot.lang}
-              data={LANG_CODES.filter((code) => !taken.includes(code)).map(
-                (code) => ({
-                  value: code,
-                  label: LANGUAGES[code].endonym,
-                }),
-              )}
-              leftSection={
-                slot.lang && (
-                  <Flag
-                    region={slot.region ?? LANGUAGES[slot.lang].defaultRegion}
-                    ring={ROLES[index]}
-                  />
-                )
-              }
-              leftSectionPointerEvents="none"
-              renderOption={({ option }) => (
-                <span>
-                  <Flag
-                    region={LANGUAGES[option.value as Lang].defaultRegion}
-                  />{" "}
-                  {option.label}
-                </span>
-              )}
-              onChange={(value) =>
-                update(index, {
-                  lang: value as Lang | null,
-                  region: value ? LANGUAGES[value as Lang].defaultRegion : null,
-                })
-              }
-            />
-            {showRegion && slot.lang && (
-              // Closed, only the flag shows (the name is hidden, not removed, so the input still has a value); the open list names each region.
-              <Select
-                w={92}
-                leftSection={
-                  <Flag region={slot.region ?? ""} ring={ROLES[index]} />
-                }
-                leftSectionPointerEvents="none"
-                styles={{ input: { color: "transparent" } }}
-                aria-label={`${SLOT_NAMES[index]} region`}
-                value={slot.region}
-                allowDeselect={false}
-                comboboxProps={{ width: 240, position: "bottom-end" }}
-                data={LANGUAGES[slot.lang].regions.map((region) => ({
-                  value: region,
-                  label: regionName(region),
-                }))}
-                renderOption={({ option }) => (
-                  <span>
-                    <Flag region={option.value} /> {option.label}
-                  </span>
+    <div className={classes.root}>
+      <div className={classes.slots}>
+        {slots.map((slot, index) => {
+          const name = SLOT_NAMES[index];
+          const role = ROLES[index];
+          const taken = slots.flatMap((s, i) =>
+            i !== index && s.lang ? [s.lang] : [],
+          );
+          const showRegion = slot.lang !== null && (editing || index === 0);
+          const isOpen = open === index;
+          const region = slot.lang
+            ? (slot.region ?? LANGUAGES[slot.lang].defaultRegion)
+            : null;
+          const panelId = `slot-${index}`;
+          return (
+            <section key={name} className={classes.slot} data-role={role}>
+              <button
+                type="button"
+                className={classes.head}
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => setOpen(isOpen ? null : index)}
+              >
+                {region ? (
+                  <Flag region={region} size="34px" ring={role} />
+                ) : (
+                  <span className={classes.empty} aria-hidden="true" />
                 )}
-                onChange={(value) => update(index, { ...slot, region: value })}
-              />
-            )}
-          </Group>
-        );
-      })}
+                <span className={classes.title}>
+                  <span className={classes.role}>{name}</span>
+                  <span className={classes.name}>
+                    {slot.lang
+                      ? `${LANGUAGES[slot.lang].endonym}${
+                          showRegion && region ? ` · ${regionName(region)}` : ""
+                        }`
+                      : "Choose a language"}
+                  </span>
+                </span>
+                <IconChevronDown
+                  className={classes.chevron}
+                  size={18}
+                  stroke={2}
+                  aria-hidden="true"
+                />
+              </button>
+              {isOpen && (
+                <div id={panelId} className={classes.panel}>
+                  <fieldset
+                    aria-label={`${name} language`}
+                    className={classes.chips}
+                  >
+                    {LANG_CODES.filter((code) => !taken.includes(code)).map(
+                      (code) => (
+                        <button
+                          key={code}
+                          type="button"
+                          className={classes.chip}
+                          aria-pressed={slot.lang === code}
+                          onClick={() =>
+                            update(index, {
+                              lang: code,
+                              region: LANGUAGES[code].defaultRegion,
+                            })
+                          }
+                        >
+                          {LANGUAGES[code].endonym}
+                        </button>
+                      ),
+                    )}
+                  </fieldset>
+                  {showRegion && slot.lang && (
+                    <>
+                      <span className={classes.hint}>
+                        Where is your {LANGUAGES[slot.lang].name} from? It
+                        changes the slang Parlo suggests.
+                      </span>
+                      <fieldset
+                        aria-label={`${name} region`}
+                        className={classes.chips}
+                      >
+                        {LANGUAGES[slot.lang].regions.map((code) => (
+                          <button
+                            key={code}
+                            type="button"
+                            className={classes.chip}
+                            data-country=""
+                            aria-pressed={region === code}
+                            onClick={() =>
+                              update(index, { ...slot, region: code })
+                            }
+                          >
+                            <Flag region={code} size="26px" />
+                            {regionName(code)}
+                          </button>
+                        ))}
+                      </fieldset>
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
       <Button
         onClick={submit}
         loading={save.isPending}
@@ -146,6 +182,6 @@ export function LanguagePicker({
       >
         Save languages
       </Button>
-    </Stack>
+    </div>
   );
 }

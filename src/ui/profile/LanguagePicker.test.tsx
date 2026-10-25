@@ -11,28 +11,47 @@ function mockSave() {
   );
 }
 
-async function choose(label: string, option: RegExp | string) {
-  await userEvent.click(input(label));
-  await userEvent.click(await screen.findByRole("option", { name: option }));
-}
-
-const input = (name: string) =>
-  screen.getByLabelText(name, { selector: "input" });
+const row = (name: string) =>
+  screen.getByRole("button", { name: new RegExp(name) });
+const group = (name: string) => screen.getByRole("group", { name });
 const save = () => screen.getByRole("button", { name: "Save languages" });
+
+/** Opens a slot (the native one starts open) and presses a chip in its language or region group. */
+async function pick(slot: string, kind: "language" | "region", chip: RegExp) {
+  if (row(slot).getAttribute("aria-expanded") !== "true") {
+    await userEvent.click(row(slot));
+  }
+  await userEvent.click(
+    within(group(`${slot} ${kind}`)).getByRole("button", { name: chip }),
+  );
+}
 
 describe("LanguagePicker", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it("starts with the native slot open and the learning slots closed", () => {
+    renderWithProviders(<LanguagePicker />);
+
+    expect(row("Native language")).toHaveAttribute("aria-expanded", "true");
+    expect(row("Second language")).toHaveAttribute("aria-expanded", "false");
+    expect(row("Third language")).toHaveAttribute("aria-expanded", "false");
+  });
 
   it("preselects the default region of the native language and sends the chosen one", async () => {
     mockSave();
     renderWithProviders(<LanguagePicker />);
 
-    await choose("Native language", /Español/);
-    expect(input("Native language region")).toHaveValue("Spain");
+    await pick("Native language", "language", /Español/);
+    expect(
+      within(group("Native language region")).getByRole("button", {
+        name: "Spain",
+        pressed: true,
+      }),
+    ).toBeInTheDocument();
 
-    await choose("Native language region", /Bolivia/);
-    await choose("Second language", /English/);
-    await choose("Third language", /Français/);
+    await pick("Native language", "region", /Bolivia/);
+    await pick("Second language", "language", /English/);
+    await pick("Third language", "language", /Français/);
     await userEvent.click(save());
 
     expect(fetch).toHaveBeenCalledWith(
@@ -52,35 +71,37 @@ describe("LanguagePicker", () => {
 
   it("does not ask for a region on the learning languages", async () => {
     renderWithProviders(<LanguagePicker />);
+    await pick("Second language", "language", /English/);
 
     expect(
-      screen.queryByLabelText("Second language region", { selector: "input" }),
+      screen.queryByRole("group", { name: "Second language region" }),
     ).not.toBeInTheDocument();
   });
 
   it("keeps Save disabled until all three languages are chosen", async () => {
     renderWithProviders(<LanguagePicker />);
-    await choose("Native language", /Español/);
-    await choose("Second language", /English/);
+    await pick("Native language", "language", /Español/);
+    await pick("Second language", "language", /English/);
 
     expect(save()).toBeDisabled();
 
-    await choose("Third language", /Français/);
+    await pick("Third language", "language", /Français/);
     expect(save()).toBeEnabled();
   });
 
   it("removes a chosen language from the other slots", async () => {
     renderWithProviders(<LanguagePicker />);
-    await choose("Native language", /Español/);
+    await pick("Native language", "language", /Español/);
+    await userEvent.click(row("Second language"));
 
-    await userEvent.click(input("Second language"));
-    const options = await screen.findAllByRole("option");
-
-    expect(options.some((o) => within(o).queryByText(/Español/))).toBe(false);
-    expect(options.some((o) => within(o).queryByText(/English/))).toBe(true);
+    const chips = within(group("Second language language")).getAllByRole(
+      "button",
+    );
+    expect(chips.some((c) => /Español/.test(c.textContent ?? ""))).toBe(false);
+    expect(chips.some((c) => /English/.test(c.textContent ?? ""))).toBe(true);
   });
 
-  it("shows every region select and the stored values when editing a profile", () => {
+  it("shows every slot's language and region when editing a profile", () => {
     renderWithProviders(
       <LanguagePicker
         initial={[
@@ -91,8 +112,18 @@ describe("LanguagePicker", () => {
       />,
     );
 
-    expect(input("Native language region")).toHaveValue("Brazil");
-    expect(input("Second language region")).toHaveValue("United Kingdom");
-    expect(input("Third language region")).toHaveValue("France");
+    expect(row("Native language")).toHaveTextContent("Português · Brazil");
+    expect(row("Second language")).toHaveTextContent(
+      "English · United Kingdom",
+    );
+    expect(row("Third language")).toHaveTextContent("Français · France");
+  });
+
+  it("opens one slot at a time", async () => {
+    renderWithProviders(<LanguagePicker />);
+    await userEvent.click(row("Second language"));
+
+    expect(row("Native language")).toHaveAttribute("aria-expanded", "false");
+    expect(row("Second language")).toHaveAttribute("aria-expanded", "true");
   });
 });
