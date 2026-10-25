@@ -1,26 +1,40 @@
 import { DEFAULT_THEME, mergeMantineTheme } from "@mantine/core";
 import { ImageResponse } from "next/og";
 import { conversationAt } from "@/ui/landing/phrases";
-import { cssVariablesResolver, theme } from "@/ui/theme";
+import { theme } from "@/ui/theme";
 
 export const alt = "parlo: three languages, one meaning";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Link previews can't use Mantine, so the same theme values are read here; nothing is hard-coded.
+// Link previews can't use Mantine or CSS variables, so the same theme values are read here; nothing is hard-coded.
+// The preview shows the dark look, the reference scheme.
 const full = mergeMantineTheme(DEFAULT_THEME, theme);
-const light = cssVariablesResolver(full).light as Record<string, string>;
 const colors = {
-  page: light["--mantine-color-body"] as string,
-  text: light["--mantine-color-text"] as string,
-  dimmed: light["--mantine-color-dimmed"] as string,
-  surface: "#ffffff",
+  page: full.colors.dark[7],
+  text: full.colors.dark[0],
+  dimmed: full.colors.dark[2],
+  // Dark text on the three language role colors.
+  onAccent: full.colors.dark[7],
+  native: full.colors.native[0],
+  english: full.colors.english[0],
+  french: full.colors.french[0],
 };
+
+type Role = "native" | "english" | "french";
 
 const TAIL = { left: "36px 36px 36px 8px", right: "36px 36px 8px 36px" };
 
 // No flags here: ImageResponse fetches emoji artwork over the network at build time, so the preview shows phrases only.
-function Bubble({ text, side }: { text: string; side: "left" | "right" }) {
+function Bubble({
+  text,
+  side,
+  langRole,
+}: {
+  text: string;
+  side: "left" | "right";
+  langRole: Role;
+}) {
   return (
     <div
       style={{
@@ -32,13 +46,12 @@ function Bubble({ text, side }: { text: string; side: "left" | "right" }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          background: colors.surface,
+          background: colors[langRole],
           borderRadius: TAIL[side],
           padding: "20px 32px",
-          boxShadow: "0 8px 28px rgba(60, 70, 140, 0.14)",
         }}
       >
-        <div style={{ fontSize: 38, fontWeight: 700, color: colors.text }}>
+        <div style={{ fontSize: 38, fontWeight: 700, color: colors.onAccent }}>
           {text}
         </div>
       </div>
@@ -86,9 +99,9 @@ export default async function Image() {
           width: 540,
         }}
       >
-        <Bubble text={set.phrases[native]} side="left" />
-        <Bubble text={set.phrases.en} side="right" />
-        <Bubble text={set.phrases.fr} side="left" />
+        <Bubble text={set.phrases[native]} side="left" langRole="native" />
+        <Bubble text={set.phrases.en} side="right" langRole="english" />
+        <Bubble text={set.phrases.fr} side="left" langRole="french" />
       </div>
     </div>,
     size,

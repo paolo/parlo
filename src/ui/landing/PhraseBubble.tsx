@@ -1,6 +1,7 @@
 import { Group, Paper, Stack, Text } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { Flag } from "../Flag";
+import type { Role } from "../roles";
 
 /** How long a bubble takes to slide out or in; the conversation waits this long before swapping phrases. */
 export const SLIDE_MS = 200;
@@ -16,6 +17,8 @@ interface PhraseBubbleProps {
   text: string;
   /** The side the speaker is on; the small-radius corner (the "tail") points that way and the content aligns to it. */
   side: "left" | "right";
+  /** Which language role colors the bubble: native, then the second and third language. */
+  langRole: Role;
   /** True while the bubble is slid out to its own side, between two phrases. */
   exited: boolean;
 }
@@ -31,6 +34,7 @@ export function PhraseBubble({
   flagName,
   text,
   side,
+  langRole,
   exited,
 }: PhraseBubbleProps) {
   const reducedMotion = useReducedMotion();
@@ -49,13 +53,17 @@ export function PhraseBubble({
       }}
     >
       {/* Two lines of phrase plus the flag: enough that rotating phrases never change the height. */}
+      {/* Not the `bg` prop: it sets the `background` shorthand, which conflicts with the theme's `backgroundColor` on Paper. */}
       <Paper
-        shadow="sm"
         px="md"
         py="sm"
         miw="60%"
         maw="80%"
         bdrs={TAIL_RADIUS[side]}
+        style={{
+          backgroundColor: `var(--parlo-${langRole})`,
+          color: "var(--parlo-on-accent)",
+        }}
       >
         <Stack
           gap={0}

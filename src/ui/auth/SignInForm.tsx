@@ -87,7 +87,7 @@ export function SignInForm({
                 Sign in
               </Button>
               <Button
-                variant="light"
+                variant="default"
                 loading={pending === "sign-up"}
                 disabled={pending !== null}
                 onClick={() => void submit("sign-up")}
