@@ -5,23 +5,39 @@ import { LangLabel } from "./LangLabel";
 
 describe("LangLabel", () => {
   it("shows the flag, the name and a non-default region", () => {
-    renderWithProviders(<LangLabel lang="es" region="BO" />);
+    const { container } = renderWithProviders(
+      <LangLabel lang="es" region="BO" />,
+    );
 
-    expect(screen.getByText(/🇧🇴 Español/)).toBeInTheDocument();
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/flags/bo.svg",
+    );
+    expect(screen.getByText(/Español/)).toBeInTheDocument();
     expect(screen.getByText(/Bolivia/)).toBeInTheDocument();
   });
 
   it("falls back to the default flag and hides the default region name", () => {
-    renderWithProviders(<LangLabel lang="en" />);
+    const { container } = renderWithProviders(<LangLabel lang="en" />);
 
-    expect(screen.getByText(/🇬🇧 English/)).toBeInTheDocument();
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/flags/gb.svg",
+    );
+    expect(screen.getByText(/English/)).toBeInTheDocument();
     expect(screen.queryByText(/United Kingdom/)).not.toBeInTheDocument();
   });
 
   it("shows the flag of the region even when the name is shared with other regions", () => {
-    renderWithProviders(<LangLabel lang="fr" region="CA" />);
+    const { container } = renderWithProviders(
+      <LangLabel lang="fr" region="CA" />,
+    );
 
-    expect(screen.getByText(/🇨🇦 Français/)).toBeInTheDocument();
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/flags/ca.svg",
+    );
+    expect(screen.getByText(/Français/)).toBeInTheDocument();
     expect(screen.getByText(/Canada/)).toBeInTheDocument();
   });
 });

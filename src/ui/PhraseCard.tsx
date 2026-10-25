@@ -16,10 +16,15 @@ import { LangLabel } from "./LangLabel";
 
 export function PhraseCard({ phrase }: { phrase: PhraseDTO }) {
   return (
+    // Not the `bg` prop: it sets the `background` shorthand, which conflicts with the theme's `backgroundColor` on Paper.
     <Paper
       withBorder
       p="md"
-      bg={phrase.isRoot ? "var(--mantine-primary-color-light)" : undefined}
+      style={
+        phrase.isRoot
+          ? { backgroundColor: "var(--mantine-primary-color-light)" }
+          : undefined
+      }
     >
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">

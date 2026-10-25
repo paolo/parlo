@@ -22,17 +22,15 @@ describe("Conversation", () => {
     renderWithProviders(<Conversation />);
     const first = phrases(0);
     expect(
-      screen.getAllByRole("img").map((el) => el.getAttribute("aria-label")),
+      screen.getAllByRole("img").map((el) => el.getAttribute("alt")),
     ).toEqual([
       "Spanish (Mexico)",
       "English (United Kingdom)",
       "French (France)",
     ]);
-    expect(screen.getAllByRole("img").map((el) => el.textContent)).toEqual([
-      "🇲🇽",
-      "🇬🇧",
-      "🇫🇷",
-    ]);
+    expect(
+      screen.getAllByRole("img").map((el) => el.getAttribute("src")),
+    ).toEqual(["/flags/mx.svg", "/flags/gb.svg", "/flags/fr.svg"]);
     const shown = [first.native, first.en, first.fr].map((text) =>
       screen.getByText(text),
     );
@@ -148,7 +146,7 @@ describe("Conversation", () => {
     expect(await screen.findByText(phrases(1).native)).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Portuguese (Brazil)" }),
-    ).toHaveTextContent("🇧🇷");
+    ).toHaveAttribute("src", "/flags/br.svg");
     expect(screen.queryByRole("img", { name: /^Spanish/ })).toBeNull();
   });
 

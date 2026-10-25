@@ -28,7 +28,7 @@ describe("LanguagePicker", () => {
     renderWithProviders(<LanguagePicker />);
 
     await choose("Native language", /Español/);
-    expect(input("Native language region")).toHaveValue("🇪🇸");
+    expect(input("Native language region")).toHaveValue("Spain");
 
     await choose("Native language region", /Bolivia/);
     await choose("Second language", /English/);
@@ -91,8 +91,8 @@ describe("LanguagePicker", () => {
       />,
     );
 
-    expect(input("Native language region")).toHaveValue("🇧🇷");
-    expect(input("Second language region")).toHaveValue("🇬🇧");
-    expect(input("Third language region")).toHaveValue("🇫🇷");
+    expect(input("Native language region")).toHaveValue("Brazil");
+    expect(input("Second language region")).toHaveValue("United Kingdom");
+    expect(input("Third language region")).toHaveValue("France");
   });
 });

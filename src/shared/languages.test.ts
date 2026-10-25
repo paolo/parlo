@@ -3,9 +3,7 @@ import {
   isRegionOf,
   LANG_CODES,
   LANGUAGES,
-  languageFlag,
   PROFILE_SIZE,
-  regionFlag,
   regionName,
 } from "./languages";
 
@@ -33,16 +31,7 @@ describe("language catalog", () => {
   });
 });
 
-describe("flags and region names", () => {
-  it("builds a flag emoji from a region code", () => {
-    expect(regionFlag("BO")).toBe("🇧🇴");
-  });
-
-  it("falls back to the language's default region when none is given", () => {
-    expect(languageFlag("es", null)).toBe(regionFlag("ES"));
-    expect(languageFlag("pt", "BR")).toBe("🇧🇷");
-  });
-
+describe("region names", () => {
   it("names regions in English", () => {
     expect(regionName("BO")).toBe("Bolivia");
   });
