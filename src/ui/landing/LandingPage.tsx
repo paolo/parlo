@@ -3,18 +3,16 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { GoogleSignInButton } from "@/ui/auth/GoogleSignInButton";
 import { authClient } from "@/ui/auth-client";
+import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
 
 export function LandingPage() {
   return (
     <Stack mih="100vh" px="md" py="sm" gap={0}>
       <Group justify="space-between" py="xs">
-        <Text fw={800} size="xl">
-          parlo
-        </Text>
+        <Wordmark size={30} />
         <Button
-          variant="subtle"
-          color="gray"
+          variant="default"
           onClick={() =>
             authClient.signIn.social({ provider: "google", callbackURL: "/" })
           }

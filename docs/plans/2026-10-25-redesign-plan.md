@@ -50,13 +50,13 @@ no prefix, no trailers.
 | Task | Branch | Status |
 |---|---|---|
 | 0 Font specimen | (scratch, decided: Onest for Cyrillic, system fonts for the rest) | [x] |
-| 1 Foundation: tokens, fonts, theme, forced dark | `redesign-foundation` | [ ] |
-| 2 `CLAUDE.md` | `redesign-rules` | [ ] |
-| 3 Wordmark and identity assets | `redesign-identity` | [ ] |
-| 4 Roles, Flag ring, PhraseCard | `redesign-phrase-card` | [ ] |
-| 5 App layout and navigation | `redesign-layout` | [ ] |
-| 6 Screens | `redesign-screens` (may split per screen) | [ ] |
-| 7 Sign-in, landing, preview image | `redesign-public` | [ ] |
+| 1 Foundation: tokens, fonts, theme, forced dark | `redesign-foundation` | [x] |
+| 2 `CLAUDE.md` | `redesign-rules` | [x] |
+| 3 Wordmark and identity assets | `redesign-identity` | [x] |
+| 4 Roles, Flag ring, PhraseCard | `redesign-phrase-card` | [x] |
+| 5 App layout and navigation | `redesign-layout` | [x] |
+| 6 Screens | `redesign-screens` (may split per screen) | [x] |
+| 7 Sign-in, landing, preview image | `redesign-public` | [x] |
 | 8 Light scheme | `redesign-light` | [ ] |
 | 9 Final review | n/a | [ ] |
 

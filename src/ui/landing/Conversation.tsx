@@ -75,6 +75,7 @@ export function Conversation() {
           {...flagFor(native, region)}
           text={phrases[native]}
           side="left"
+          langRole="native"
           exited={!visible}
         />
         <PhraseBubble
@@ -82,6 +83,7 @@ export function Conversation() {
           {...flagFor("en", LANGUAGES.en.defaultRegion)}
           text={phrases.en}
           side="right"
+          langRole="english"
           exited={!visible}
         />
         <PhraseBubble
@@ -89,6 +91,7 @@ export function Conversation() {
           {...flagFor("fr", LANGUAGES.fr.defaultRegion)}
           text={phrases.fr}
           side="left"
+          langRole="french"
           exited={!visible}
         />
       </Stack>
