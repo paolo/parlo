@@ -36,13 +36,16 @@
 .dots i[data-role="french"] {
   background: var(--parlo-french);
 }
-.root[data-on-light] .dots i[data-role="native"] {
+.root[data-on-light] .dots i[data-role="native"],
+:global([data-mantine-color-scheme="light"]) .dots i[data-role="native"] {
   background: var(--parlo-native-deep);
 }
-.root[data-on-light] .dots i[data-role="english"] {
+.root[data-on-light] .dots i[data-role="english"],
+:global([data-mantine-color-scheme="light"]) .dots i[data-role="english"] {
   background: var(--parlo-english-deep);
 }
-.root[data-on-light] .dots i[data-role="french"] {
+.root[data-on-light] .dots i[data-role="french"],
+:global([data-mantine-color-scheme="light"]) .dots i[data-role="french"] {
   background: var(--parlo-french-deep);
 }
 

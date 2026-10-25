@@ -31,6 +31,15 @@
   --parlo-french-deep: #3fc79a;
   --parlo-icon-btn-on-accent: rgba(21, 20, 27, 0.1);
 
+  /* The accent as text, icons and focus rings. On dark it is the lilac role color; on light a darker lilac that
+     passes AA (the role colors are too pale for text on a light ground). The -strong tokens do the same for the
+     other two roles. */
+  --parlo-accent: #b9a6ff;
+  --parlo-native-strong: #ffb38a;
+  --parlo-english-strong: #b9a6ff;
+  --parlo-french-strong: #8fe3c3;
+  --parlo-dots: rgba(255, 255, 255, 0.045);
+
   /* Type families: set by next/font in app/layout.tsx. Onest covers Cyrillic; the system fonts cover the other
      scripts (Devanagari, Gurmukhi, Arabic, CJK) without downloading anything. */
   --parlo-font-display:
@@ -82,10 +91,7 @@
 
 body {
   background-color: var(--parlo-ground);
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.045) 1px,
-    transparent 1.2px
-  );
+  background-image: radial-gradient(var(--parlo-dots) 1px, transparent 1.2px);
   background-size: 18px 18px;
   color: var(--parlo-text);
   font-family: var(--parlo-font-sans);
@@ -104,4 +110,27 @@ body {
   }
 }
 
-/* Light scheme: added in the light-mode task (docs/plans/2026-10-25-redesign-plan.md, Task 8). */
+/* Light scheme: derived from dark. Role colors, their inks and on-accent stay the same, so a phrase card looks
+   identical in both; only the surfaces, text and the text-safe accents change. */
+:root[data-mantine-color-scheme="light"] {
+  color-scheme: light;
+
+  --parlo-ground: #f5f3fa;
+  --parlo-surface: #ffffff;
+  --parlo-surface-raised: #ffffff;
+  --parlo-surface-chip: #ebe8f3;
+  --parlo-border-subtle: rgba(21, 20, 27, 0.1);
+  --parlo-border-strong: rgba(21, 20, 27, 0.2);
+
+  --parlo-text: #15141b;
+  --parlo-text-soft: #3f3d4c;
+  --parlo-text-muted: #5d5a6e;
+  --parlo-text-placeholder: #6b6880;
+
+  --parlo-accent: #5b44d6;
+  --parlo-native-strong: #a64a16;
+  --parlo-english-strong: #5b44d6;
+  --parlo-french-strong: #1d7a5c;
+  --parlo-dots: rgba(21, 20, 27, 0.06);
+  --parlo-shadow-card: 0 24px 40px -28px rgba(21, 20, 27, 0.35);
+}

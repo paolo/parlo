@@ -40,8 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {...mantineHtmlProps}
     >
       <head>
-        {/* Dark only until the light palette lands (see docs/plans/2026-10-25-redesign-plan.md, Task 8). */}
-        <ColorSchemeScript forceColorScheme="dark" />
+        <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body>
         <Providers>{children}</Providers>

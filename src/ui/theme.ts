@@ -3,6 +3,7 @@ import {
   colorsTuple,
   createTheme,
   defaultVariantColorsResolver,
+  type MantineColorsTuple,
   rem,
 } from "@mantine/core";
 
@@ -16,17 +17,26 @@ const GOOGLE = {
   border: `${rem(1)} solid light-dark(#747775, #8E918F)`,
 };
 
+/** Ten shades: the role color everywhere, except shade 6, the darker one that reads as text on a light ground. */
+function roleTuple(role: string, strong: string): MantineColorsTuple {
+  const tuple = [...colorsTuple(role)];
+  tuple[6] = strong;
+  return tuple as unknown as MantineColorsTuple;
+}
+
 export const theme = createTheme({
-  // The accent only colors focus rings, links and checkboxes: a single lilac, so every shade is the same.
+  // The accent only colors focus rings, links and checkboxes.
   // Dark text on the light role colors, light text on dark ones.
   autoContrast: true,
   primaryColor: "english",
-  primaryShade: 5,
+  // Dark uses the role colors as they are (shade 5); light uses the darker text-safe versions (shade 6).
+  primaryShade: { light: 6, dark: 5 },
   colors: {
-    // The three language roles. Their values also live in tokens.css as --parlo-native / -english / -french.
-    native: colorsTuple("#ffb38a"),
-    english: colorsTuple("#b9a6ff"),
-    french: colorsTuple("#8fe3c3"),
+    // The three language roles. Values mirror --parlo-native / -english / -french and their -strong versions
+    // in tokens.css (Mantine needs hex values here, not variables).
+    native: roleTuple("#ffb38a", "#a64a16"),
+    english: roleTuple("#b9a6ff", "#5b44d6"),
+    french: roleTuple("#8fe3c3", "#1d7a5c"),
     // Mantine reads dark[0] as text, [2] as dimmed text, [4] as borders, [5] as chips, [6] as surfaces and [7] as the page.
     dark: [
       "#f3f1f8",
@@ -62,9 +72,10 @@ export const theme = createTheme({
       return {
         ...result,
         background: "var(--parlo-text)",
-        hover: "#ffffff",
-        color: "var(--parlo-on-accent)",
-        hoverColor: "var(--parlo-on-accent)",
+        hover: "var(--parlo-text-soft)",
+        // The label is the ground color: dark on the light pill in dark mode, light on the dark pill in light mode.
+        color: "var(--parlo-ground)",
+        hoverColor: "var(--parlo-ground)",
       };
     }
     return result;
@@ -98,14 +109,18 @@ export const theme = createTheme({
   },
 });
 
-// Passed to MantineProvider (it is a provider prop, not a theme field). The dark scheme gets its page, text and
-// dimmed colors from `colors.dark`; the light values below are placeholders until the light-mode task.
+// Passed to MantineProvider (it is a provider prop, not a theme field). The --parlo-* tokens already change with
+// the scheme, so both schemes point Mantine's variables at them; only "default" differs, because a default
+// surface is a chip in the dark scheme and a white card on the light ground.
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
-    "--mantine-color-body": "#f4f5fb",
-    "--mantine-color-text": "#1d2033",
-    "--mantine-color-dimmed": "#62678a",
+    "--mantine-color-body": "var(--parlo-ground)",
+    "--mantine-color-text": "var(--parlo-text)",
+    "--mantine-color-dimmed": "var(--parlo-text-muted)",
+    "--mantine-color-default": "var(--parlo-surface)",
+    "--mantine-color-default-border": "var(--parlo-border-strong)",
+    "--mantine-color-placeholder": "var(--parlo-text-placeholder)",
   },
   dark: {
     "--mantine-color-default": "var(--parlo-surface-chip)",
