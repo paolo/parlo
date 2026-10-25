@@ -1,0 +1,40 @@
+/* The ring's explanation: same level, same color, so the two read as one thing. */
+.summary {
+  --ring: var(--parlo-text-muted);
+  --label: var(--parlo-text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--parlo-space-2) var(--parlo-space-3);
+}
+.summary[data-level="low"] {
+  --ring: var(--parlo-meter-low);
+  --label: var(--parlo-meter-low);
+}
+.summary[data-level="out"] {
+  --ring: var(--parlo-meter-out);
+  --label: var(--parlo-meter-out);
+}
+
+.count {
+  color: var(--label);
+  font: 600 14px / 1.3 var(--parlo-font-sans);
+}
+
+.bar {
+  height: 4px;
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-border-strong);
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ring);
+  transition: width var(--parlo-dur-strike) var(--parlo-ease-out);
+}
+
+.reset {
+  color: var(--parlo-text-muted);
+  font: 400 12px / 1.3 var(--parlo-font-sans);
+}

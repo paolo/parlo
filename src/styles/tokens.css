@@ -31,6 +31,10 @@
   --parlo-french-deep: #3fc79a;
   --parlo-icon-btn-on-accent: rgba(21, 20, 27, 0.1);
 
+  /* Colour: usage meter. Only the ring around the avatar uses these, once the allowance runs low or out. */
+  --parlo-meter-low: #f5c26b;
+  --parlo-meter-out: #ff7a7a;
+
   /* The accent as text, icons and focus rings. On dark it is the lilac role color; on light a darker lilac that
      passes AA (the role colors are too pale for text on a light ground). The -strong tokens do the same for the
      other two roles. */
@@ -131,6 +135,8 @@ body {
   --parlo-native-strong: #a64a16;
   --parlo-english-strong: #5b44d6;
   --parlo-french-strong: #1d7a5c;
+  --parlo-meter-low: #a35f00;
+  --parlo-meter-out: #c62828;
   --parlo-dots: rgba(21, 20, 27, 0.06);
   --parlo-shadow-card: 0 24px 40px -28px rgba(21, 20, 27, 0.35);
 }

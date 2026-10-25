@@ -18,8 +18,9 @@ typical $0.30 to $0.60. The $10 a month budget covers roughly seven users maxing
 
 ## Steps (one branch each, merged with `--no-ff` after the author says so)
 
-- [x] 1. Phrasebook merge and three-tab navigation (`phrasebook-merge`).
-- [ ] 2. Allowance model and avatar ring replacing the counter. Needs warning tokens in `tokens.css` first.
+- [x] 1. Phrasebook merge and three-tab navigation (merged).
+- [ ] 2. Allowance model and avatar ring replacing the counter. Ring and warning tokens done (`usage-ring`: neutral,
+  amber at 20% left, red when out). Still to do: the ledger (action and cost per row).
   Log token usage per translation so real cost shows up.
 - [ ] 3. Typed answers in Practice.
 - [ ] 4. Later: voice, payments, exam prep (each its own spec).

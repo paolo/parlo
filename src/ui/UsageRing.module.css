@@ -1,0 +1,39 @@
+/* A ring drawn around the avatar: the part of today's allowance that is left. Subtle until it runs low. */
+.wrap {
+  --ring: var(--parlo-text-muted);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--parlo-radius-pill);
+}
+.wrap[data-level="low"] {
+  --ring: var(--parlo-meter-low);
+}
+.wrap[data-level="out"] {
+  --ring: var(--parlo-meter-out);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.track,
+.fill {
+  fill: none;
+  stroke-width: 3;
+}
+.track {
+  stroke: var(--parlo-border-strong);
+}
+.fill {
+  stroke: var(--ring);
+  stroke-linecap: round;
+  transition:
+    stroke-dasharray var(--parlo-dur-strike) var(--parlo-ease-out),
+    stroke var(--parlo-dur-fast);
+}
