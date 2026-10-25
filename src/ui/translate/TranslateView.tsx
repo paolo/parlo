@@ -38,6 +38,7 @@ export function TranslateView() {
       <div className={classes.output}>
         {translate.data ? (
           <TranslationResult
+            key={translate.data.group.id}
             group={translate.data.group}
             profileLangs={profile.data?.languages.map((l) => l.lang)}
             layout="stack"

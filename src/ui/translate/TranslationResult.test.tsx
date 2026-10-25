@@ -81,7 +81,7 @@ describe("TranslationResult", () => {
       ],
     };
 
-    it("replaces the root text and marks the alert as applied", async () => {
+    it("replaces the root text and tucks the alert away once applied", async () => {
       vi.stubGlobal(
         "fetch",
         // The labels also ask for the profile, to show the region the user picked.
@@ -97,7 +97,10 @@ describe("TranslationResult", () => {
         screen.getByRole("button", { name: /use corrected/i }),
       );
 
-      expect(await screen.findByText("Correction applied")).toBeInTheDocument();
+      expect(
+        await screen.findByRole("button", { name: "Show correction" }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
       expect(fetch).toHaveBeenCalledWith(
         "/api/phrase-groups/g1",
         expect.objectContaining({
@@ -106,10 +109,16 @@ describe("TranslationResult", () => {
         }),
       );
       expect(screen.getAllByText("Llegué tarde").length).toBeGreaterThan(0);
-      expect(screen.getByText("me tarde")).toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /use corrected/i }),
       ).not.toBeInTheDocument();
+
+      // It can be brought back, now saying it was applied, with the original struck out.
+      await userEvent.click(
+        screen.getByRole("button", { name: "Show correction" }),
+      );
+      expect(screen.getByText("Correction applied")).toBeInTheDocument();
+      expect(screen.getByText("me tarde")).toBeInTheDocument();
     });
 
     it("keeps the button and shows an error when the request fails", async () => {
@@ -135,6 +144,78 @@ describe("TranslationResult", () => {
       expect(
         screen.getByRole("button", { name: /use corrected/i }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("showing and hiding the correction", () => {
+    const base = makeGroup({
+      phrases: [
+        {
+          lang: "es",
+          text: "Llegué tarde",
+          isRoot: true,
+          correctedFrom: "me tarde",
+        },
+        { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
+        {
+          lang: "fr",
+          text: "J'étais en retard",
+          isRoot: false,
+          correctedFrom: null,
+        },
+      ],
+    });
+    const withCorrection = (accepted: boolean) => ({
+      ...base,
+      correction: {
+        text: "Llegué tarde",
+        explanation: "«Me tarde» no existe.",
+        accepted,
+      },
+    });
+
+    it("shows a suggestion that is not applied yet, and lets it be dismissed and brought back", async () => {
+      renderWithProviders(<TranslationResult group={withCorrection(false)} />);
+
+      expect(
+        screen.getByText("This could sound more natural"),
+      ).toBeInTheDocument();
+      await userEvent.click(
+        screen.getByRole("button", { name: "Hide correction" }),
+      );
+      expect(
+        screen.queryByText("This could sound more natural"),
+      ).not.toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Show correction" }),
+      );
+      expect(
+        screen.getByText("This could sound more natural"),
+      ).toBeInTheDocument();
+    });
+
+    it("starts with an applied correction hidden, as in History and the Phrasebook", async () => {
+      renderWithProviders(<TranslationResult group={withCorrection(true)} />);
+
+      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
+      await userEvent.click(
+        screen.getByRole("button", { name: "Show correction" }),
+      );
+      expect(screen.getByText("Correction applied")).toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Hide correction" }),
+      );
+      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
+    });
+
+    it("offers nothing when there is no correction", () => {
+      renderWithProviders(<TranslationResult group={base} />);
+
+      expect(
+        screen.queryByRole("button", { name: "Show correction" }),
+      ).not.toBeInTheDocument();
     });
   });
 });
