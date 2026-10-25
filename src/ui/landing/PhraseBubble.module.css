@@ -1,0 +1,17 @@
+/* The language label, as on a phrase card: small caps in the role's ink color. */
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  margin-bottom: var(--parlo-space-1);
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parlo-native-ink);
+}
+.label[data-ink="english"] {
+  color: var(--parlo-english-ink);
+}
+.label[data-ink="french"] {
+  color: var(--parlo-french-ink);
+}

@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 import { conversationAt } from "@/ui/landing/phrases";
 import { theme } from "@/ui/theme";
 
-export const alt = "parlo: three languages, one meaning";
+export const alt = "parlo: say it like a local";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -23,7 +23,8 @@ const colors = {
 
 type Role = "native" | "english" | "french";
 
-const TAIL = { left: "36px 36px 36px 8px", right: "36px 36px 8px 36px" };
+// Rounded all round and a little tilted, like the phrase cards in the app.
+const TILT = { left: "-1.2deg", right: "1deg" };
 
 // No flags here: ImageResponse fetches emoji artwork over the network at build time, so the preview shows phrases only.
 function Bubble({
@@ -47,7 +48,8 @@ function Bubble({
           display: "flex",
           flexDirection: "column",
           background: colors[langRole],
-          borderRadius: TAIL[side],
+          borderRadius: 30,
+          transform: `rotate(${TILT[side]})`,
           padding: "20px 32px",
         }}
       >
@@ -84,11 +86,11 @@ export default async function Image() {
             color: colors.text,
           }}
         >
-          Three languages. One meaning.
+          Say it like a local.
         </div>
         <div style={{ fontSize: 28, marginTop: 28, color: colors.dimmed }}>
-          Understand what people really say, and say what you mean like they
-          would.
+          The phrases you grew up with, turned into the way people actually say
+          them in your other languages.
         </div>
       </div>
       <div

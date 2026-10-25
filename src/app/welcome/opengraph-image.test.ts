@@ -5,7 +5,7 @@ describe("landing preview image", () => {
   it("is a 1200x630 PNG with alt text", () => {
     expect(size).toEqual({ width: 1200, height: 630 });
     expect(contentType).toBe("image/png");
-    expect(alt).toMatch(/three languages/i);
+    expect(alt).toMatch(/say it like a local/i);
     expect(alt).toMatch(/^parlo/);
   });
 
