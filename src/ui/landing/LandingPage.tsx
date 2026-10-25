@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@mantine/core";
+import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
-import { GoogleSignInButton } from "@/ui/auth/GoogleSignInButton";
 import { LANG_CODES, LANGUAGES } from "../../shared/languages";
 import { Flag } from "../Flag";
 import { ThemeToggle } from "../ThemeToggle";
@@ -52,7 +52,14 @@ export function LandingPage() {
             never word for word.
           </p>
           <div className={classes.cta}>
-            <GoogleSignInButton />
+            <Button
+              component={Link}
+              href="/sign-in"
+              size="lg"
+              rightSection={<IconArrowRight size={18} stroke={2} />}
+            >
+              Start with a phrase
+            </Button>
           </div>
         </div>
         <Conversation />
@@ -124,7 +131,10 @@ export function LandingPage() {
           <h2 className={classes.closerTitle}>
             Your next bus ride is a lesson.
           </h2>
-          <GoogleSignInButton />
+          <Link href="/sign-in" className={classes.closerLink}>
+            Hop on
+            <IconArrowRight size={18} stroke={2} aria-hidden="true" />
+          </Link>
         </div>
       </section>
 

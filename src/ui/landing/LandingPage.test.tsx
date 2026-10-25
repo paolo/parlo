@@ -1,15 +1,9 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { LandingPage } from "./LandingPage";
 
-const authClient = vi.hoisted(() => ({ signIn: { social: vi.fn() } }));
-vi.mock("@/ui/auth-client", () => ({ authClient }));
-
 describe("LandingPage", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it("shows the headline and subline", () => {
     renderWithProviders(<LandingPage />);
     expect(
@@ -18,16 +12,26 @@ describe("LandingPage", () => {
     expect(screen.getByText(/never word for word/i)).toBeInTheDocument();
   });
 
-  it("offers Continue with Google", async () => {
+  it("sends the hero call to action to the sign-in page", () => {
     renderWithProviders(<LandingPage />);
-    const [hero] = screen.getAllByRole("button", {
-      name: "Continue with Google",
-    });
-    await userEvent.click(hero);
-    expect(authClient.signIn.social).toHaveBeenCalledWith({
-      provider: "google",
-      callbackURL: "/",
-    });
+    expect(
+      screen.getByRole("link", { name: "Start with a phrase" }),
+    ).toHaveAttribute("href", "/sign-in");
+  });
+
+  it("sends the closing call to action to the sign-in page", () => {
+    renderWithProviders(<LandingPage />);
+    expect(screen.getByRole("link", { name: "Hop on" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+  });
+
+  it("does not start Google from the landing page itself", () => {
+    renderWithProviders(<LandingPage />);
+    expect(
+      screen.queryByRole("button", { name: /continue with google/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("links Sign in to the sign-in page, which offers every way in", () => {
@@ -47,18 +51,6 @@ describe("LandingPage", () => {
       screen.getByRole("button", { name: /another phrase/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/made in canada/i)).not.toBeInTheDocument();
-  });
-
-  it("starts Google from the closing call to action too", async () => {
-    renderWithProviders(<LandingPage />);
-    const buttons = screen.getAllByRole("button", {
-      name: "Continue with Google",
-    });
-    await userEvent.click(buttons[buttons.length - 1] as HTMLElement);
-    expect(authClient.signIn.social).toHaveBeenCalledWith({
-      provider: "google",
-      callbackURL: "/",
-    });
   });
 
   it("has a theme toggle", () => {
