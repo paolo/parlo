@@ -16,7 +16,10 @@
 }
 
 .input {
-  padding: 0;
+  /* Square, with a little room each side: a rounded input clips the first letter of a display-font phrase. */
+  border-radius: 0;
+  padding: 0 4px;
+  margin-inline: -4px;
   font: 700 28px / 1.15 var(--parlo-font-display);
   letter-spacing: -0.02em;
   color: var(--parlo-text);
