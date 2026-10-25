@@ -40,6 +40,16 @@ function mockApi(groups: PhraseGroupDTO[]) {
 const click = (name: string | RegExp) =>
   userEvent.click(screen.getByRole("button", { name }));
 
+/** Opens a language pill ("Practice in" or "Type in") and picks a language from its list. */
+async function pickLanguage(label: string, language: RegExp) {
+  await userEvent.click(
+    screen.getByRole("button", { name: new RegExp(`^${label}:`) }),
+  );
+  await userEvent.click(
+    await screen.findByRole("menuitem", { name: language }),
+  );
+}
+
 describe("ReviewView", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -106,7 +116,7 @@ describe("ReviewView", () => {
     await click("Reveal");
     await click("Got it");
 
-    await userEvent.click(screen.getByRole("radio", { name: /Français/ }));
+    await pickLanguage("Practice in", /Français/);
 
     expect(await screen.findByText("Un")).toBeInTheDocument();
     expect(screen.getByText("0 of 2")).toBeInTheDocument();
@@ -134,10 +144,31 @@ describe("ReviewView", () => {
     mockApi([a, b]);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
-    expect(
-      await screen.findByText("Your deck: 2 starred phrases"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("2 starred phrases")).toBeInTheDocument();
     expect(screen.getByText(/small deck so far/i)).toBeInTheDocument();
+  });
+
+  it("swaps the practice and typing languages with one tap", async () => {
+    mockApi([a]);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+    await screen.findByText("One");
+    await userEvent.click(screen.getByRole("radio", { name: "Type" }));
+    expect(
+      screen.getByRole("button", { name: "Practice in: English" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Type in: Español" }),
+    ).toBeInTheDocument();
+
+    await click("Swap languages");
+
+    expect(
+      screen.getByRole("button", { name: "Practice in: Español" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Type in: English" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Uno")).toBeInTheDocument();
   });
 
   it("drops the small-deck hint once there are enough phrases", async () => {
@@ -147,9 +178,7 @@ describe("ReviewView", () => {
     mockApi(many);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
-    expect(
-      await screen.findByText("Your deck: 5 starred phrases"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("5 starred phrases")).toBeInTheDocument();
     expect(screen.queryByText(/small deck so far/i)).not.toBeInTheDocument();
   });
 
@@ -162,7 +191,7 @@ describe("ReviewView", () => {
       screen.getByText(/practice uses the phrases you star/i),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("radiogroup", { name: "Practice in" }),
+      screen.queryByRole("button", { name: /^Practice in:/ }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
       "href",
@@ -280,20 +309,20 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
       await startTyping();
 
-      await userEvent.click(
-        within(group("Type in")).getByRole("radio", { name: /Français/ }),
-      );
+      await pickLanguage("Type in", /Français/);
       expect(screen.getByText("Write it in Français")).toBeInTheDocument();
       await typeAnswer("un");
       expect(await screen.findByText("Correct")).toBeInTheDocument();
 
+      await pickLanguage("Practice in", /Español/);
       // Starting from Español leaves English and Français to type in.
-      await userEvent.click(
-        within(group("Practice in")).getByRole("radio", { name: /Español/ }),
-      );
+      await userEvent.click(screen.getByRole("button", { name: /^Type in:/ }));
       expect(
-        within(group("Type in")).queryByRole("radio", { name: /Español/ }),
+        screen.queryByRole("menuitem", { name: /Español/ }),
       ).not.toBeInTheDocument();
+      expect(
+        await screen.findByRole("menuitem", { name: /English/ }),
+      ).toBeInTheDocument();
     });
 
     it("skips groups missing the answer language and says so", async () => {
@@ -307,9 +336,7 @@ describe("ReviewView", () => {
       mockApi([a, noFrench]);
       renderWithProviders(<ReviewView random={keepOrder} />);
       await startTyping();
-      await userEvent.click(
-        within(group("Type in")).getByRole("radio", { name: /Français/ }),
-      );
+      await pickLanguage("Type in", /Français/);
 
       expect(
         await screen.findByText(
