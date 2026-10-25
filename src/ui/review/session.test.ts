@@ -53,6 +53,27 @@ describe("buildCards", () => {
     expect(built.map((c) => c.id)).toEqual(["g1"]);
     expect(skipped).toBe(1);
   });
+
+  it("for typing, also needs the answer language and keeps that phrase as the answer", () => {
+    const noFrench: PhraseGroupDTO = makeGroup({
+      id: "no-fr",
+      phrases: [
+        { lang: "es", text: "Hola", isRoot: true, correctedFrom: null },
+        { lang: "en", text: "Hello", isRoot: false, correctedFrom: null },
+      ],
+    });
+
+    const { cards: built, skipped } = buildCards(
+      [makeGroup(), noFrench],
+      "en",
+      ["es", "en", "fr"],
+      "fr",
+    );
+
+    expect(built.map((c) => c.id)).toEqual(["g1"]);
+    expect(built[0].answer?.text).toBe("Il pleut des cordes");
+    expect(skipped).toBe(1);
+  });
 });
 
 describe("ReviewSession", () => {

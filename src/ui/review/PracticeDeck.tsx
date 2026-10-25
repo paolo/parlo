@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { Flag } from "../Flag";
 import { useProfileRegion } from "../queries";
@@ -7,7 +8,7 @@ import type { ReviewCard } from "./session";
 
 /**
  * The front card plus two cards peeking out behind it while more are waiting. `step` changes with every
- * graded card so the next one is dealt in.
+ * graded card so the next one is dealt in. `children` is the lower part of the card: how the user answers.
  */
 export function PracticeDeck({
   card,
@@ -15,9 +16,7 @@ export function PracticeDeck({
   profileLangs,
   remaining,
   step,
-  revealed,
-  onReveal,
-  onGrade,
+  children,
 }: {
   card: ReviewCard;
   lang: Lang;
@@ -25,9 +24,7 @@ export function PracticeDeck({
   /** Cards not yet got: decides how many cards show behind this one. */
   remaining: number;
   step: number;
-  revealed: boolean;
-  onReveal: () => void;
-  onGrade: (result: "gotIt" | "again") => void;
+  children: ReactNode;
 }) {
   const region = useProfileRegion(lang);
   const role: Role | undefined = roleFor(lang, profileLangs);
@@ -49,53 +46,7 @@ export function PracticeDeck({
         <p className={classes.front} lang={lang} dir="auto">
           {card.front.text}
         </p>
-        {revealed && (
-          <div className={classes.answers}>
-            {card.back.map((phrase) => (
-              <p
-                key={phrase.lang}
-                className={classes.answer}
-                data-role={roleFor(phrase.lang, profileLangs)}
-              >
-                <span className={classes.answerLang}>
-                  {LANGUAGES[phrase.lang].endonym}
-                </span>
-                <span
-                  className={classes.answerText}
-                  lang={phrase.lang}
-                  dir="auto"
-                >
-                  {phrase.text}
-                </span>
-              </p>
-            ))}
-          </div>
-        )}
-        <div className={classes.actions}>
-          {revealed ? (
-            <>
-              <button
-                type="button"
-                className={classes.action}
-                data-variant="ghost"
-                onClick={() => onGrade("again")}
-              >
-                Again
-              </button>
-              <button
-                type="button"
-                className={classes.action}
-                onClick={() => onGrade("gotIt")}
-              >
-                Got it
-              </button>
-            </>
-          ) : (
-            <button type="button" className={classes.action} onClick={onReveal}>
-              Reveal
-            </button>
-          )}
-        </div>
+        {children}
       </article>
     </div>
   );
