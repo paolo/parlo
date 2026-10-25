@@ -5,7 +5,7 @@ import { ProfileGate } from "@/ui/profile/ProfileGate";
 export default function HistoryPage() {
   return (
     <ProfileGate>
-      <Stack maw={960}>
+      <Stack>
         <div>
           <Title order={2}>History</Title>
           <Text c="dimmed">Everything you've translated, newest first.</Text>
