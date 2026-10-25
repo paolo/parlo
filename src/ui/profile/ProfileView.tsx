@@ -1,13 +1,25 @@
 "use client";
 
-import { Alert, Loader, Stack, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Avatar,
+  Button,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { authClient } from "@/ui/auth-client";
 import { errorMessage } from "../errors";
 import { useProfile } from "../queries";
+import { signOut } from "../signOut";
 import { LanguagePicker } from "./LanguagePicker";
 
 export function ProfileView() {
   const profile = useProfile();
+  const user = authClient.useSession().data?.user;
 
   if (profile.isPending) return <Loader size="sm" />;
   if (profile.isError) {
@@ -18,9 +30,22 @@ export function ProfileView() {
     );
   }
   return (
-    <Stack maw={720}>
+    <Stack maw={720} gap="lg">
+      <Group gap="md" wrap="nowrap">
+        <Avatar
+          src={user?.image}
+          name={user?.name}
+          color="initials"
+          radius="xl"
+          size={60}
+        />
+        <div>
+          <Title order={2}>{user?.name ?? "Profile"}</Title>
+          {user?.email && <Text c="dimmed">{user.email}</Text>}
+        </div>
+      </Group>
       <div>
-        <Title order={2}>Your languages</Title>
+        <Title order={3}>Your languages</Title>
         <Text c="dimmed">
           Parlo translates between these three and explains and corrects in the
           first one. The regions help it understand how you speak.
@@ -35,6 +60,9 @@ export function ProfileView() {
       <Text size="sm" c="dimmed">
         Levels per language are coming next.
       </Text>
+      <Button variant="default" onClick={signOut} w="fit-content">
+        Sign out
+      </Button>
     </Stack>
   );
 }
