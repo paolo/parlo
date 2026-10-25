@@ -29,6 +29,26 @@ async function pick(slot: string, kind: "language" | "region", chip: RegExp) {
 describe("LanguagePicker", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("starts with every slot closed when the profile is complete", () => {
+    renderWithProviders(
+      <LanguagePicker
+        initial={[
+          { lang: "es", region: "BO", level: "native", position: 0 },
+          { lang: "en", region: "GB", level: "intermediate", position: 1 },
+          { lang: "fr", region: "FR", level: "intermediate", position: 2 },
+        ]}
+      />,
+    );
+
+    for (const name of [
+      "Native language",
+      "Second language",
+      "Third language",
+    ]) {
+      expect(row(name)).toHaveAttribute("aria-expanded", "false");
+    }
+  });
+
   it("starts with the native slot open and the learning slots closed", () => {
     renderWithProviders(<LanguagePicker />);
 
