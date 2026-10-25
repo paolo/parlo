@@ -74,6 +74,16 @@ describe("UserMenu", () => {
       expect(screen.getByText(/^Resets at/)).toBeInTheDocument();
     });
 
+    it("colors the menu text with the ring's level", async () => {
+      mockUsage(42);
+      renderWithProviders(<UserMenu />);
+      await userEvent.click(
+        await screen.findByRole("button", { name: /translations left/ }),
+      );
+      const count = await screen.findByText("8 of 50 translations left today");
+      expect(count.parentElement).toHaveAttribute("data-level", "low");
+    });
+
     it.each([
       [10, "ok"],
       [42, "low"],

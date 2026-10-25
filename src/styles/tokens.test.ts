@@ -63,6 +63,16 @@ describe.each([
     );
   });
 
+  // The same colors are the usage count in the account menu.
+  it.each([
+    "--parlo-meter-low",
+    "--parlo-meter-out",
+  ])("reads %s as text on the menu surfaces", (meter) => {
+    for (const surface of ["--parlo-surface", "--parlo-surface-raised"]) {
+      expect(contrastRatio(t[meter], t[surface])).toBeGreaterThanOrEqual(AA);
+    }
+  });
+
   it.each(ROLES)("puts dark text and the ink on the %s card", (role) => {
     expect(
       contrastRatio(t["--parlo-on-accent"], t[`--parlo-${role}`]),

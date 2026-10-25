@@ -1,12 +1,13 @@
 "use client";
 
-import { Avatar, Menu, Text, UnstyledButton } from "@mantine/core";
+import { Avatar, Menu, UnstyledButton } from "@mantine/core";
 import { IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
 import { authClient } from "@/ui/auth-client";
 import { useUsage } from "./queries";
 import { signOut } from "./signOut";
 import { UsageRing } from "./UsageRing";
+import { UsageSummary } from "./UsageSummary";
 import { meterState } from "./usageMeter";
 
 export function UserMenu() {
@@ -14,12 +15,6 @@ export function UserMenu() {
   const user = data?.user;
   const usage = useUsage().data;
   const left = usage && meterState(usage.usedToday, usage.dailyLimit).remaining;
-  const resetTime =
-    usage &&
-    new Date(usage.resetAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   const avatar = (
     <Avatar
@@ -53,13 +48,13 @@ export function UserMenu() {
       <Menu.Dropdown>
         {user && <Menu.Label>{user.email}</Menu.Label>}
         {usage && (
-          <Text size="sm" px="sm" py={6}>
-            {left} of {usage.dailyLimit} translations left today
-            <Text span display="block" size="xs" c="dimmed">
-              Resets at {resetTime}
-            </Text>
-          </Text>
+          <UsageSummary
+            used={usage.usedToday}
+            limit={usage.dailyLimit}
+            resetAt={usage.resetAt}
+          />
         )}
+        <Menu.Divider />
         <Menu.Item
           component={Link}
           href="/profile"
