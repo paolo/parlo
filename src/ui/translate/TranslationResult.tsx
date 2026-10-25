@@ -1,6 +1,14 @@
 "use client";
 
-import { Badge, Button, Group, SimpleGrid, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconBulb, IconInfoCircle } from "@tabler/icons-react";
 import { useState } from "react";
@@ -39,7 +47,7 @@ export function TranslationResult({
     (current.correction ? !current.correction.accepted : false);
   return (
     <Stack>
-      <Group justify="space-between">
+      <Group justify="space-between" wrap="nowrap">
         {root ? (
           <Group gap="xs">
             <Text size="sm" c="dimmed">
@@ -52,16 +60,19 @@ export function TranslationResult({
         ) : (
           <span />
         )}
-        <Group gap="xs">
+        <Group gap="xs" wrap="nowrap">
           {root && current.correction && !showCorrection && (
-            <Button
-              variant="subtle"
-              color="gray"
-              leftSection={<IconBulb size={18} stroke={1.8} />}
-              onClick={() => setCorrectionShown(true)}
-            >
-              Show correction
-            </Button>
+            // An icon button the size of the star beside it, so the two line up and never wrap.
+            <Tooltip label="Show correction" withArrow>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label="Show correction"
+                onClick={() => setCorrectionShown(true)}
+              >
+                <IconBulb size={20} stroke={1.8} />
+              </ActionIcon>
+            </Tooltip>
           )}
           {/* Keyed so a new translation doesn't inherit the previous one's star. */}
           <FavoriteButton key={group.id} group={current} />
