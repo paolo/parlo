@@ -138,7 +138,7 @@ function Session({
             : "Nothing to review yet. Star some translations first."}
         </Text>
         {skippedLine}
-        <Button component={Link} href="/" variant="light">
+        <Button component={Link} href="/">
           Go to Translate
         </Button>
       </Stack>
@@ -185,9 +185,14 @@ function Session({
         {skippedLine}
       </Group>
       {card && (
-        <Paper withBorder p="lg">
+        <Paper withBorder radius="md" p="lg">
           <Stack gap="md">
-            <Text size="xl" dir="auto">
+            <Text
+              size="xl"
+              fw={700}
+              dir="auto"
+              style={{ fontFamily: "var(--parlo-font-display)" }}
+            >
               {card.front.text}
             </Text>
             {revealed ? (
@@ -203,9 +208,7 @@ function Session({
                   ))}
                 </Stack>
                 <Group>
-                  <Button color="teal" onClick={() => grade("gotIt")}>
-                    Got it
-                  </Button>
+                  <Button onClick={() => grade("gotIt")}>Got it</Button>
                   <Button variant="default" onClick={() => grade("again")}>
                     Again
                   </Button>
