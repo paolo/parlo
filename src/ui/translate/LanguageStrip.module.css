@@ -10,6 +10,7 @@
 }
 
 .pill {
+  --color: var(--parlo-native);
   display: inline-flex;
   align-items: center;
   gap: var(--parlo-space-2);
@@ -17,29 +18,23 @@
   padding: 0 var(--parlo-space-4) 0 10px;
   border-radius: var(--parlo-radius-pill);
   background: var(--parlo-surface-chip);
-  border: 1px solid var(--parlo-border-subtle);
+  border: 1.5px solid var(--parlo-border-subtle);
   font: 600 15px / 1 var(--parlo-font-sans);
+  transition: border-color var(--parlo-dur-pop) var(--parlo-ease-out);
+}
+.pill[data-role="english"] {
+  --color: var(--parlo-english);
+}
+.pill[data-role="french"] {
+  --color: var(--parlo-french);
 }
 
 .strip:hover .pill {
   border-color: var(--parlo-border-strong);
 }
 
-.strip > svg {
-  color: var(--parlo-text-muted);
-}
-
-.group {
-  display: inline-flex;
-  gap: var(--parlo-space-1);
-  padding: 0 6px;
-  border-radius: var(--parlo-radius-pill);
-  background: var(--parlo-surface-raised);
-  border: 1px solid var(--parlo-border-subtle);
-}
-
-.group .pill {
-  background: transparent;
-  border: 0;
-  padding-inline: 8px;
+/* The language the last phrase was in. */
+.pill[data-detected],
+.strip:hover .pill[data-detected] {
+  border-color: var(--color);
 }
