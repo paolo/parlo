@@ -1,14 +1,14 @@
 "use client";
 
-import { IconBook, IconHistory, IconLanguage } from "@tabler/icons-react";
+import { IconBook, IconCards, IconLanguage } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import classes from "./NavLinks.module.css";
 
 const links = [
   { href: "/", label: "Translate", icon: IconLanguage },
-  { href: "/history", label: "History", icon: IconHistory },
   { href: "/phrasebook", label: "Phrasebook", icon: IconBook },
+  { href: "/practice", label: "Practice", icon: IconCards },
 ] as const;
 
 export function NavLinks() {

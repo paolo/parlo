@@ -70,7 +70,7 @@ describe("proxy", () => {
       "/",
       "/welcome",
       "/phrasebook",
-      "/history",
+      "/practice",
     ])("guards %s", (path) => {
       expect(matcher.test(path)).toBe(true);
     });
