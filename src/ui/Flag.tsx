@@ -18,9 +18,14 @@ export function Flag({
     <img
       src={`/flags/${region.toLowerCase()}.svg`}
       alt={alt}
-      width={size}
-      height={size}
-      style={{ display: "inline-block", verticalAlign: "-0.125em", ...style }}
+      // Sizes go in CSS: the width and height attributes only take plain pixel numbers, so "1em" would become 1px.
+      style={{
+        display: "inline-block",
+        verticalAlign: "-0.125em",
+        width: size,
+        height: size,
+        ...style,
+      }}
     />
   );
 }

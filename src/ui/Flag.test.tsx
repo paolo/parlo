@@ -11,9 +11,16 @@ describe("Flag", () => {
     expect(img).toHaveAttribute("alt", "");
   });
 
-  it("takes an accessible name and a size", () => {
-    render(<Flag region="es" alt="Spain" size={24} />);
+  it("takes an accessible name", () => {
+    render(<Flag region="es" alt="Spain" />);
 
-    expect(screen.getByAltText("Spain")).toHaveAttribute("width", "24");
+    expect(screen.getByAltText("Spain")).toBeInTheDocument();
+  });
+
+  it("sizes by CSS so relative units work", () => {
+    render(<Flag region="es" alt="Spain" size="1.5rem" />);
+
+    const { style } = screen.getByAltText("Spain");
+    expect([style.width, style.height]).toEqual(["1.5rem", "1.5rem"]);
   });
 });
