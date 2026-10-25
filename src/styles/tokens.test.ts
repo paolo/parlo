@@ -53,6 +53,16 @@ describe.each([
     expect(contrastRatio(t[text], t[surface])).toBeGreaterThanOrEqual(AA);
   });
 
+  // Graphics need 3:1 (WCAG 1.4.11), not the 4.5:1 of text.
+  it.each([
+    "--parlo-meter-low",
+    "--parlo-meter-out",
+  ])("draws the %s ring visibly on the ground", (meter) => {
+    expect(contrastRatio(t[meter], t["--parlo-ground"])).toBeGreaterThanOrEqual(
+      3,
+    );
+  });
+
   it.each(ROLES)("puts dark text and the ink on the %s card", (role) => {
     expect(
       contrastRatio(t["--parlo-on-accent"], t[`--parlo-${role}`]),

@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import classes from "./AppLayout.module.css";
 import { NavLinks } from "./NavLinks";
-import { UsageBadge } from "./UsageBadge";
 import { UserMenu } from "./UserMenu";
 import { Wordmark } from "./Wordmark";
 
@@ -24,7 +23,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <NavLinks />
           </nav>
           <div className={classes.tools}>
-            <UsageBadge />
             <UserMenu />
           </div>
         </div>
