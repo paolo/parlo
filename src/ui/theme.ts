@@ -1,5 +1,6 @@
 import {
   type CSSVariablesResolver,
+  colorsTuple,
   createTheme,
   defaultVariantColorsResolver,
   rem,
@@ -15,45 +16,35 @@ const GOOGLE = {
   border: `${rem(1)} solid light-dark(#747775, #8E918F)`,
 };
 
-const FILLED_PRIMARY_TEXT =
-  "light-dark(var(--mantine-color-white), var(--mantine-color-black))";
-
 export const theme = createTheme({
-  primaryColor: "parlo",
-  primaryShade: { light: 6, dark: 4 },
+  // The accent only colors focus rings, links and checkboxes: a single lilac, so every shade is the same.
+  primaryColor: "english",
+  primaryShade: 5,
   colors: {
-    // Shade 6 is the accent on light backgrounds, shade 4 on dark ones.
-    parlo: [
-      "#eef0fe",
-      "#dde1fc",
-      "#c3caf9",
-      "#a8b2f7",
-      "#8f9cf5",
-      "#6b7be0",
-      "#4c5fd5",
-      "#3f50bb",
-      "#34429d",
-      "#2a3680",
-    ],
-    // Mantine reads dark[0] as text, [2] as dimmed text, [4] as borders, [6] as surfaces and [7] as the page.
+    // The three language roles. Their values also live in tokens.css as --parlo-native / -english / -french.
+    native: colorsTuple("#ffb38a"),
+    english: colorsTuple("#b9a6ff"),
+    french: colorsTuple("#8fe3c3"),
+    // Mantine reads dark[0] as text, [2] as dimmed text, [4] as borders, [5] as chips, [6] as surfaces and [7] as the page.
     dark: [
-      "#eceefb",
-      "#c3c7e6",
-      "#8d93b8",
-      "#6d739c",
-      "#4d5280",
-      "#373b69",
-      "#21244a",
-      "#14162a",
-      "#0f1122",
-      "#0a0b18",
+      "#f3f1f8",
+      "#c9c6d6",
+      "#a9a6b8",
+      "#8b8899",
+      "#3a3944",
+      "#2a2933",
+      "#1f1e27",
+      "#15141b",
+      "#111016",
+      "#0c0b10",
     ],
   },
+  // Cards and inputs are rounded rectangles; buttons and chips opt into "xl" (a pill).
   defaultRadius: "md",
-  fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-  fontFamilyMonospace: "var(--font-geist-mono), ui-monospace, monospace",
+  radius: { xs: "16px", sm: "22px", md: "26px", lg: "28px", xl: "999px" },
+  fontFamily: "var(--parlo-font-sans)",
   headings: {
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+    fontFamily: "var(--parlo-font-display)",
     fontWeight: "800",
   },
   variantColorResolver: (input) => {
@@ -61,18 +52,25 @@ export const theme = createTheme({
       return { ...GOOGLE, hoverColor: GOOGLE.color };
     }
     const result = defaultVariantColorsResolver(input);
-    if (input.variant === "filled" && input.color === "parlo") {
-      // Shade 4 (the dark scheme's primary) is too light for white text; see theme.test.ts.
+    if (
+      input.variant === "filled" &&
+      input.color === input.theme.primaryColor
+    ) {
+      // The primary action is the inverse pill: a light fill with a dark label.
       return {
         ...result,
-        color: FILLED_PRIMARY_TEXT,
-        hoverColor: FILLED_PRIMARY_TEXT,
+        background: "var(--parlo-text)",
+        hover: "#ffffff",
+        color: "var(--parlo-on-accent)",
+        hoverColor: "var(--parlo-on-accent)",
       };
     }
     return result;
   },
   // 16px inputs: iOS Safari zooms into anything smaller when it gets focus.
   components: {
+    // filled is the primary pill, default the secondary, outline the ghost.
+    Button: { defaultProps: { radius: "xl", size: "md" } },
     Textarea: { defaultProps: { size: "md" } },
     TextInput: { defaultProps: { size: "md" } },
     PasswordInput: { defaultProps: { size: "md" } },
@@ -88,12 +86,12 @@ export const theme = createTheme({
         },
       },
     },
-    Title: { styles: { root: { letterSpacing: "-0.02em" } } },
+    Title: { styles: { root: { letterSpacing: "-0.025em" } } },
   },
 });
 
-// Passed to MantineProvider (it is a provider prop, not a theme field). The dark scheme gets its
-// page, text and dimmed colors from `colors.dark`; only the light scheme needs overriding.
+// Passed to MantineProvider (it is a provider prop, not a theme field). The dark scheme gets its page, text and
+// dimmed colors from `colors.dark`; the light values below are placeholders until the light-mode task.
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
@@ -101,5 +99,9 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
     "--mantine-color-text": "#1d2033",
     "--mantine-color-dimmed": "#62678a",
   },
-  dark: {},
+  dark: {
+    "--mantine-color-default": "var(--parlo-surface-chip)",
+    "--mantine-color-default-border": "var(--parlo-border-subtle)",
+    "--mantine-color-placeholder": "var(--parlo-text-placeholder)",
+  },
 });

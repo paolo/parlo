@@ -38,7 +38,7 @@ no prefix, no trailers.
 ## Review Focus
 
 1. No screen is left in the old look at any merge, and light mode (forced off until Task 8) is not reachable broken.
-2. Every supported script renders with the chosen font, and the card weight does not jump between scripts (Tasks 0, 1).
+2. Every supported script renders (Onest for Cyrillic, system fonts elsewhere) and the Windows weight cost is accepted (Task 1).
 3. Contrast: AA for text on each role color, each surface and the muted/placeholder colors (Tasks 1, 8).
 4. `theme.ts` is still importable by server code (the preview image) and the Google button is unchanged (Task 1).
 5. Reduced motion disables rise, bob, pop (Tasks 1, 3, 4).
@@ -49,7 +49,7 @@ no prefix, no trailers.
 
 | Task | Branch | Status |
 |---|---|---|
-| 0 Font specimen | (scratch, no merge) | [ ] |
+| 0 Font specimen | (scratch, decided: Onest for Cyrillic, system fonts for the rest) | [x] |
 | 1 Foundation: tokens, fonts, theme, forced dark | `redesign-foundation` | [ ] |
 | 2 `CLAUDE.md` | `redesign-rules` | [ ] |
 | 3 Wordmark and identity assets | `redesign-identity` | [ ] |
@@ -62,16 +62,11 @@ no prefix, no trailers.
 
 ---
 
-### Task 0: Font specimen (decision, no merge)
+### Task 0: Font specimen (done)
 
-**Files:** scratch only, in `$CLAUDE_JOB_DIR/tmp` or another folder outside the repo. Result recorded in spec §4.
-
-- [ ] Read `node_modules/next/dist/docs/` on `next/font/google`: subsets available for Bricolage Grotesque, Instrument
-  Sans, and the Noto candidates (Cyrillic? Devanagari? Gurmukhi? Arabic? SC?).
-- [ ] Build a throwaway page rendering one real phrase per script (Ukrainian, Hindi, Punjabi, Arabic, Persian, Chinese,
-  plus Spanish and French) in the card style, weights 700 and 800, with two or three fallback candidates per script.
-- [ ] Screenshot it (browser tools) and show the author; pick fallbacks together.
-- [ ] Update spec §4 with the final choice and any size cost (Chinese). Commit the spec change on `redesign-foundation`.
+Decided with the author: the stacks looked alike, so load as few fonts as possible. Latin: Bricolage + Instrument
+Sans; Cyrillic: Onest; other scripts: platform system fonts. Recorded in spec §4. Instrument Sans has no Cyrillic
+(checked in the installed `next/font` data) and tops out at weight 700.
 
 ### Task 1: Foundation: tokens, fonts, theme, forced dark
 
@@ -81,8 +76,8 @@ no prefix, no trailers.
 
 **Steps:**
 - [ ] Copy tokens from the export; add the empty light-scheme block; import in `layout.tsx` after Mantine styles.
-- [ ] Replace Geist with Bricolage + Instrument Sans (+ Task 0 fallbacks) via `next/font`; expose
-  `--font-display`, `--font-sans` and per-script variables; build the stacks in `tokens.css`. Drop Geist Mono if
+- [ ] Replace Geist with Bricolage + Instrument Sans + Onest for Cyrillic via `next/font`; expose
+  `--font-display`, `--font-sans` and `--font-cyrillic`; build the stacks in `tokens.css`. Drop Geist Mono if
   unused (`grep`).
 - [ ] Merge the export's theme into `theme.ts`: dark scale, `native`/`english`/`french` tuples, radius scale, pill
   Button mapping, `cssVariablesResolver`. Keep the `google` variant, 16 px input sizes, plain-object components,
@@ -128,7 +123,7 @@ no prefix, no trailers.
 - [ ] Rewrite `PhraseCard` per spec §6 (no listen button, no literal line); keep the copy and favorite behavior,
   `lang`, `dir="auto"`, accessible labels; `rise` stagger via `index`; reduced motion.
 - [ ] Update call sites to pass `role`; keep existing behavior tests green (adjust markup assertions only).
-- [ ] Check long phrases and every script from Task 0 on the card at 320 px.
+- [ ] Check long phrases and every supported script on the card at 320 px.
 
 ### Task 5: App layout and navigation
 

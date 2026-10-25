@@ -74,17 +74,19 @@ copy; line icons; small purposeful motion (rise, strike, pop, bob).
 
 ## 4. Fonts
 
-- Latin: Bricolage Grotesque (display: wordmark, phrases, headings) and Instrument Sans (UI), loaded with
-  `next/font/google` as CSS variables. Instrument Serif is not loaded (see non-goals).
-- Non-Latin: each family's stack gets a script-specific fallback so a card in Ukrainian, Hindi, Punjabi, Arabic,
-  Persian or Chinese gets a deliberate font. `next/font` loads per subset with `unicode-range`, so a script's font is
-  only downloaded when a phrase in that script is on screen.
-- Candidates (to be confirmed by eye in the specimen step, Task 0): Cyrillic: Noto Sans or Onest; Devanagari: Noto
-  Sans Devanagari; Gurmukhi: Noto Sans Gurmukhi; Arabic and Persian: Noto Sans Arabic; Chinese: Noto Sans SC,
-  or the system font if its weight is too high for the page.
-- Whether Instrument Sans itself covers Cyrillic must be checked against the installed `next/font` data, not
-  assumed.
-- Weights for fallbacks match the display font (700 and 800) so a card does not change weight between scripts.
+Decided after a specimen of Bricolage with several fallback stacks (Task 0): the options looked alike, so the
+choice is the one that downloads the fewest fonts.
+
+- Latin: Bricolage Grotesque (display: wordmark, phrases, headings; weights up to 800) and Instrument Sans (UI;
+  weights up to 700), loaded with `next/font/google` as CSS variables. Instrument Serif is not loaded (see non-goals).
+- Cyrillic: Instrument Sans and Bricolage have none, and Ukrainian can be a user's native language, so one extra
+  family is loaded: Onest (variable, `cyrillic` and `latin` subsets), placed after the Latin fonts in both stacks.
+- Hindi, Punjabi, Arabic, Persian, Chinese: no download. The stacks end in system fonts that name each
+  platform's own: `"Nirmala UI"` (Devanagari, Gurmukhi, Windows), `"Segoe UI"`, `"Noto Sans"` (Android, Linux),
+  then `system-ui, sans-serif`. Apple platforms resolve these scripts through `system-ui`.
+- Known cost: non-Latin text differs a little per device, and Windows has fewer weights, so 800 renders as bold.
+  Not tested on Windows or Android by us. If a script looks poor on a real device, add its Noto font then
+  (`Noto Sans Devanagari`, `Gurmukhi`, `Arabic` are all available in `next/font/google`).
 - Phrase elements keep `lang` and `dir="auto"` (already true in the app; the card rewrite must not drop them).
 
 ## 5. `CLAUDE.md`
@@ -128,7 +130,6 @@ Shared pieces go in `src/ui/` with a `.module.css`, next to the existing compone
 ## 8. Left to the builder
 
 - Exact component markup and CSS inside the constraints above.
-- Which fallback fonts win the specimen (Task 0), within §4.
 - Bottom-nav and rail visuals, as long as they follow the tokens and the 44 px rule.
 - Light palette values (Task 8), derived from dark and verified for AA. The export's `-deep` colors are meant for
   light surfaces and are the starting point.
