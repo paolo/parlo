@@ -61,6 +61,40 @@ function Bubble({
   );
 }
 
+// The Wordmark component uses CSS modules and variables, which ImageResponse can't read: same look, inline.
+function Wordmark({ size }: { size: number }) {
+  const dot = Math.round(size * 0.23);
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: size * 0.2,
+        fontSize: size,
+        fontWeight: 800,
+        letterSpacing: -size * 0.045,
+        lineHeight: 1,
+        color: colors.text,
+      }}
+    >
+      <div>parlo</div>
+      <div style={{ display: "flex", gap: 3 }}>
+        {(["native", "english", "french"] as const).map((role) => (
+          <div
+            key={role}
+            style={{
+              width: dot,
+              height: dot,
+              borderRadius: dot,
+              background: colors[role],
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Statically generated at build time: it has no request-time inputs.
 export default async function Image() {
   const { set, native } = conversationAt(0);
@@ -74,8 +108,12 @@ export default async function Image() {
         justifyContent: "space-between",
         background: colors.page,
         padding: "0 80px",
+        position: "relative",
       }}
     >
+      <div style={{ position: "absolute", top: 52, left: 80, display: "flex" }}>
+        <Wordmark size={52} />
+      </div>
       <div style={{ display: "flex", flexDirection: "column", width: 460 }}>
         <div
           style={{
