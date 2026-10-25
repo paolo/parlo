@@ -1,43 +1,35 @@
 "use client";
 
-import { AppShell, Burger, Group, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import Link from "next/link";
 import type { ReactNode } from "react";
+import classes from "./AppLayout.module.css";
 import { NavLinks } from "./NavLinks";
 import { UsageBadge } from "./UsageBadge";
 import { UserMenu } from "./UserMenu";
+import { Wordmark } from "./Wordmark";
 
+/**
+ * Phone: a header on top and the navigation pinned to the bottom edge.
+ * Desktop (900px and up): the navigation becomes a rail on the left, under the header.
+ */
 export function AppLayout({ children }: { children: ReactNode }) {
-  const [opened, { toggle, close }] = useDisclosure();
-
   return (
-    <AppShell
-      header={{ height: 60 }}
-      navbar={{ width: 220, breakpoint: "sm", collapsed: { mobile: !opened } }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              hiddenFrom="sm"
-              size="sm"
-              aria-label="Toggle navigation"
-            />
-            <Title order={3}>parlo</Title>
-          </Group>
-          <Group gap="sm">
-            <UsageBadge />
-            <UserMenu />
-          </Group>
-        </Group>
-      </AppShell.Header>
-      <AppShell.Navbar p="sm">
-        <NavLinks onNavigate={close} />
-      </AppShell.Navbar>
-      <AppShell.Main>{children}</AppShell.Main>
-    </AppShell>
+    <div className={classes.shell}>
+      <header className={classes.header}>
+        <Link href="/" className={classes.home} aria-label="parlo, home">
+          <Wordmark size={28} />
+        </Link>
+        <div className={classes.tools}>
+          <UsageBadge />
+          <UserMenu />
+        </div>
+      </header>
+      <nav className={classes.nav} aria-label="Main">
+        <NavLinks />
+      </nav>
+      <main className={classes.main}>
+        <div className={classes.content}>{children}</div>
+      </main>
+    </div>
   );
 }

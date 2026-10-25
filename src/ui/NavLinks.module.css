@@ -1,0 +1,44 @@
+/* Phone: icon over label, three equal pills. */
+.link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--parlo-size-touch);
+  padding: var(--parlo-space-1) var(--parlo-space-2);
+  border-radius: var(--parlo-radius-nav);
+  color: var(--parlo-text-muted);
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  text-decoration: none;
+  transition:
+    background var(--parlo-dur-fast),
+    color var(--parlo-dur-fast);
+}
+
+.link:hover {
+  color: var(--parlo-text);
+}
+
+.link[data-active] {
+  background: var(--parlo-surface-chip);
+  color: var(--parlo-text);
+}
+
+.link[data-active] svg {
+  color: var(--parlo-english);
+}
+
+/* Desktop rail: icon beside label. */
+@media (min-width: 900px) {
+  .link {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--parlo-space-3);
+    padding: var(--parlo-space-2) var(--parlo-space-4);
+    border-radius: var(--parlo-radius-pill);
+    font-size: 15px;
+  }
+}

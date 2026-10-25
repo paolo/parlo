@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { AppLayout } from "./AppLayout";
@@ -17,12 +17,23 @@ describe("AppLayout", () => {
     pathname.current = "/";
   });
 
-  it("shows the lowercase wordmark as a heading", () => {
+  it("shows the wordmark, linked home", () => {
+    renderWithProviders(<AppLayout>content</AppLayout>);
+    expect(screen.getByRole("link", { name: "parlo, home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("img", { name: "parlo" })).toBeInTheDocument();
+    expect(screen.queryByText("Parlo")).toBeNull();
+  });
+
+  it("puts the sections in a labelled navigation", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     expect(
-      screen.getByRole("heading", { level: 3, name: "parlo" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Parlo")).toBeNull();
+      within(screen.getByRole("navigation", { name: "Main" })).getAllByRole(
+        "link",
+      ),
+    ).toHaveLength(3);
   });
 
   it("renders the three main sections as links", () => {
@@ -42,10 +53,11 @@ describe("AppLayout", () => {
     pathname.current = "/history";
     renderWithProviders(<AppLayout>content</AppLayout>);
     expect(screen.getByRole("link", { name: "History" })).toHaveAttribute(
-      "data-active",
+      "aria-current",
+      "page",
     );
     expect(screen.getByRole("link", { name: "Translate" })).not.toHaveAttribute(
-      "data-active",
+      "aria-current",
     );
   });
 });

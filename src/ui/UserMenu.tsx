@@ -36,7 +36,7 @@ export function UserMenu() {
             name={user?.name}
             color="initials"
             radius="xl"
-            size="md"
+            size={44}
           />
         </UnstyledButton>
       </Menu.Target>
