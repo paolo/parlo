@@ -2,6 +2,7 @@ import { Group, Paper, Stack, Text } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { Flag } from "../Flag";
 import type { Role } from "../roles";
+import classes from "./PhraseBubble.module.css";
 
 /** How long a bubble takes to slide out or in; the conversation waits this long before swapping phrases. */
 export const SLIDE_MS = 200;
@@ -14,6 +15,8 @@ interface PhraseBubbleProps {
   region: string;
   /** What the flag stands for, e.g. "Spanish (Bolivia)", since a flag alone says nothing to a screen reader. */
   flagName: string;
+  /** The language's own name, shown beside the flag the way a phrase card labels its language. */
+  label: string;
   text: string;
   /** The side the speaker is on; the small-radius corner (the "tail") points that way and the content aligns to it. */
   side: "left" | "right";
@@ -23,15 +26,14 @@ interface PhraseBubbleProps {
   exited: boolean;
 }
 
-const TAIL_RADIUS = {
-  left: "26px 26px 26px 6px",
-  right: "26px 26px 6px 26px",
-} as const;
+/** A slight tilt, alternating by side, like the phrase cards in History and the Phrasebook. */
+const TILT = { left: "-0.6deg", right: "0.5deg" } as const;
 
 export function PhraseBubble({
   lang,
   region,
   flagName,
+  label,
   text,
   side,
   langRole,
@@ -59,10 +61,11 @@ export function PhraseBubble({
         py="sm"
         miw="60%"
         maw="80%"
-        bdrs={TAIL_RADIUS[side]}
+        bdrs="var(--parlo-radius-card)"
         style={{
           backgroundColor: `var(--parlo-${langRole})`,
           color: "var(--parlo-on-accent)",
+          transform: `rotate(${TILT[side]})`,
         }}
       >
         <Stack
@@ -71,7 +74,10 @@ export function PhraseBubble({
           justify="center"
           align={side === "left" ? "flex-start" : "flex-end"}
         >
-          <Flag region={region} alt={flagName} size="1.5rem" />
+          <span className={classes.label} data-ink={langRole}>
+            <Flag region={region} alt={flagName} size="1.25rem" />
+            {label}
+          </span>
           <Text
             fw={800}
             fz={{ base: 22, sm: 28 }}

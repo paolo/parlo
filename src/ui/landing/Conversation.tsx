@@ -73,6 +73,7 @@ export function Conversation() {
         <PhraseBubble
           lang={htmlLang(native)}
           {...flagFor(native, region)}
+          label={LANGUAGES[native].endonym}
           text={phrases[native]}
           side="left"
           langRole="native"
@@ -81,6 +82,7 @@ export function Conversation() {
         <PhraseBubble
           lang="en"
           {...flagFor("en", LANGUAGES.en.defaultRegion)}
+          label={LANGUAGES.en.endonym}
           text={phrases.en}
           side="right"
           langRole="english"
@@ -89,6 +91,7 @@ export function Conversation() {
         <PhraseBubble
           lang="fr"
           {...flagFor("fr", LANGUAGES.fr.defaultRegion)}
+          label={LANGUAGES.fr.endonym}
           text={phrases.fr}
           side="left"
           langRole="french"
