@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { GoogleSignInButton } from "@/ui/auth/GoogleSignInButton";
-import { authClient } from "@/ui/auth-client";
+import { IconArrowRight } from "@tabler/icons-react";
+import Link from "next/link";
 import { LANG_CODES, LANGUAGES } from "../../shared/languages";
 import { Flag } from "../Flag";
+import { ThemeToggle } from "../ThemeToggle";
 import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
 import classes from "./LandingPage.module.css";
@@ -25,10 +26,6 @@ const STEPS = [
   },
 ] as const;
 
-function signIn() {
-  return authClient.signIn.social({ provider: "google", callbackURL: "/" });
-}
-
 export function LandingPage() {
   return (
     <div className={classes.page}>
@@ -36,10 +33,11 @@ export function LandingPage() {
         <div className={classes.bar}>
           <Wordmark size={30} />
           <div className={classes.barActions}>
-            <Button variant="default" onClick={signIn}>
+            <ThemeToggle />
+            {/* The sign-in page offers every way in: Google, and email and password in development. */}
+            <Button component={Link} href="/sign-in">
               Sign in
             </Button>
-            <Button onClick={signIn}>Get started</Button>
           </div>
         </div>
       </header>
@@ -54,7 +52,14 @@ export function LandingPage() {
             never word for word.
           </p>
           <div className={classes.cta}>
-            <GoogleSignInButton />
+            <Button
+              component={Link}
+              href="/sign-in"
+              size="lg"
+              rightSection={<IconArrowRight size={18} stroke={2} />}
+            >
+              Start with a phrase
+            </Button>
           </div>
         </div>
         <Conversation />
@@ -126,7 +131,10 @@ export function LandingPage() {
           <h2 className={classes.closerTitle}>
             Your next bus ride is a lesson.
           </h2>
-          <GoogleSignInButton />
+          <Link href="/sign-in" className={classes.closerLink}>
+            Hop on
+            <IconArrowRight size={18} stroke={2} aria-hidden="true" />
+          </Link>
         </div>
       </section>
 

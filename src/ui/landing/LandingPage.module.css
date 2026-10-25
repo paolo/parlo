@@ -217,6 +217,23 @@
   text-wrap: balance;
 }
 
+/* The closing band is inverted, so its button is the inverse of the page's primary pill. */
+.closerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-ground);
+  color: var(--parlo-text);
+  font: 600 16px / 1 var(--parlo-font-sans);
+  text-decoration: none;
+}
+.closerLink:hover {
+  background: var(--parlo-surface-chip);
+}
+
 .dots {
   display: flex;
   gap: 6px;

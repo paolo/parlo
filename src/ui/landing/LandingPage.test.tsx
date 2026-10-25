@@ -1,15 +1,9 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { LandingPage } from "./LandingPage";
 
-const authClient = vi.hoisted(() => ({ signIn: { social: vi.fn() } }));
-vi.mock("@/ui/auth-client", () => ({ authClient }));
-
 describe("LandingPage", () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it("shows the headline and subline", () => {
     renderWithProviders(<LandingPage />);
     expect(
@@ -18,25 +12,37 @@ describe("LandingPage", () => {
     expect(screen.getByText(/never word for word/i)).toBeInTheDocument();
   });
 
-  it("offers Continue with Google", async () => {
+  it("sends the hero call to action to the sign-in page", () => {
     renderWithProviders(<LandingPage />);
-    const [hero] = screen.getAllByRole("button", {
-      name: "Continue with Google",
-    });
-    await userEvent.click(hero);
-    expect(authClient.signIn.social).toHaveBeenCalledWith({
-      provider: "google",
-      callbackURL: "/",
-    });
+    expect(
+      screen.getByRole("link", { name: "Start with a phrase" }),
+    ).toHaveAttribute("href", "/sign-in");
   });
 
-  it("starts the same Google flow from the Sign in button", async () => {
+  it("sends the closing call to action to the sign-in page", () => {
     renderWithProviders(<LandingPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(authClient.signIn.social).toHaveBeenCalledWith({
-      provider: "google",
-      callbackURL: "/",
-    });
+    expect(screen.getByRole("link", { name: "Hop on" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+  });
+
+  it("does not start Google from the landing page itself", () => {
+    renderWithProviders(<LandingPage />);
+    expect(
+      screen.queryByRole("button", { name: /continue with google/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("links Sign in to the sign-in page, which offers every way in", () => {
+    renderWithProviders(<LandingPage />);
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Get started" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the conversation and no footer line", () => {
@@ -47,14 +53,11 @@ describe("LandingPage", () => {
     expect(screen.queryByText(/made in canada/i)).not.toBeInTheDocument();
   });
 
-  it("starts the same flow from Get started and the closing call to action", async () => {
+  it("has a theme toggle", () => {
     renderWithProviders(<LandingPage />);
-    await userEvent.click(screen.getByRole("button", { name: "Get started" }));
-    const buttons = screen.getAllByRole("button", {
-      name: "Continue with Google",
-    });
-    await userEvent.click(buttons[buttons.length - 1] as HTMLElement);
-    expect(authClient.signIn.social).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole("button", { name: /toggle light and dark theme/i }),
+    ).toBeInTheDocument();
   });
 
   it("lists every supported language", () => {
