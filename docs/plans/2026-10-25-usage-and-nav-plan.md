@@ -22,8 +22,9 @@ typical $0.30 to $0.60. The $10 a month budget covers roughly seven users maxing
 - [x] 2. Allowance model and avatar ring replacing the counter. Ring and warning tokens done (`usage-ring`: neutral,
   amber at 20% left, red when out). Ledger done (`usage-ledger`): `translation_usage` rows carry
   an action, a cost in allowance units (`ACTION_COSTS`) and the model's token counts; today's usage is the sum of
-  costs. `npm run usage:cost` totals real spend per day. Migration 0002 is additive, so the deploy order does not
-  matter for old rows.
+  costs. `npm run usage:cost` totals real spend per day. Migration 0002 is additive (old rows get cost 1), but the
+  new code writes the new columns: run the migration on Neon before or with the deploy, or translations fail
+  until it lands.
   Log token usage per translation so real cost shows up.
 - [ ] 3. Typed answers in Practice.
 - [ ] 4. Later: voice, payments, exam prep (each its own spec).
