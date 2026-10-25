@@ -9,7 +9,8 @@ export default function ReviewPage() {
         <div>
           <Title order={2}>Practice</Title>
           <Text c="dimmed">
-            Read each starred phrase, try to recall the rest, then check.
+            Cards from the phrases you've starred. Read one, try to recall the
+            rest, then reveal.
           </Text>
         </div>
         <ReviewView />

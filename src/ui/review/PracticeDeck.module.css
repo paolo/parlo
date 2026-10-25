@@ -1,0 +1,158 @@
+/* The practice deck: a front card in the practice language's role color, two more cards peeking out behind it. */
+.deck {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding-bottom: 36px;
+}
+
+.back {
+  position: absolute;
+  inset: 12px 6px 30px 14px;
+  border-radius: var(--parlo-radius-card-l);
+  background: var(--parlo-english);
+  transform: rotate(4deg) translate(10px, 6px);
+}
+.back[data-slot="second"] {
+  inset: 12px 14px 30px 6px;
+  background: var(--parlo-french);
+  transform: rotate(-4deg) translate(-8px, 14px);
+}
+
+.card {
+  --bg: var(--parlo-surface-chip);
+  --ink: var(--parlo-text-muted);
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+  padding: 26px 24px 22px;
+  border-radius: var(--parlo-radius-card-l);
+  background: var(--bg);
+  color: var(--parlo-on-accent);
+  box-shadow: var(--parlo-shadow-card);
+  transform: rotate(-1.5deg);
+  animation: deal var(--parlo-dur-rise) var(--parlo-ease-deal) both;
+}
+.card[data-role="native"] {
+  --bg: var(--parlo-native);
+  --ink: var(--parlo-native-ink);
+}
+.card[data-role="english"] {
+  --bg: var(--parlo-english);
+  --ink: var(--parlo-english-ink);
+}
+.card[data-role="french"] {
+  --bg: var(--parlo-french);
+  --ink: var(--parlo-french-ink);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.front {
+  margin: 0;
+  font: 800 clamp(26px, 8vw, 34px) / 1.08 var(--parlo-font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.answers {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-2);
+}
+
+.answer {
+  --answer-bg: var(--parlo-surface-chip);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--answer-bg);
+  animation: pop var(--parlo-dur-pop) var(--parlo-ease-out) both;
+}
+.answer[data-role="native"] {
+  --answer-bg: var(--parlo-native);
+}
+.answer[data-role="english"] {
+  --answer-bg: var(--parlo-english);
+}
+.answer[data-role="french"] {
+  --answer-bg: var(--parlo-french);
+}
+.answerLang {
+  font: 600 11px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.answerText {
+  font: 700 18px / 1.2 var(--parlo-font-display);
+  overflow-wrap: break-word;
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  gap: var(--parlo-space-2);
+}
+.answers + .actions {
+  margin-top: var(--parlo-space-2);
+}
+
+/* Pills that read on every card color: dark ink fill with the card color as label, or an outline. */
+.action {
+  flex: 1;
+  min-height: 50px;
+  padding: 0 var(--parlo-space-4);
+  border: 2px solid var(--parlo-on-accent);
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-on-accent);
+  color: var(--bg);
+  font: 600 16px / 1 var(--parlo-font-sans);
+  cursor: pointer;
+}
+.action[data-variant="ghost"] {
+  background: transparent;
+  color: var(--parlo-on-accent);
+}
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateX(50px) rotate(8deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-1.5deg);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .answer {
+    animation: none;
+  }
+}

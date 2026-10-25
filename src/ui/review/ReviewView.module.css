@@ -1,0 +1,19 @@
+.summary {
+  color: var(--parlo-text);
+}
+
+/* No cards to deal: a dashed outline of one, so the screen still reads as a deck waiting for phrases. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--parlo-space-3);
+  max-width: 440px;
+  padding: 26px 24px;
+  border: 2px dashed var(--parlo-border-subtle);
+  border-radius: var(--parlo-radius-card-l);
+  color: var(--parlo-text-muted);
+}
+.empty h3 {
+  color: var(--parlo-text);
+}
