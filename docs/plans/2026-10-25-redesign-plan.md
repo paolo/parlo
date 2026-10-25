@@ -101,7 +101,7 @@ Sans; Cyrillic: Onest; other scripts: platform system fonts. Recorded in spec §
 **Files:**
 - Create: `src/ui/Wordmark.tsx`, `src/ui/Wordmark.module.css`, `src/ui/Wordmark.test.tsx`, `src/app/manifest.ts`,
   `public/icon-192.png`, `public/icon-512.png`
-- Modify (replace): `src/app/favicon.ico`; add `src/app/apple-icon.png`, `src/app/icon.png`;
+- Modify (replace): `src/app/favicon.ico`; add `src/app/apple-icon.png`;
   viewport `themeColor` in `src/app/layout.tsx`
 
 - [ ] Port `Wordmark` (client-free, accessible name "parlo", dots `aria-hidden`); test name and `onLight`.

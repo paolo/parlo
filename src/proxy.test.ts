@@ -50,13 +50,16 @@ describe("proxy", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
-  // Link crawlers are signed out; if the proxy caught the preview image they would get a redirect, not a picture.
+  // Link crawlers and browsers fetching icons are signed out; if the proxy caught the preview image or icons they
+  // would get a redirect, not a picture.
   describe("matcher", () => {
     const matcher = new RegExp(`^${config.matcher[0]}$`);
 
     it.each([
       "/welcome/opengraph-image",
       "/opengraph-image",
+      "/apple-icon",
+      "/manifest.webmanifest",
       "/sign-in",
       "/api/phrases",
     ])("leaves %s alone", (path) => {

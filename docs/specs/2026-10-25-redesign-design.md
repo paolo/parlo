@@ -113,7 +113,7 @@ Shared pieces go in `src/ui/` with a `.module.css`, next to the existing compone
   Phrasebook). Desktop (900 px and up): left rail and a centered column; result cards in a grid.
 - **Screens**, one pass each, in this order: Translate (form, result, correction alert), History, Phrasebook and
   review, Profile (language picker), sign-in, landing and its preview image.
-- **Identity assets**: `favicon.ico`, `apple-icon.png` and `icon.png` in `src/app` (Next file conventions), a
+- **Identity assets**: `favicon.ico` and `apple-icon.png` in `src/app` (Next file conventions), a
   `manifest.ts` using `icon-192.png` and `icon-512.png` from `public/`, and a `theme-color` viewport entry.
 
 ## 7. Constraints
