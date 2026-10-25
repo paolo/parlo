@@ -61,4 +61,47 @@ describe("PhraseCard", () => {
     );
     expect(screen.getByText("مرحبا بالعالم")).toHaveAttribute("dir", "auto");
   });
+
+  it("colors the card by the role it is given", () => {
+    renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "en",
+          text: "It's pouring",
+          isRoot: false,
+          correctedFrom: null,
+        }}
+        langRole="english"
+      />,
+    );
+    expect(screen.getByRole("article")).toHaveAttribute("data-role", "english");
+  });
+
+  it("is neutral without a role", () => {
+    renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "hi",
+          text: "बहुत बारिश हो रही है",
+          isRoot: false,
+          correctedFrom: null,
+        }}
+      />,
+    );
+    expect(screen.getByRole("article")).not.toHaveAttribute("data-role");
+  });
+
+  it("marks the phrase with its language", () => {
+    renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "uk",
+          text: "Дощ іде",
+          isRoot: false,
+          correctedFrom: null,
+        }}
+      />,
+    );
+    expect(screen.getByText("Дощ іде")).toHaveAttribute("lang", "uk");
+  });
 });

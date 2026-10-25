@@ -20,6 +20,7 @@ import { FavoriteButton } from "../FavoriteButton";
 import { PhraseCard } from "../PhraseCard";
 import { pickPhrase } from "../phrases";
 import { useDeleteGroup } from "../queries";
+import { roleFor } from "../roles";
 import { TranslationResult } from "../translate/TranslationResult";
 import type { ShowIn } from "./ShowInSelect";
 
@@ -70,7 +71,10 @@ export function GroupItem({
         </Group>
         {single && showIn !== "all" ? (
           <Stack gap="xs">
-            <PhraseCard phrase={single.phrase} />
+            <PhraseCard
+              phrase={single.phrase}
+              langRole={roleFor(single.phrase.lang, profileLangs)}
+            />
             {single.fallback && (
               <Text size="sm" c="dimmed">
                 No {LANGUAGES[showIn].endonym} version, showing the original.

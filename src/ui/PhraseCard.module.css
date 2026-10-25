@@ -1,0 +1,105 @@
+.card {
+  /* A card without a role is neutral: a chip-colored surface with light text. */
+  --bg: var(--parlo-surface-chip);
+  --fg: var(--parlo-text);
+  --ink: var(--parlo-text-muted);
+  --icon-bg: var(--parlo-border-subtle);
+  background: var(--bg);
+  color: var(--fg);
+  border-radius: var(--parlo-radius-card);
+  padding: 14px 14px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-1);
+  opacity: 0;
+  animation: rise var(--parlo-dur-rise) var(--parlo-ease-out) var(--delay, 0s)
+    forwards;
+}
+
+.card[data-role="native"] {
+  --bg: var(--parlo-native);
+  --ink: var(--parlo-native-ink);
+}
+.card[data-role="english"] {
+  --bg: var(--parlo-english);
+  --ink: var(--parlo-english-ink);
+}
+.card[data-role="french"] {
+  --bg: var(--parlo-french);
+  --ink: var(--parlo-french-ink);
+}
+.card[data-role] {
+  --fg: var(--parlo-on-accent);
+  --icon-bg: var(--parlo-icon-btn-on-accent);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--parlo-space-2);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--parlo-space-2);
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.badge {
+  border: 1.5px solid currentColor;
+  border-radius: var(--parlo-radius-pill);
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.icon {
+  flex: none;
+  background: var(--icon-bg);
+  color: var(--fg);
+}
+.icon:hover {
+  background: var(--icon-bg);
+  filter: brightness(0.92);
+}
+
+.phrase {
+  margin: 0;
+  padding-right: var(--parlo-space-4);
+  font: 700 28px / 1.1 var(--parlo-font-display);
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(var(--tilt, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg));
+  }
+}
+
+@media (min-width: 900px) {
+  .card {
+    border-radius: var(--parlo-radius-card-l);
+    padding: 18px 18px 22px 26px;
+  }
+  .phrase {
+    font-size: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg));
+  }
+}
