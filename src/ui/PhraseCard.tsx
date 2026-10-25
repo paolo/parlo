@@ -1,62 +1,64 @@
 "use client";
 
-import {
-  ActionIcon,
-  Badge,
-  CopyButton,
-  Group,
-  Paper,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, CopyButton } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
+import type { CSSProperties } from "react";
 import type { PhraseDTO } from "@/server/phrases/types";
 import { LangLabel } from "./LangLabel";
+import classes from "./PhraseCard.module.css";
+import type { Role } from "./roles";
 
-export function PhraseCard({ phrase }: { phrase: PhraseDTO }) {
+/**
+ * One phrase on a card colored by its language role. Without a role (a language the viewer no longer has) the
+ * card is neutral. `index` is the position in a stack: it staggers the entrance and alternates the tilt.
+ */
+export function PhraseCard({
+  phrase,
+  langRole,
+  index = 0,
+}: {
+  phrase: PhraseDTO;
+  langRole?: Role;
+  index?: number;
+}) {
   return (
-    // Not the `bg` prop: it sets the `background` shorthand, which conflicts with the theme's `backgroundColor` on Paper.
-    <Paper
-      withBorder
-      p="md"
+    <article
+      className={classes.card}
+      data-role={langRole}
       style={
-        phrase.isRoot
-          ? { backgroundColor: "var(--mantine-primary-color-light)" }
-          : undefined
+        {
+          "--delay": `${0.05 + index * 0.13}s`,
+          "--tilt": index % 2 === 0 ? "-0.6deg" : "0.5deg",
+        } as CSSProperties
       }
     >
-      <Stack gap="xs">
-        <Group justify="space-between" wrap="nowrap">
-          <Group gap="xs">
-            <Text size="sm" fw={600}>
-              <LangLabel lang={phrase.lang} />
-            </Text>
-            {phrase.isRoot && (
-              <Badge size="xs" variant="light">
-                Original
-              </Badge>
-            )}
-          </Group>
-          <CopyButton value={phrase.text}>
-            {({ copied, copy }) => (
-              <Tooltip label={copied ? "Copied" : "Copy"} withArrow>
-                <ActionIcon
-                  variant="subtle"
-                  color={copied ? "teal" : "gray"}
-                  onClick={copy}
-                  aria-label="Copy phrase"
-                >
-                  {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </CopyButton>
-        </Group>
-        <Text size="lg" dir="auto">
-          {phrase.text}
-        </Text>
-      </Stack>
-    </Paper>
+      <div className={classes.top}>
+        <span className={classes.label}>
+          <LangLabel lang={phrase.lang} flagSize="var(--parlo-size-flag-s)" />
+          {phrase.isRoot && <span className={classes.badge}>Original</span>}
+        </span>
+        <CopyButton value={phrase.text}>
+          {({ copied, copy }) => (
+            <ActionIcon
+              className={classes.icon}
+              size={44}
+              radius="xl"
+              variant="transparent"
+              onClick={copy}
+              aria-label={copied ? "Copied" : "Copy phrase"}
+            >
+              {copied ? (
+                <IconCheck size={19} stroke={1.8} />
+              ) : (
+                <IconCopy size={19} stroke={1.8} />
+              )}
+            </ActionIcon>
+          )}
+        </CopyButton>
+      </div>
+      <p className={classes.phrase} lang={phrase.lang} dir="auto">
+        {phrase.text}
+      </p>
+    </article>
   );
 }

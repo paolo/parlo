@@ -23,4 +23,18 @@ describe("Flag", () => {
     const { style } = screen.getByAltText("Spain");
     expect([style.width, style.height]).toEqual(["1.5rem", "1.5rem"]);
   });
+
+  it("draws a ring in the role color when asked", () => {
+    render(<Flag region="es" alt="Spain" ring="french" />);
+
+    expect(screen.getByAltText("Spain").style.boxShadow).toContain(
+      "var(--parlo-french)",
+    );
+  });
+
+  it("has no ring by default", () => {
+    render(<Flag region="es" alt="Spain" />);
+
+    expect(screen.getByAltText("Spain").style.boxShadow).toBe("");
+  });
 });

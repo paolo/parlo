@@ -12,6 +12,7 @@ import { LangLabel } from "../LangLabel";
 import { PhraseCard } from "../PhraseCard";
 import { orderPhrases } from "../phrases";
 import { useAcceptCorrection } from "../queries";
+import { roleFor } from "../roles";
 
 export function TranslationResult({
   group,
@@ -63,8 +64,13 @@ export function TranslationResult({
         />
       )}
       <SimpleGrid cols={{ base: 1, sm: Math.min(phrases.length, 3) || 1 }}>
-        {phrases.map((phrase) => (
-          <PhraseCard key={phrase.lang} phrase={phrase} />
+        {phrases.map((phrase, index) => (
+          <PhraseCard
+            key={phrase.lang}
+            phrase={phrase}
+            langRole={roleFor(phrase.lang, profileLangs)}
+            index={index}
+          />
         ))}
       </SimpleGrid>
       {current.notes && (
