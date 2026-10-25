@@ -27,7 +27,7 @@
 }
 
 .link[data-active] svg {
-  color: var(--parlo-english);
+  color: var(--parlo-accent);
 }
 
 /* Desktop rail: icon beside label. */
