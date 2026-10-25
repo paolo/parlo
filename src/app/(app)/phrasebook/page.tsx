@@ -8,7 +8,10 @@ export default function PhrasebookPage() {
       <Stack>
         <div>
           <Title order={2}>Phrasebook</Title>
-          <Text c="dimmed">The phrases you've starred to keep.</Text>
+          <Text c="dimmed">
+            The phrases you've starred to keep and practice. All shows
+            everything you've translated.
+          </Text>
         </div>
         <PhrasebookView />
       </Stack>

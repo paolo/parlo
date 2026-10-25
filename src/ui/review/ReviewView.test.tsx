@@ -130,13 +130,40 @@ describe("ReviewView", () => {
     expect(screen.getByText("0 of 1")).toBeInTheDocument();
   });
 
-  it("explains when nothing is starred", async () => {
-    mockApi([]);
+  it("says the deck is the starred phrases, and that a small one can grow", async () => {
+    mockApi([a, b]);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
     expect(
-      await screen.findByText(/nothing to review yet/i),
+      await screen.findByText("Your deck: 2 starred phrases"),
     ).toBeInTheDocument();
+    expect(screen.getByText(/small deck so far/i)).toBeInTheDocument();
+  });
+
+  it("drops the small-deck hint once there are enough phrases", async () => {
+    const many = ["a", "b", "c", "d", "e"].map((id) =>
+      card(id, `es ${id}`, `en ${id}`, `fr ${id}`),
+    );
+    mockApi(many);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(
+      await screen.findByText("Your deck: 5 starred phrases"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/small deck so far/i)).not.toBeInTheDocument();
+  });
+
+  it("explains that practice uses starred phrases when there are none", async () => {
+    mockApi([]);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(await screen.findByText("Your deck is empty")).toBeInTheDocument();
+    expect(
+      screen.getByText(/practice uses the phrases you star/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("radiogroup", { name: "Practice in" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
       "href",
       "/",

@@ -7,12 +7,12 @@ import {
   Group,
   List,
   Loader,
-  Paper,
   SegmentedControl,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
+import { IconStar } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
@@ -21,6 +21,8 @@ import { LANGUAGES, type Lang } from "../../shared/languages";
 import { errorMessage } from "../errors";
 import { LangLabel } from "../LangLabel";
 import { useAllFavorites, useProfile } from "../queries";
+import { PracticeDeck } from "./PracticeDeck";
+import classes from "./ReviewView.module.css";
 import { buildCards, ReviewSession } from "./session";
 
 export function ReviewView({ random }: { random?: () => number }) {
@@ -39,16 +41,20 @@ export function ReviewView({ random }: { random?: () => number }) {
   }
   const languages = profile.data.languages;
   const practice = chosen ?? languages[1]?.lang ?? languages[0].lang;
+  const starred = favorites.data.items.length;
   return (
     <Stack gap="lg" maw={720}>
-      <PracticeLanguage
-        languages={languages}
-        value={practice}
-        onChange={(lang) => {
-          setChosen(lang);
-          setRound((r) => r + 1);
-        }}
-      />
+      <DeckSummary count={starred} />
+      {starred > 0 && (
+        <PracticeLanguage
+          languages={languages}
+          value={practice}
+          onChange={(lang) => {
+            setChosen(lang);
+            setRound((r) => r + 1);
+          }}
+        />
+      )}
       <Session
         key={`${practice}-${round}`}
         groups={favorites.data.items}
@@ -60,6 +66,28 @@ export function ReviewView({ random }: { random?: () => number }) {
     </Stack>
   );
 }
+
+/** Says which phrases the cards come from, and nudges toward starring more while the deck is small. */
+function DeckSummary({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <Stack gap={4}>
+      <Group gap="xs" className={classes.summary}>
+        <IconStar size={18} stroke={1.8} aria-hidden="true" />
+        <Text fw={600}>
+          Your deck: {count} starred {count === 1 ? "phrase" : "phrases"}
+        </Text>
+      </Group>
+      {count < SMALL_DECK && (
+        <Text size="sm" c="dimmed">
+          Small deck so far. Star more translations and they will join it.
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+const SMALL_DECK = 5;
 
 function PracticeLanguage({
   languages,
@@ -121,11 +149,14 @@ function Session({
   // Plain snapshots in state: the session object mutates, React only sees new values.
   const [view, setView] = useState(() => snapshot(session));
   const [revealed, setRevealed] = useState(false);
+  // Counts graded cards, so a card shown again after "Again" is dealt in afresh.
+  const [step, setStep] = useState(0);
 
   function grade(result: "gotIt" | "again") {
     session[result]();
     setView(snapshot(session));
     setRevealed(false);
+    setStep((n) => n + 1);
   }
 
   const skippedLine = built.skipped > 0 && (
@@ -136,18 +167,25 @@ function Session({
   );
 
   if (built.cards.length === 0) {
+    const noVersion = built.skipped > 0;
     return (
-      <Stack align="flex-start" gap="xs">
+      <div className={classes.empty}>
+        <IconStar size={32} stroke={1.8} aria-hidden="true" />
+        <Title order={3}>
+          {noVersion
+            ? `No ${LANGUAGES[practice].name} versions yet`
+            : "Your deck is empty"}
+        </Title>
         <Text c="dimmed">
-          {built.skipped > 0
+          {noVersion
             ? `None of your starred phrases have a ${LANGUAGES[practice].name} version. Try another language.`
-            : "Nothing to review yet. Star some translations first."}
+            : "Practice uses the phrases you star. Translate something, tap its star, and it joins your deck."}
         </Text>
         {skippedLine}
         <Button component={Link} href="/">
           Go to Translate
         </Button>
-      </Stack>
+      </div>
     );
   }
 
@@ -191,42 +229,16 @@ function Session({
         {skippedLine}
       </Group>
       {card && (
-        <Paper withBorder radius="md" p="lg">
-          <Stack gap="md">
-            <Text
-              size="xl"
-              fw={700}
-              dir="auto"
-              style={{ fontFamily: "var(--parlo-font-display)" }}
-            >
-              {card.front.text}
-            </Text>
-            {revealed ? (
-              <>
-                <Stack gap="xs">
-                  {card.back.map((phrase) => (
-                    <div key={phrase.lang}>
-                      <Text size="xs" c="dimmed">
-                        <LangLabel lang={phrase.lang} />
-                      </Text>
-                      <Text dir="auto">{phrase.text}</Text>
-                    </div>
-                  ))}
-                </Stack>
-                <Group>
-                  <Button onClick={() => grade("gotIt")}>Got it</Button>
-                  <Button variant="default" onClick={() => grade("again")}>
-                    Again
-                  </Button>
-                </Group>
-              </>
-            ) : (
-              <Group>
-                <Button onClick={() => setRevealed(true)}>Reveal</Button>
-              </Group>
-            )}
-          </Stack>
-        </Paper>
+        <PracticeDeck
+          card={card}
+          lang={practice}
+          profileLangs={profileLangs}
+          remaining={view.total - view.done}
+          step={step}
+          revealed={revealed}
+          onReveal={() => setRevealed(true)}
+          onGrade={grade}
+        />
       )}
     </Stack>
   );

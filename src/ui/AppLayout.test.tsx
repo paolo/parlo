@@ -40,8 +40,8 @@ describe("AppLayout", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     for (const [name, href] of [
       ["Translate", "/"],
-      ["History", "/history"],
       ["Phrasebook", "/phrasebook"],
+      ["Practice", "/practice"],
     ]) {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
@@ -50,9 +50,9 @@ describe("AppLayout", () => {
   });
 
   it("marks the link for the current path as active", () => {
-    pathname.current = "/history";
+    pathname.current = "/practice";
     renderWithProviders(<AppLayout>content</AppLayout>);
-    expect(screen.getByRole("link", { name: "History" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Practice" })).toHaveAttribute(
       "aria-current",
       "page",
     );

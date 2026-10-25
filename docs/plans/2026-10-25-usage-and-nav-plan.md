@@ -1,0 +1,29 @@
+# Usage, navigation and practice: plan
+
+Agreed 2026-10-25. Pricing intent: cover running costs only; maybe a small business later (CELPIP and TCF exam
+prep is the candidate paid feature). No payment provider yet.
+
+Cost check (Haiku 5.5, 50 translations a day, 500 characters each): worst case about $1.30 a month per person,
+typical $0.30 to $0.60. The $10 a month budget covers roughly seven users maxing out every day.
+
+## Decisions
+
+- One Phrasebook page replaces History and Phrasebook: filter All / Starred, plus the existing "Show in" control.
+- Three tabs: Translate, Phrasebook, Practice. Profile and settings stay behind the avatar.
+- Review becomes Practice at `/practice`. `/history` and `/phrasebook/review` redirect.
+- Usage becomes a generic allowance (an action type has a cost) shown as a ring around the avatar, not a counter.
+  Free refilling allowance now; prepaid credit packs at cost later; a subscription only once the value is clear.
+- Practice gets more answer modes in steps: speak aloud (now), typed (string match first, model only when close),
+  spoken (browser recognition first, cloud speech later, spending allowance).
+
+## Steps (one branch each, merged with `--no-ff` after the author says so)
+
+- [x] 1. Phrasebook merge and three-tab navigation (`phrasebook-merge`).
+- [ ] 2. Allowance model and avatar ring replacing the counter. Needs warning tokens in `tokens.css` first.
+  Log token usage per translation so real cost shows up.
+- [ ] 3. Typed answers in Practice.
+- [ ] 4. Later: voice, payments, exam prep (each its own spec).
+
+## Not doing yet
+
+Payments, a company or payment account, spoken-answer checking, exam prep.
