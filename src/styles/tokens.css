@@ -1,0 +1,107 @@
+/* parlo design tokens: the single source of design values.
+   Names match the parlo design system, prefixed --parlo- so they never collide with Mantine's.
+   Dark is the reference scheme; the light block at the bottom is filled in when light mode is turned back on. */
+:root {
+  color-scheme: dark;
+
+  /* Colour: surfaces */
+  --parlo-ground: #15141b;
+  --parlo-surface: #1a1922;
+  --parlo-surface-raised: #1f1e27;
+  --parlo-surface-chip: #2a2933;
+  --parlo-border-subtle: rgba(255, 255, 255, 0.08);
+  --parlo-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Colour: text */
+  --parlo-text: #f3f1f8;
+  --parlo-text-soft: #c9c6d6;
+  --parlo-text-muted: #a9a6b8;
+  --parlo-text-placeholder: #8b8899; /* the design system had #7c7990, under AA on inputs */
+  --parlo-on-accent: #15141b;
+
+  /* Colour: the three language roles, assigned by profile position (native, second, third) */
+  --parlo-native: #ffb38a;
+  --parlo-native-ink: #6b3a1f;
+  --parlo-english: #b9a6ff;
+  --parlo-english-ink: #3b2f7a;
+  --parlo-french: #8fe3c3;
+  --parlo-french-ink: #1d5a44;
+  --parlo-native-deep: #ff8f5c; /* on light surfaces only */
+  --parlo-english-deep: #8f78ff;
+  --parlo-french-deep: #3fc79a;
+  --parlo-icon-btn-on-accent: rgba(21, 20, 27, 0.1);
+
+  /* Type families: set by next/font in app/layout.tsx. Onest covers Cyrillic; the system fonts cover the other
+     scripts (Devanagari, Gurmukhi, Arabic, CJK) without downloading anything. */
+  --parlo-font-display:
+    var(--font-display, "Bricolage Grotesque"), var(--font-cyrillic, "Onest"),
+    "Nirmala UI", "Segoe UI", "Noto Sans", system-ui, sans-serif;
+  --parlo-font-sans:
+    var(--font-sans, "Instrument Sans"), var(--font-cyrillic, "Onest"),
+    "Nirmala UI", "Segoe UI", "Noto Sans", system-ui, sans-serif;
+
+  /* Spacing */
+  --parlo-space-1: 4px;
+  --parlo-space-2: 8px;
+  --parlo-space-3: 12px;
+  --parlo-space-4: 16px;
+  --parlo-space-5: 20px;
+  --parlo-space-6: 24px;
+  --parlo-space-9: 36px;
+  --parlo-space-12: 48px;
+  --parlo-space-24: 96px;
+
+  /* Radius */
+  --parlo-radius-pill: 999px;
+  --parlo-radius-nav: 16px;
+  --parlo-radius-row: 22px;
+  --parlo-radius-card: 26px;
+  --parlo-radius-panel: 28px;
+  --parlo-radius-card-l: 32px;
+  --parlo-radius-band: 40px;
+
+  /* Sizes */
+  --parlo-size-touch: 44px;
+  --parlo-size-flag-s: 18px;
+  --parlo-size-flag-m: 22px;
+  --parlo-size-flag-l: 34px;
+
+  /* Elevation (the only shadow) */
+  --parlo-shadow-card: 0 24px 40px -28px rgba(0, 0, 0, 0.8);
+
+  /* Motion */
+  --parlo-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --parlo-ease-draw: cubic-bezier(0.6, 0, 0.2, 1);
+  --parlo-ease-spring: cubic-bezier(0.3, 1.6, 0.5, 1);
+  --parlo-ease-deal: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --parlo-dur-fast: 150ms;
+  --parlo-dur-pop: 350ms;
+  --parlo-dur-strike: 550ms;
+  --parlo-dur-rise: 600ms;
+}
+
+body {
+  background-color: var(--parlo-ground);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.045) 1px,
+    transparent 1.2px
+  );
+  background-size: 18px 18px;
+  color: var(--parlo-text);
+  font-family: var(--parlo-font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: this must beat every component's own animation timing */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: see above */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: see above */
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Light scheme: added in the light-mode task (docs/plans/2026-10-25-redesign-plan.md, Task 8). */

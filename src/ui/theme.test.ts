@@ -19,29 +19,33 @@ describe("theme", () => {
   });
 
   describe("palette", () => {
-    it("uses the parlo accent as the primary color", () => {
-      expect(theme.primaryColor).toBe("parlo");
-      expect(theme.primaryShade).toEqual({ light: 6, dark: 4 });
+    it("uses lilac as the single accent", () => {
+      expect(theme.primaryColor).toBe("english");
+      expect(theme.colors?.english?.every((c) => c === "#b9a6ff")).toBe(true);
     });
 
-    it("anchors the accent scale at shades 4 and 6", () => {
-      const parlo = theme.colors?.parlo;
-      expect(parlo).toHaveLength(10);
-      expect(parlo?.[6]).toBe("#4c5fd5");
-      expect(parlo?.[4]).toBe("#8f9cf5");
+    it("defines the three language roles", () => {
+      expect(theme.colors?.native?.[0]).toBe("#ffb38a");
+      expect(theme.colors?.english?.[0]).toBe("#b9a6ff");
+      expect(theme.colors?.french?.[0]).toBe("#8fe3c3");
     });
 
-    it("tints the dark scale", () => {
+    it("sets the dark scale from the parlo tokens", () => {
       const dark = theme.colors?.dark;
       expect(dark).toHaveLength(10);
-      expect(dark?.[0]).toBe("#eceefb");
-      expect(dark?.[2]).toBe("#8d93b8");
-      expect(dark?.[6]).toBe("#21244a");
-      expect(dark?.[7]).toBe("#14162a");
+      expect(dark?.[0]).toBe("#f3f1f8");
+      expect(dark?.[2]).toBe("#a9a6b8");
+      expect(dark?.[6]).toBe("#1f1e27");
+      expect(dark?.[7]).toBe("#15141b");
     });
 
-    it("sets heavy headings", () => {
+    it("sets heavy display headings", () => {
       expect(theme.headings?.fontWeight).toBe("800");
+      expect(theme.headings?.fontFamily).toBe("var(--parlo-font-display)");
+    });
+
+    it("makes buttons pills", () => {
+      expect(theme.components?.Button?.defaultProps?.radius).toBe("xl");
     });
   });
 
@@ -58,51 +62,55 @@ describe("theme", () => {
   describe("contrast", () => {
     const light = cssVariablesResolver(full).light as Record<string, string>;
     const dark = full.colors.dark;
-    const parlo = full.colors.parlo;
     const lightBody = light["--mantine-color-body"];
     const white = "#ffffff";
+    const roles = [
+      ["native", "#ffb38a", "#6b3a1f"],
+      ["english", "#b9a6ff", "#3b2f7a"],
+      ["french", "#8fe3c3", "#1d5a44"],
+    ] as const;
 
     it.each([
       ["text on the light body", light["--mantine-color-text"], lightBody],
       ["dimmed on the light body", light["--mantine-color-dimmed"], lightBody],
       ["dimmed on a white surface", light["--mantine-color-dimmed"], white],
-      ["accent on the light body", parlo[6], lightBody],
       ["text on the dark body", dark[0], dark[7]],
-      ["dimmed on the dark body", dark[2], dark[7]],
-      ["dimmed on a dark surface", dark[2], dark[6]],
-      ["accent on the dark body", parlo[4], dark[7]],
-      ["accent on a dark surface", parlo[4], dark[6]],
+      ["text-soft on the dark body", dark[1], dark[7]],
+      ["muted on the dark body", dark[2], dark[7]],
+      ["muted on a dark surface", dark[2], dark[6]],
+      ["muted on a chip", dark[2], dark[5]],
+      ["text on a chip", dark[0], dark[5]],
+      ["placeholder on a surface", dark[3], dark[6]],
+      ["lilac accent on the dark body", "#b9a6ff", dark[7]],
     ])("meets AA for %s", (_name, foreground, background) => {
       expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(AA);
     });
+
+    it.each(
+      roles,
+    )("puts dark text on the %s role color", (_name, fill, ink) => {
+      expect(contrastRatio(dark[7], fill)).toBeGreaterThanOrEqual(AA);
+      expect(contrastRatio(ink, fill)).toBeGreaterThanOrEqual(AA);
+    });
   });
 
-  // Filled buttons put text on the primary shade. Shade 4 (dark scheme) is too light for white text, and it
-  // cannot be darkened because the same shade is the accent used as text on the dark page. Mantine's
-  // autoContrast only looks at the light shade, so the filled variant picks its text color per scheme.
+  // The primary action is the inverse pill: a light fill with a dark label, in both schemes.
   describe("filled primary buttons", () => {
-    const parlo = full.colors.parlo;
-
-    it("shows why: white is fine on shade 6 but fails on shade 4, where black passes", () => {
-      expect(
-        contrastRatio("#ffffff", parlo[6] as string),
-      ).toBeGreaterThanOrEqual(AA);
-      expect(contrastRatio("#ffffff", parlo[4] as string)).toBeLessThan(AA);
-      expect(
-        contrastRatio("#000000", parlo[4] as string),
-      ).toBeGreaterThanOrEqual(AA);
-    });
-
     it.each([
       ["the primary color", full.primaryColor],
-      ["parlo", "parlo"],
-    ])("uses white text in light and black in dark for %s", (_name, color) => {
+      ["english", "english"],
+    ])("is the inverse pill for %s", (_name, color) => {
       const result = full.variantColorResolver({
         variant: "filled",
         theme: full,
         color,
       });
-      expect(result.color).toMatch(/^light-dark\(.*white.*,.*black.*\)$/);
+      expect(result.background).toBe("var(--parlo-text)");
+      expect(result.color).toBe("var(--parlo-on-accent)");
+    });
+
+    it("has a readable label", () => {
+      expect(contrastRatio("#15141b", "#f3f1f8")).toBeGreaterThanOrEqual(AA);
     });
 
     it("leaves other colors alone", () => {
@@ -111,7 +119,7 @@ describe("theme", () => {
         theme: full,
         color: "red",
       });
-      expect(result.color).not.toContain("light-dark");
+      expect(result.background).not.toBe("var(--parlo-text)");
     });
   });
 
@@ -152,7 +160,7 @@ describe("theme", () => {
       const filled = full.variantColorResolver({
         variant: "filled",
         theme: full,
-        color: "parlo",
+        color: "french",
       });
       expect(filled.background).not.toContain("light-dark");
     });

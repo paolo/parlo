@@ -1,18 +1,26 @@
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "../styles/tokens.css";
 import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans, Onest } from "next/font/google";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const display = Bricolage_Grotesque({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-display",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const sans = Instrument_Sans({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sans",
+});
+
+// Neither font above has Cyrillic. The face only downloads when a Cyrillic character is on screen.
+const cyrillic = Onest({
+  subsets: ["cyrillic", "cyrillic-ext"],
+  variable: "--font-cyrillic",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -25,11 +33,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${display.variable} ${sans.variable} ${cyrillic.variable}`}
       {...mantineHtmlProps}
     >
       <head>
-        <ColorSchemeScript defaultColorScheme="auto" />
+        {/* Dark only until the light palette lands (see docs/plans/2026-10-25-redesign-plan.md, Task 8). */}
+        <ColorSchemeScript forceColorScheme="dark" />
       </head>
       <body>
         <Providers>{children}</Providers>
