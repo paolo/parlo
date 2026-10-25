@@ -19,9 +19,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except API routes, the sign-in page, link preview images (crawlers are signed out),
+  // Everything except API routes, the sign-in page, link preview images and the generated apple icon (crawlers are
+  // signed out),
   // Next internals and files with an extension.
   matcher: [
-    "/((?!api|sign-in|.*opengraph-image|_next/static|_next/image|.*\\..*).*)",
+    "/((?!api|sign-in|apple-icon|.*opengraph-image|_next/static|_next/image|.*\\..*).*)",
   ],
 };
