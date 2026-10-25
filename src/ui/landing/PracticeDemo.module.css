@@ -1,0 +1,96 @@
+.deck {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  min-height: 440px;
+  justify-self: center;
+}
+
+.back {
+  position: absolute;
+  inset: 12px 6px 30px 14px;
+  border-radius: var(--parlo-radius-card-l);
+  background: var(--parlo-english);
+  transform: rotate(4deg) translate(10px, 6px);
+}
+.back[data-role="french"] {
+  inset: 12px 14px 30px 6px;
+  background: var(--parlo-french);
+  transform: rotate(-4deg) translate(-8px, 14px);
+}
+
+.card {
+  position: absolute;
+  inset: 0 4px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+  padding: 26px 24px 22px;
+  border-radius: var(--parlo-radius-card-l);
+  background: var(--parlo-native);
+  color: var(--parlo-on-accent);
+  box-shadow: var(--parlo-shadow-card);
+  transform: rotate(-1.5deg);
+  animation: deal 0.6s var(--parlo-ease-deal) both;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parlo-native-ink);
+}
+
+.src {
+  margin: 0;
+  font: 800 34px / 1.04 var(--parlo-font-display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.answers {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-2);
+}
+
+.answer {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--parlo-english);
+  font: 700 18px / 1.2 var(--parlo-font-display);
+}
+.answer[data-role="french"] {
+  background: var(--parlo-french);
+}
+
+.action {
+  margin-top: auto;
+  min-height: 50px;
+  border: 0;
+  border-radius: var(--parlo-radius-pill);
+  /* Dark pill on the peach card, whichever scheme the page is in. */
+  background: #15141b;
+  color: #f3f1f8;
+  font: 600 16px / 1 var(--parlo-font-sans);
+  cursor: pointer;
+}
+.answers + .action {
+  margin-top: var(--parlo-space-2);
+}
+
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateX(50px) rotate(8deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-1.5deg);
+  }
+}

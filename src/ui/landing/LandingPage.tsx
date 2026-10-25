@@ -1,41 +1,138 @@
 "use client";
 
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Button } from "@mantine/core";
 import { GoogleSignInButton } from "@/ui/auth/GoogleSignInButton";
 import { authClient } from "@/ui/auth-client";
+import { LANG_CODES, LANGUAGES } from "../../shared/languages";
+import { Flag } from "../Flag";
 import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
+import classes from "./LandingPage.module.css";
+import { PracticeDemo } from "./PracticeDemo";
+
+const STEPS = [
+  {
+    title: "Save what you hear",
+    text: "Star a translation and it joins your phrasebook.",
+  },
+  {
+    title: "Flip through on the go",
+    text: "Say it out loud, reveal, mark it. A few minutes between stops.",
+  },
+  {
+    title: "All your languages at once",
+    text: "Every card teaches all three, so none of them falls behind.",
+  },
+] as const;
+
+function signIn() {
+  return authClient.signIn.social({ provider: "google", callbackURL: "/" });
+}
 
 export function LandingPage() {
   return (
-    <Stack mih="100vh" px="md" py="sm" gap={0}>
-      <Group justify="space-between" py="xs">
-        <Wordmark size={30} />
-        <Button
-          variant="default"
-          onClick={() =>
-            authClient.signIn.social({ provider: "google", callbackURL: "/" })
-          }
-        >
-          Sign in
-        </Button>
-      </Group>
+    <div className={classes.page}>
+      <header className={classes.wrap}>
+        <div className={classes.bar}>
+          <Wordmark size={30} />
+          <div className={classes.barActions}>
+            <Button variant="default" onClick={signIn}>
+              Sign in
+            </Button>
+            <Button onClick={signIn}>Get started</Button>
+          </div>
+        </div>
+      </header>
 
-      <Stack flex={1} justify="center" align="center" gap="xl" py="xl">
-        <Stack align="center" gap="xs" ta="center" maw={560}>
-          <Title order={1} fz={{ base: 32, sm: 48 }} lh={1.1}>
-            Three languages. One meaning.
-          </Title>
-          <Text c="dimmed" size="lg">
-            Understand what people really say, and say what you mean like they
-            would.
-          </Text>
-        </Stack>
-
+      <section className={`${classes.wrap} ${classes.hero}`}>
+        <div className={classes.copy}>
+          <span className={classes.eyebrow}>Made for newcomers</span>
+          <h1 className={classes.h1}>Say it like a local.</h1>
+          <p className={classes.lead}>
+            The phrases you grew up with, turned into the way people actually
+            say them in your other languages. Three languages, one meaning:
+            never word for word.
+          </p>
+          <div className={classes.cta}>
+            <GoogleSignInButton />
+          </div>
+        </div>
         <Conversation />
+      </section>
 
-        <GoogleSignInButton />
-      </Stack>
-    </Stack>
+      <section className={classes.band}>
+        <div className={`${classes.wrap} ${classes.practice}`}>
+          <PracticeDemo />
+          <div className={classes.copy}>
+            <h2 className={classes.h2}>Practice on the bus ride.</h2>
+            <ol className={classes.steps}>
+              {STEPS.map((step, index) => (
+                <li key={step.title} className={classes.step}>
+                  <span
+                    className={classes.number}
+                    data-role={["native", "english", "french"][index]}
+                    aria-hidden="true"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className={classes.stepText}>
+                    <strong>{step.title}</strong>
+                    <span>{step.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section className={`${classes.wrap} ${classes.languages}`}>
+        <div className={classes.copy}>
+          <h2 className={classes.h2}>Start from home. Bring your three.</h2>
+          <p className={classes.lead}>
+            Pick your languages and where they are from, so the slang actually
+            fits.
+          </p>
+        </div>
+        <ul className={classes.grid}>
+          {LANG_CODES.map((code) => {
+            const { endonym, name, regions } = LANGUAGES[code];
+            return (
+              <li key={code} className={classes.language}>
+                <span className={classes.languageText}>
+                  <span className={classes.languageName}>{name}</span>
+                  <span lang={code} className={classes.endonym}>
+                    {endonym}
+                  </span>
+                </span>
+                <span className={classes.flags} aria-hidden="true">
+                  {regions.slice(0, 4).map((region) => (
+                    <Flag key={region} region={region} size="34px" />
+                  ))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className={`${classes.wrap} ${classes.closing}`}>
+        <div className={classes.closer}>
+          <span className={classes.dots} aria-hidden="true">
+            <i data-role="native" />
+            <i data-role="english" />
+            <i data-role="french" />
+          </span>
+          <h2 className={classes.closerTitle}>
+            Your next bus ride is a lesson.
+          </h2>
+          <GoogleSignInButton />
+        </div>
+      </section>
+
+      <footer className={classes.wrap}>
+        <div className={classes.footer}>parlo.fun</div>
+      </footer>
+    </div>
   );
 }
