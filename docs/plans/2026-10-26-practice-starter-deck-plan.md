@@ -27,7 +27,7 @@ Tasks 3 to 5 are one feature arc on one branch; one commit per step group, tests
 - [x] 1. Favorites naming (`favorites-naming`, awaiting merge)
 - [x] 2. Compact language strip (merged)
 - [x] 3. Practice engine (bundle types, drawing, prefs, Recent query)
-- [ ] 4. Practice setup UI
+- [x] 4. Practice setup UI
 - [ ] 5. Starter data (about 100 phrases x 13 languages) and review file
 
 ## Global Constraints
