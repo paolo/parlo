@@ -55,12 +55,17 @@ async function start() {
     await screen.findByRole("button", { name: /^start$/i }),
   );
 }
+/** Picks the radio whose name starts with `name` ("Favorites" also matches "Favorites 6"). */
 const pickRadio = async (group: string, name: string) =>
   userEvent.click(
     within(await screen.findByRole("radiogroup", { name: group })).getByRole(
       "radio",
-      { name },
+      { name: new RegExp(`^${name}`) },
     ),
+  );
+const many = (n: number) =>
+  Array.from({ length: n }, (_, i) =>
+    card(`m${i}`, `es${i}`, `en${i}`, `fr${i}`),
   );
 
 /** Opens a language pill ("Practice in" or "Type in") and picks a language from its list. */
@@ -218,7 +223,7 @@ describe("ReviewView", () => {
     expect(await screen.findByText("0 of 20")).toBeInTheDocument();
   });
 
-  it("only ever reads the profile and the favorites", async () => {
+  it("only ever reads the profile and phrase lists, never translating", async () => {
     const api = mockApi([a]);
     renderWithProviders(<ReviewView random={keepOrder} />);
     await start();
@@ -228,7 +233,11 @@ describe("ReviewView", () => {
 
     const urls = api.mock.calls.map(([url]) => url);
     expect(new Set(urls)).toEqual(
-      new Set(["/api/profile", "/api/phrase-groups?favorite=true&limit=100"]),
+      new Set([
+        "/api/profile",
+        "/api/phrase-groups?favorite=true&limit=100",
+        "/api/phrase-groups?favorite=false&limit=100",
+      ]),
     );
   });
 
@@ -239,25 +248,25 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
 
       await screen.findByRole("button", { name: /^start$/i });
-      expect(screen.getByRole("radio", { name: "Starter" })).toBeChecked();
+      expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
       expect(screen.getByRole("radio", { name: "10" })).toBeChecked();
       expect(screen.queryByText("One")).not.toBeInTheDocument();
     });
 
     it("remembers the last source and count", async () => {
       remember({ source: "recent", count: 20 });
-      mockApi([a]);
+      mockApi([a], many(25));
       renderWithProviders(<ReviewView random={keepOrder} />);
 
       await screen.findByRole("button", { name: /^start$/i });
-      expect(screen.getByRole("radio", { name: "Recent" })).toBeChecked();
+      expect(screen.getByRole("radio", { name: /^Recent/ })).toBeChecked();
       expect(screen.getByRole("radio", { name: "20" })).toBeChecked();
     });
 
     it("saves the choice when practice starts", async () => {
-      mockApi([a]);
+      mockApi(many(7));
       renderWithProviders(<ReviewView random={keepOrder} />);
-      await pickRadio("How many cards", "5");
+      await pickRadio("Cards this round", "5");
       await start();
 
       expect(JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? "")).toEqual({
@@ -271,7 +280,7 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
 
       await screen.findByRole("button", { name: /^start$/i });
-      expect(screen.getByRole("radio", { name: "Starter" })).toBeChecked();
+      expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
     });
 
     it("survives unreadable storage", async () => {
@@ -282,7 +291,7 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
 
       await screen.findByRole("button", { name: /^start$/i });
-      expect(screen.getByRole("radio", { name: "Starter" })).toBeChecked();
+      expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
       expect(screen.getByRole("radio", { name: "10" })).toBeChecked();
     });
 
@@ -306,7 +315,7 @@ describe("ReviewView", () => {
 
     it("collapses setup to a summary once started, and Change brings it back", async () => {
       remember({ source: "favorites", count: 5 });
-      mockApi([a]);
+      mockApi(many(7));
       renderWithProviders(<ReviewView random={keepOrder} />);
       await start();
 
@@ -317,7 +326,7 @@ describe("ReviewView", () => {
         screen.queryByRole("button", { name: /^start$/i }),
       ).not.toBeInTheDocument();
 
-      await click("Change");
+      await click("Setup");
 
       expect(
         await screen.findByRole("button", { name: /^start$/i }),
@@ -339,14 +348,43 @@ describe("ReviewView", () => {
       ).toBe(true);
     });
 
-    it("does not ask for history unless Recent is chosen", async () => {
-      const api = mockApi([a]);
+    it("shows how many phrases each source has", async () => {
+      mockApi([a, b], [a, b, card("c", "Tres", "Three", "Trois")]);
       renderWithProviders(<ReviewView random={keepOrder} />);
-      await start();
-      await screen.findByText("One");
 
-      const urls = api.mock.calls.map(([url]) => String(url));
-      expect(urls.some((url) => url.includes("favorite=false"))).toBe(false);
+      expect(
+        await screen.findByRole("radio", { name: "Favorites 2" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: "Recent 3" }),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByRole("radio", { name: "Starter 100" }),
+      ).toBeInTheDocument();
+    });
+
+    it("disables counts bigger than the source and deals All", async () => {
+      mockApi(many(6));
+      renderWithProviders(<ReviewView random={keepOrder} />);
+
+      await screen.findByRole("button", { name: /^start$/i });
+      expect(screen.getByRole("radio", { name: "5" })).toBeEnabled();
+      expect(screen.getByRole("radio", { name: "10" })).toBeDisabled();
+      expect(screen.getByRole("radio", { name: "20" })).toBeDisabled();
+      // The remembered 20 is more than the 6 favorites, so All is what is selected.
+      expect(screen.getByRole("radio", { name: "All" })).toBeChecked();
+      await start();
+      expect(await screen.findByText("0 of 6")).toBeInTheDocument();
+      expect(screen.getByText("Favorites · 6 cards")).toBeInTheDocument();
+    });
+
+    it("shows speaking as on its way, not selectable", async () => {
+      mockApi([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+
+      const speak = await screen.findByRole("radio", { name: /^Say it/ });
+      expect(speak).toBeDisabled();
+      expect(screen.getByText("Soon")).toBeInTheDocument();
     });
 
     it("offers Starter when Recent fails to load", async () => {
@@ -415,7 +453,7 @@ describe("ReviewView", () => {
       await click("Practice again");
 
       expect(await screen.findByText("0 of 1")).toBeInTheDocument();
-      expect(screen.getByText("Favorites · 5 cards")).toBeInTheDocument();
+      expect(screen.getByText("Favorites · 1 card")).toBeInTheDocument();
     });
   });
 
@@ -424,7 +462,7 @@ describe("ReviewView", () => {
     async function startTyping(before?: () => Promise<void>) {
       await screen.findByRole("radiogroup", { name: "How to practice" });
       await userEvent.click(
-        within(group("How to practice")).getByRole("radio", { name: "Type" }),
+        within(group("How to practice")).getByRole("radio", { name: /^Type/ }),
       );
       await before?.();
       await start();
@@ -522,7 +560,7 @@ describe("ReviewView", () => {
       await typeAnswer("un");
       expect(await screen.findByText("Correct")).toBeInTheDocument();
 
-      await click("Change");
+      await click("Setup");
       await pickLanguage("Practice in", /Español/);
       // Starting from Español leaves English and Français to type in.
       await userEvent.click(screen.getByRole("button", { name: /^Type in:/ }));

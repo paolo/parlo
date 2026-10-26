@@ -1,0 +1,12 @@
+.panel {
+  max-width: 640px;
+  padding: var(--parlo-space-5);
+  border: 1px solid var(--parlo-border-subtle);
+  border-radius: var(--parlo-radius-panel);
+  background: var(--parlo-surface-raised);
+}
+
+.count {
+  color: var(--parlo-text-muted);
+  font-variant-numeric: tabular-nums;
+}

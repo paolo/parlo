@@ -1,24 +1,30 @@
 import { Button, Group, Text } from "@mantine/core";
+import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { SOURCE_LABELS } from "./PracticeSetup";
-import type { Count, Source } from "./prefs";
+import type { Source } from "./prefs";
 
 /** One line that stands in for the setup once practice has started, so the card keeps its place. */
 export function SetupSummary({
   source,
-  count,
-  onChange,
+  cards,
+  onSetup,
 }: {
   source: Source;
-  count: Count;
-  onChange: () => void;
+  /** How many cards the round deals. */
+  cards: number;
+  onSetup: () => void;
 }) {
   return (
     <Group justify="space-between" gap="sm" wrap="nowrap">
       <Text fw={600} size="sm">
-        {SOURCE_LABELS[source]} · {count} cards
+        {SOURCE_LABELS[source]} · {cards} {cards === 1 ? "card" : "cards"}
       </Text>
-      <Button variant="subtle" onClick={onChange}>
-        Change
+      <Button
+        variant="default"
+        leftSection={<IconAdjustmentsHorizontal size={18} stroke={1.8} />}
+        onClick={onSetup}
+      >
+        Setup
       </Button>
     </Group>
   );

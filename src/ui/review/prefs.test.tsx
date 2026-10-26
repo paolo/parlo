@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PREFS, loadPrefs, resolveSource, savePrefs } from "./prefs";
+import {
+  DEFAULT_PREFS,
+  dealtCount,
+  loadPrefs,
+  resolveCount,
+  resolveSource,
+  savePrefs,
+} from "./prefs";
 
 const KEY = "parlo.practice";
 
@@ -45,5 +52,24 @@ describe("practice prefs", () => {
     expect(resolveSource(favorites, 0)).toBe("starter");
     expect(resolveSource(favorites, 3)).toBe("favorites");
     expect(resolveSource({ source: "recent", count: 5 }, 0)).toBe("recent");
+  });
+
+  it("accepts All as a saved count", () => {
+    savePrefs({ source: "starter", count: "all" });
+    expect(loadPrefs()).toEqual({ source: "starter", count: "all" });
+  });
+
+  it("uses All when the chosen count is more than the source has", () => {
+    expect(resolveCount(10, 6)).toBe("all");
+    expect(resolveCount(5, 6)).toBe(5);
+    expect(resolveCount(5, 5)).toBe(5);
+    expect(resolveCount("all", 6)).toBe("all");
+    expect(resolveCount(5, 0)).toBe("all");
+  });
+
+  it("deals the chosen number, or everything for All, never more than exist", () => {
+    expect(dealtCount(10, 6)).toBe(6);
+    expect(dealtCount(5, 6)).toBe(5);
+    expect(dealtCount("all", 6)).toBe(6);
   });
 });

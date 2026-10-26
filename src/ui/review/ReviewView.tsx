@@ -8,7 +8,6 @@ import {
   List,
   Loader,
   Menu,
-  SegmentedControl,
   Stack,
   Text,
   Title,
@@ -32,10 +31,12 @@ import { useAllFavorites, useProfile, useRecentGroups } from "../queries";
 import { bundleToGroups } from "./bundles";
 import { PracticeDeck } from "./PracticeDeck";
 import { RevealPanel, TypedPanel } from "./PracticePanels";
-import { PracticeSetup } from "./PracticeSetup";
+import { AnswerModeSelect, Field, PracticeSetup } from "./PracticeSetup";
 import {
+  dealtCount,
   loadPrefs,
   type PracticePrefs,
+  resolveCount,
   resolveSource,
   type Source,
   savePrefs,
@@ -58,8 +59,24 @@ export function ReviewView({ random }: { random?: () => number }) {
   const favoriteCount = favorites.data?.items.length ?? 0;
   // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
   const source = picked.source ?? resolveSource(saved, favoriteCount);
-  const count = picked.count ?? saved.count;
-  const deck = useSourceGroups(source, favorites.data?.items ?? []);
+  const sources = useSources(favorites.data?.items);
+  const counts = {
+    favorites: favorites.data?.items.length,
+    recent:
+      sources.recent.status === "ready"
+        ? sources.recent.groups.length
+        : undefined,
+    starter:
+      sources.starter.status === "ready"
+        ? sources.starter.groups.length
+        : undefined,
+  };
+  const deck = sources[source];
+  // A number of cards bigger than the source has becomes All.
+  const count = resolveCount(
+    picked.count ?? saved.count,
+    counts[source] ?? Number.POSITIVE_INFINITY,
+  );
 
   if (profile.isPending || favorites.isPending) return <Loader size="sm" />;
   if (profile.isError || favorites.isError) {
@@ -84,6 +101,7 @@ export function ReviewView({ random }: { random?: () => number }) {
       <PracticeSetup
         source={source}
         count={count}
+        counts={counts}
         onSource={(next) => setPicked((p) => ({ ...p, source: next }))}
         onCount={(next) => setPicked((p) => ({ ...p, count: next }))}
         onStart={() => {
@@ -92,38 +110,42 @@ export function ReviewView({ random }: { random?: () => number }) {
           setStarted(true);
         }}
       >
-        <ModeSelect value={mode} onChange={setMode} />
-        <Group gap="xs" wrap="nowrap">
-          <LanguageMenu
-            label="Practice in"
-            languages={languages}
-            value={practice}
-            onChange={setChosen}
-          />
-          {typing && (
-            <>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size={44}
-                radius="xl"
-                aria-label="Swap languages"
-                onClick={() => {
-                  setChosen(answerLang);
-                  setChosenAnswer(practice);
-                }}
-              >
-                <IconArrowsExchange size={20} stroke={1.8} />
-              </ActionIcon>
-              <LanguageMenu
-                label="Type in"
-                languages={others}
-                value={answerLang}
-                onChange={setChosenAnswer}
-              />
-            </>
-          )}
-        </Group>
+        <Field label="How you answer">
+          <AnswerModeSelect value={mode} onChange={setMode} />
+        </Field>
+        <Field label="Language">
+          <Group gap="xs" wrap="nowrap">
+            <LanguageMenu
+              label="Practice in"
+              languages={languages}
+              value={practice}
+              onChange={setChosen}
+            />
+            {typing && (
+              <>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size={44}
+                  radius="xl"
+                  aria-label="Swap languages"
+                  onClick={() => {
+                    setChosen(answerLang);
+                    setChosenAnswer(practice);
+                  }}
+                >
+                  <IconArrowsExchange size={20} stroke={1.8} />
+                </ActionIcon>
+                <LanguageMenu
+                  label="Type in"
+                  languages={others}
+                  value={answerLang}
+                  onChange={setChosenAnswer}
+                />
+              </>
+            )}
+          </Group>
+        </Field>
       </PracticeSetup>
     );
   }
@@ -132,8 +154,8 @@ export function ReviewView({ random }: { random?: () => number }) {
     <Stack gap="md" maw={720}>
       <SetupSummary
         source={source}
-        count={count}
-        onChange={() => setStarted(false)}
+        cards={dealtCount(count, counts[source] ?? 0)}
+        onSetup={() => setStarted(false)}
       />
       {deck.status === "pending" && <Loader size="sm" />}
       {deck.status === "error" && (
@@ -151,7 +173,7 @@ export function ReviewView({ random }: { random?: () => number }) {
           key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
           groups={deck.groups}
           source={source}
-          count={count}
+          count={dealtCount(count, counts[source] ?? 0)}
           practice={practice}
           answerLang={typing ? answerLang : undefined}
           profileLangs={languages.map((l) => l.lang)}
@@ -172,49 +194,35 @@ type DeckState =
   | { status: "error"; error: unknown }
   | { status: "ready"; groups: PhraseGroupDTO[] };
 
-/** The phrases of the chosen source; only that source is requested (Favorites are already loaded). */
-function useSourceGroups(
-  source: Source,
-  favorites: PhraseGroupDTO[],
-): DeckState {
-  const recent = useRecentGroups({ enabled: source === "recent" });
+/** Every source's phrases; Recent and Starter load up front so the setup can show how many each has. */
+function useSources(
+  favorites: PhraseGroupDTO[] | undefined,
+): Record<Source, DeckState> {
+  const recent = useRecentGroups();
   const starter = useQuery({
     queryKey: ["bundle", "starter"],
     queryFn: () => BUNDLE_LOADERS.starter().then(bundleToGroups),
-    enabled: source === "starter",
     staleTime: Number.POSITIVE_INFINITY,
   });
-  if (source === "favorites") return { status: "ready", groups: favorites };
-  const query = source === "recent" ? recent : starter;
-  if (query.isError) return { status: "error", error: query.error };
-  if (!query.data) return { status: "pending" };
+  const state = (
+    query: { isError: boolean; error: unknown },
+    groups: PhraseGroupDTO[] | undefined,
+  ): DeckState =>
+    query.isError
+      ? { status: "error", error: query.error }
+      : groups
+        ? { status: "ready", groups }
+        : { status: "pending" };
   return {
-    status: "ready",
-    groups: Array.isArray(query.data) ? query.data : query.data.items,
+    favorites: favorites
+      ? { status: "ready", groups: favorites }
+      : { status: "pending" },
+    recent: state(recent, recent.data?.items),
+    starter: state(starter, starter.data),
   };
 }
 
 type Mode = "flip" | "type";
-
-function ModeSelect({
-  value,
-  onChange,
-}: {
-  value: Mode;
-  onChange: (mode: Mode) => void;
-}) {
-  return (
-    <SegmentedControl
-      aria-label="How to practice"
-      value={value}
-      onChange={(next) => onChange(next as Mode)}
-      data={[
-        { value: "flip", label: "Flip" },
-        { value: "type", label: "Type" },
-      ]}
-    />
-  );
-}
 
 /** A language as a pill that opens a short list: one row of controls instead of a segmented control each. */
 function LanguageMenu({

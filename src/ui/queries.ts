@@ -89,12 +89,11 @@ export function useAllFavorites() {
 }
 
 /** The latest 100 translations in one request, for practicing from history. */
-export function useRecentGroups({ enabled }: { enabled: boolean }) {
+export function useRecentGroups() {
   return useQuery({
     queryKey: queryKeys.recent,
     queryFn: () =>
       apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=false&limit=100"),
-    enabled,
   });
 }
 
