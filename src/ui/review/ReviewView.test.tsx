@@ -215,7 +215,7 @@ describe("ReviewView", () => {
     );
     // A way forward in place: Starter always has cards.
     await click("Use Starter");
-    expect(await screen.findByText("0 of 3")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 20")).toBeInTheDocument();
   });
 
   it("only ever reads the profile and the favorites", async () => {
@@ -368,7 +368,7 @@ describe("ReviewView", () => {
         await screen.findByText(/couldn't load these phrases/i),
       ).toBeInTheDocument();
       await click("Use Starter");
-      expect(await screen.findByText("0 of 3")).toBeInTheDocument();
+      expect(await screen.findByText("0 of 10")).toBeInTheDocument();
     });
 
     it("shows Starter cards in Arabic as Arabic, directed by the text", async () => {
@@ -400,7 +400,7 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
       await start();
 
-      await screen.findByText("0 of 3");
+      await screen.findByText("0 of 10");
       expect(document.querySelector('[lang="ar"][dir="auto"]')).not.toBeNull();
     });
 

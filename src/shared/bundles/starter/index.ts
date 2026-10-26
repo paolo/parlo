@@ -1,68 +1,28 @@
 import type { Bundle } from "../types";
+import { emergencies } from "./emergencies";
+import { greetings } from "./greetings";
+import { health } from "./health";
+import { housing } from "./housing";
+import { phoneBanking } from "./phone-banking";
+import { restaurants } from "./restaurants";
+import { shops } from "./shops";
+import { smallTalk } from "./small-talk";
+import { transit } from "./transit";
+import { workSchool } from "./work-school";
 
 export const starter: Bundle = {
   id: "starter",
   name: "Starter",
   phrases: [
-    {
-      id: "starter-001",
-      topic: "greetings",
-      source: "en",
-      text: {
-        es: "Hola, ¿cómo estás?",
-        en: "Hi, how are you?",
-        fr: "Salut, comment ça va ?",
-        uk: "Привіт, як справи?",
-        pt: "Olá, tudo bem?",
-        zh: "你好，你好吗？",
-        pa: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?",
-        tl: "Kumusta ka?",
-        ar: "مرحباً، كيف حالك؟",
-        hi: "नमस्ते, आप कैसे हैं?",
-        ru: "Привет, как дела?",
-        it: "Ciao, come stai?",
-        fa: "سلام، حال شما چطور است؟",
-      },
-    },
-    {
-      id: "starter-002",
-      topic: "courtesy",
-      source: "en",
-      text: {
-        es: "Gracias",
-        en: "Thank you",
-        fr: "Merci",
-        uk: "Дякую",
-        pt: "Obrigado",
-        zh: "谢谢",
-        pa: "ਧੰਨਵਾਦ",
-        tl: "Salamat",
-        ar: "شكراً",
-        hi: "धन्यवाद",
-        ru: "Спасибо",
-        it: "Grazie",
-        fa: "ممنون",
-      },
-    },
-    {
-      id: "starter-003",
-      topic: "transit",
-      source: "fr",
-      text: {
-        es: "¿Dónde está la parada del autobús?",
-        en: "Where is the bus stop?",
-        fr: "Où est l'arrêt d'autobus ?",
-        uk: "Де зупинка автобуса?",
-        pt: "Onde fica o ponto de ônibus?",
-        zh: "公交车站在哪里？",
-        pa: "ਬੱਸ ਸਟਾਪ ਕਿੱਥੇ ਹੈ?",
-        tl: "Nasaan ang hintuan ng bus?",
-        ar: "أين محطة الحافلة؟",
-        hi: "बस स्टॉप कहाँ है?",
-        ru: "Где автобусная остановка?",
-        it: "Dov'è la fermata dell'autobus?",
-        fa: "ایستگاه اتوبوس کجاست؟",
-      },
-    },
+    ...greetings,
+    ...transit,
+    ...shops,
+    ...restaurants,
+    ...health,
+    ...workSchool,
+    ...housing,
+    ...phoneBanking,
+    ...smallTalk,
+    ...emergencies,
   ],
 };
