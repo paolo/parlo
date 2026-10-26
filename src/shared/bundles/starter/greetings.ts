@@ -188,7 +188,7 @@ export const greetings: BundlePhrase[] = [
     text: {
       es: "De nada",
       en: "You're welcome",
-      fr: "Bienvenue",
+      fr: "De rien",
       uk: "Прошу",
       pt: "De nada",
       zh: "不客气",
