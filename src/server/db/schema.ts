@@ -112,6 +112,8 @@ export const phraseGroup = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     isFavorite: boolean("is_favorite").notNull().default(false),
+    /** "<bundleId>:<phraseId>" for a group saved from a bundle phrase; null for the user's own translations. */
+    bundleRef: text("bundle_ref"),
     notes: text("notes"),
     correctionText: text("correction_text"),
     correctionExplanation: text("correction_explanation"),
@@ -126,6 +128,9 @@ export const phraseGroup = pgTable(
       t.createdAt.desc(),
       t.id.desc(),
     ),
+    uniqueIndex("phrase_group_user_bundle_ref_idx")
+      .on(t.userId, t.bundleRef)
+      .where(sql`${t.bundleRef} is not null`),
   ],
 );
 

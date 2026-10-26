@@ -30,6 +30,7 @@ describe("bundleToGroups", () => {
       correctedFrom: null,
     });
     expect(groups[0]).toMatchObject({
+      bundleRef: "starter:s-1",
       isFavorite: false,
       notes: null,
       correction: null,

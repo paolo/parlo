@@ -14,6 +14,7 @@ export function bundleToGroups(
     id: `bundle:${phrase.id}`,
     createdAt: "2026-10-26T00:00:00.000Z",
     isFavorite: false,
+    bundleRef: `${bundle.id}:${phrase.id}`,
     notes: null,
     correction: null,
     phrases: langs.map((lang) => ({

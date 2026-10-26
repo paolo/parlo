@@ -4,6 +4,7 @@ import type { Db } from "../db/client";
 import { phrase, phraseGroup } from "../db/schema";
 import { decodeCursor, encodeCursor } from "./cursor";
 import type {
+  NewBundleGroup,
   NewPhraseGroup,
   PhraseDTO,
   PhraseGroupDTO,
@@ -38,6 +39,7 @@ export function toDTO(row: GroupRow): PhraseGroupDTO {
     id: row.id,
     createdAt: row.createdAt.toISOString(),
     isFavorite: row.isFavorite,
+    bundleRef: row.bundleRef,
     notes: row.notes,
     correction:
       row.correctionText && row.correctionExplanation
@@ -75,6 +77,67 @@ export class DrizzlePhraseRepository implements PhraseRepository {
       await this.pruneHistory(tx, group.userId, inserted.id);
       return toDTO({ ...inserted, phrases });
     });
+  }
+
+  async favoriteBundleGroup(group: NewBundleGroup): Promise<PhraseGroupDTO> {
+    const existing = await this.db.query.phraseGroup.findFirst({
+      where: and(
+        eq(phraseGroup.userId, group.userId),
+        eq(phraseGroup.bundleRef, group.bundleRef),
+      ),
+      columns: { id: true },
+    });
+    if (existing) {
+      const updated = await this.setFavorite(group.userId, existing.id, true);
+      if (updated) return updated;
+    }
+    await this.assertRoomForNewFavorite(group.userId);
+    try {
+      return await this.db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(phraseGroup)
+          .values({
+            userId: group.userId,
+            bundleRef: group.bundleRef,
+            isFavorite: true,
+            notes: group.notes,
+          })
+          .returning();
+        const phrases = await tx
+          .insert(phrase)
+          .values(group.phrases.map((p) => ({ ...p, groupId: inserted.id })))
+          .returning();
+        await this.pruneHistory(tx, group.userId, inserted.id);
+        return toDTO({ ...inserted, phrases });
+      });
+    } catch (error) {
+      // Two taps at once: the other request created it first, so favorite that one.
+      const raced = await this.db.query.phraseGroup.findFirst({
+        where: and(
+          eq(phraseGroup.userId, group.userId),
+          eq(phraseGroup.bundleRef, group.bundleRef),
+        ),
+        columns: { id: true },
+      });
+      const updated = raced
+        ? await this.setFavorite(group.userId, raced.id, true)
+        : null;
+      if (updated) return updated;
+      throw error;
+    }
+  }
+
+  async deleteBundleGroup(userId: string, bundleRef: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(phraseGroup)
+      .where(
+        and(
+          eq(phraseGroup.userId, userId),
+          eq(phraseGroup.bundleRef, bundleRef),
+        ),
+      )
+      .returning({ id: phraseGroup.id });
+    return deleted.length > 0;
   }
 
   /**
@@ -180,6 +243,18 @@ export class DrizzlePhraseRepository implements PhraseRepository {
       .where(and(eq(phraseGroup.id, id), eq(phraseGroup.userId, userId)))
       .returning({ id: phraseGroup.id });
     return updated.length > 0 ? this.findById(userId, id) : null;
+  }
+
+  private async assertRoomForNewFavorite(userId: string) {
+    const [{ starred }] = await this.db
+      .select({ starred: count() })
+      .from(phraseGroup)
+      .where(
+        and(eq(phraseGroup.userId, userId), eq(phraseGroup.isFavorite, true)),
+      );
+    if (starred >= this.limits.phrasebookLimit) {
+      throw new PhrasebookFullError(this.limits.phrasebookLimit);
+    }
   }
 
   // Best effort: two parallel stars could overshoot the cap by one, which is harmless at this size.
