@@ -1,5 +1,5 @@
 export type Source = "favorites" | "recent" | "starter";
-export const COUNTS = [5, 10, 20, "all"] as const;
+export const COUNTS = [5, 10, 20] as const;
 export type Count = (typeof COUNTS)[number];
 
 export interface PracticePrefs {
@@ -12,14 +12,22 @@ export const DEFAULT_PREFS: PracticePrefs = { source: "starter", count: 10 };
 const KEY = "parlo.practice";
 const SOURCES: readonly Source[] = ["favorites", "recent", "starter"];
 
-/** How many cards a round deals when the source has that many: a number is only offered up to the source's size. */
+/** How many cards a round deals: the count, or every phrase when the source has fewer. */
 export function dealtCount(count: Count, available: number): number {
-  return count === "all" ? available : Math.min(count, available);
+  return Math.min(count, available);
 }
 
-/** The count to use for a source of `available` phrases: the chosen one, or All when it asks for more than exist. */
+/** Whether a count can be picked: the smallest always can, so a tiny source still has a selection. */
+export function countAllowed(count: Count, available: number): boolean {
+  return count === COUNTS[0] || count <= available;
+}
+
+/** The count in effect for a source of `available` phrases: the chosen one, or the biggest that still fits. */
 export function resolveCount(count: Count, available: number): Count {
-  return count !== "all" && count > available ? "all" : count;
+  if (countAllowed(count, available)) return count;
+  return (
+    [...COUNTS].reverse().find((c) => countAllowed(c, available)) ?? COUNTS[0]
+  );
 }
 
 /** The last choice, field by field; anything missing, unknown or unreadable falls back to the default. */

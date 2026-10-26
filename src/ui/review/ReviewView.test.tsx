@@ -348,22 +348,18 @@ describe("ReviewView", () => {
       ).toBe(true);
     });
 
-    it("shows how many phrases each source has", async () => {
+    it("says how many phrases the chosen source has", async () => {
       mockApi([a, b], [a, b, card("c", "Tres", "Three", "Trois")]);
       renderWithProviders(<ReviewView random={keepOrder} />);
 
-      expect(
-        await screen.findByRole("radio", { name: "Favorites 2" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("radio", { name: "Recent 3" }),
-      ).toBeInTheDocument();
-      expect(
-        await screen.findByRole("radio", { name: "Starter 100" }),
-      ).toBeInTheDocument();
+      expect(await screen.findByText("2 phrases")).toBeInTheDocument();
+      await pickRadio("Where cards come from", "Recent");
+      expect(screen.getByText("3 phrases")).toBeInTheDocument();
+      await pickRadio("Where cards come from", "Starter");
+      expect(await screen.findByText("100 phrases")).toBeInTheDocument();
     });
 
-    it("disables counts bigger than the source and deals All", async () => {
+    it("disables counts bigger than the source and uses the biggest that fits", async () => {
       mockApi(many(6));
       renderWithProviders(<ReviewView random={keepOrder} />);
 
@@ -371,11 +367,37 @@ describe("ReviewView", () => {
       expect(screen.getByRole("radio", { name: "5" })).toBeEnabled();
       expect(screen.getByRole("radio", { name: "10" })).toBeDisabled();
       expect(screen.getByRole("radio", { name: "20" })).toBeDisabled();
-      // The remembered 20 is more than the 6 favorites, so All is what is selected.
-      expect(screen.getByRole("radio", { name: "All" })).toBeChecked();
+      // The remembered 20 is more than the 6 favorites, so 5 is what is selected.
+      expect(screen.getByRole("radio", { name: "5" })).toBeChecked();
       await start();
-      expect(await screen.findByText("0 of 6")).toBeInTheDocument();
-      expect(screen.getByText("Favorites · 6 cards")).toBeInTheDocument();
+      expect(await screen.findByText("0 of 5")).toBeInTheDocument();
+    });
+
+    it("deals everything a tiny source has, with the smallest count selected", async () => {
+      mockApi(many(3));
+      renderWithProviders(<ReviewView random={keepOrder} />);
+
+      await screen.findByRole("button", { name: /^start$/i });
+      expect(screen.getByRole("radio", { name: "5" })).toBeChecked();
+      await start();
+      expect(await screen.findByText("0 of 3")).toBeInTheDocument();
+      expect(screen.getByText("Favorites · 3 cards")).toBeInTheDocument();
+    });
+
+    it("shows a Starter card's other versions only in the languages the user has", async () => {
+      remember({ source: "starter", count: 5 });
+      mockApi([]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await screen.findByRole("radio", { name: "Starter" });
+      await start();
+
+      await screen.findByText("Hi, how are you?");
+      await click("Reveal");
+
+      expect(screen.getByText("Hola, ¿cómo estás?")).toBeInTheDocument();
+      expect(screen.getByText("Salut, comment ça va ?")).toBeInTheDocument();
+      expect(screen.queryByText("Привіт, як справи?")).not.toBeInTheDocument();
+      expect(screen.queryByText("Kumusta ka?")).not.toBeInTheDocument();
     });
 
     it("shows speaking as on its way, not selectable", async () => {

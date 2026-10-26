@@ -21,7 +21,7 @@ const bundle: Bundle = {
 
 describe("bundleToGroups", () => {
   it("makes one group per phrase with a bundle: id and all 13 languages in catalog order", () => {
-    const groups = bundleToGroups(bundle);
+    const groups = bundleToGroups(bundle, [...LANG_CODES]);
     expect(groups.map((g) => g.id)).toEqual(["bundle:s-1", "bundle:s-2"]);
     expect(groups[0].phrases.map((p) => p.lang)).toEqual([...LANG_CODES]);
     expect(groups[0].phrases[0]).toMatchObject({
@@ -37,13 +37,21 @@ describe("bundleToGroups", () => {
   });
 
   it("builds a card for every phrase in any practice language, skipping none", () => {
-    const { cards, skipped } = buildCards(bundleToGroups(bundle), "ar", [
-      "es",
-      "en",
+    const { cards, skipped } = buildCards(
+      bundleToGroups(bundle, ["es", "en", "ar"]),
       "ar",
-    ]);
+      ["es", "en", "ar"],
+    );
     expect(cards).toHaveLength(2);
     expect(skipped).toBe(0);
     expect(cards[0].front.text).toBe("one ar");
+  });
+
+  it("keeps only the languages asked for, in that order", () => {
+    const [group] = bundleToGroups(bundle, ["ar", "es"]);
+    expect(group.phrases.map((p) => [p.lang, p.text])).toEqual([
+      ["ar", "one ar"],
+      ["es", "one es"],
+    ]);
   });
 });

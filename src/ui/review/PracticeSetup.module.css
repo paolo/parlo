@@ -6,7 +6,7 @@
   background: var(--parlo-surface-raised);
 }
 
-.count {
-  color: var(--parlo-text-muted);
+.hint {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

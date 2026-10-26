@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  countAllowed,
   DEFAULT_PREFS,
   dealtCount,
   loadPrefs,
@@ -54,22 +55,28 @@ describe("practice prefs", () => {
     expect(resolveSource({ source: "recent", count: 5 }, 0)).toBe("recent");
   });
 
-  it("accepts All as a saved count", () => {
-    savePrefs({ source: "starter", count: "all" });
-    expect(loadPrefs()).toEqual({ source: "starter", count: "all" });
+  it("ignores an old All count", () => {
+    window.localStorage.setItem(KEY, '{"source":"starter","count":"all"}');
+    expect(loadPrefs()).toEqual({ source: "starter", count: 10 });
   });
 
-  it("uses All when the chosen count is more than the source has", () => {
-    expect(resolveCount(10, 6)).toBe("all");
+  it("uses the biggest count that fits when the chosen one is more than the source has", () => {
+    expect(resolveCount(20, 12)).toBe(10);
+    expect(resolveCount(10, 6)).toBe(5);
     expect(resolveCount(5, 6)).toBe(5);
-    expect(resolveCount(5, 5)).toBe(5);
-    expect(resolveCount("all", 6)).toBe("all");
-    expect(resolveCount(5, 0)).toBe("all");
+    expect(resolveCount(20, 100)).toBe(20);
   });
 
-  it("deals the chosen number, or everything for All, never more than exist", () => {
+  it("always allows the smallest count, even for a tiny source", () => {
+    expect(countAllowed(5, 3)).toBe(true);
+    expect(countAllowed(10, 3)).toBe(false);
+    expect(resolveCount(20, 3)).toBe(5);
+    expect(resolveCount(5, 0)).toBe(5);
+  });
+
+  it("deals the chosen number, or every phrase when there are fewer", () => {
     expect(dealtCount(10, 6)).toBe(6);
     expect(dealtCount(5, 6)).toBe(5);
-    expect(dealtCount("all", 6)).toBe(6);
+    expect(dealtCount(5, 3)).toBe(3);
   });
 });

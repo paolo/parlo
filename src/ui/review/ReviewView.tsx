@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
 import { BUNDLE_LOADERS } from "../../shared/bundles";
@@ -59,7 +59,10 @@ export function ReviewView({ random }: { random?: () => number }) {
   const favoriteCount = favorites.data?.items.length ?? 0;
   // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
   const source = picked.source ?? resolveSource(saved, favoriteCount);
-  const sources = useSources(favorites.data?.items);
+  const sources = useSources(
+    favorites.data?.items,
+    profile.data?.languages.map((l) => l.lang),
+  );
   const counts = {
     favorites: favorites.data?.items.length,
     recent:
@@ -197,13 +200,24 @@ type DeckState =
 /** Every source's phrases; Recent and Starter load up front so the setup can show how many each has. */
 function useSources(
   favorites: PhraseGroupDTO[] | undefined,
+  profileLangs: Lang[] | undefined,
 ): Record<Source, DeckState> {
   const recent = useRecentGroups();
   const starter = useQuery({
     queryKey: ["bundle", "starter"],
-    queryFn: () => BUNDLE_LOADERS.starter().then(bundleToGroups),
+    queryFn: () => BUNDLE_LOADERS.starter(),
     staleTime: Number.POSITIVE_INFINITY,
   });
+  // Starter carries every language; a card only shows the viewer's own.
+  const langKey = profileLangs?.join();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: langKey stands for profileLangs
+  const starterGroups = useMemo(
+    () =>
+      starter.data && profileLangs
+        ? bundleToGroups(starter.data, profileLangs)
+        : undefined,
+    [starter.data, langKey],
+  );
   const state = (
     query: { isError: boolean; error: unknown },
     groups: PhraseGroupDTO[] | undefined,
@@ -218,7 +232,7 @@ function useSources(
       ? { status: "ready", groups: favorites }
       : { status: "pending" },
     recent: state(recent, recent.data?.items),
-    starter: state(starter, starter.data),
+    starter: state(starter, starterGroups),
   };
 }
 

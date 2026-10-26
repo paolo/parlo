@@ -1,7 +1,14 @@
-import { Badge, Button, SegmentedControl, Stack, Text } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+} from "@mantine/core";
 import type { ReactNode } from "react";
 import classes from "./PracticeSetup.module.css";
-import { COUNTS, type Count, type Source } from "./prefs";
+import { COUNTS, type Count, countAllowed, type Source } from "./prefs";
 
 export const SOURCE_LABELS: Record<Source, string> = {
   favorites: "Favorites",
@@ -12,16 +19,26 @@ export const SOURCE_LABELS: Record<Source, string> = {
 /** A labelled group of setup controls. */
 export function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  /** Quiet detail on the right of the label, like how many phrases a source has. */
+  hint?: string;
   children: ReactNode;
 }) {
   return (
     <Stack gap={8}>
-      <Text size="sm" fw={600} c="dimmed">
-        {label}
-      </Text>
+      <Group justify="space-between" gap="sm" wrap="nowrap">
+        <Text size="sm" fw={600} c="dimmed">
+          {label}
+        </Text>
+        {hint && (
+          <Text size="sm" c="dimmed" className={classes.hint}>
+            {hint}
+          </Text>
+        )}
+      </Group>
       {children}
     </Stack>
   );
@@ -53,7 +70,14 @@ export function PracticeSetup({
   const available = counts[source] ?? Number.POSITIVE_INFINITY;
   return (
     <Stack gap="lg" className={classes.panel}>
-      <Field label="Cards from">
+      <Field
+        label="Cards from"
+        hint={
+          counts[source] === undefined
+            ? undefined
+            : `${counts[source]} ${counts[source] === 1 ? "phrase" : "phrases"}`
+        }
+      >
         <SegmentedControl
           fullWidth
           aria-label="Where cards come from"
@@ -61,17 +85,7 @@ export function PracticeSetup({
           onChange={(next) => onSource(next as Source)}
           data={(Object.keys(SOURCE_LABELS) as Source[]).map((value) => ({
             value,
-            label: (
-              <>
-                {SOURCE_LABELS[value]}
-                {counts[value] !== undefined && (
-                  <>
-                    {" "}
-                    <span className={classes.count}>{counts[value]}</span>
-                  </>
-                )}
-              </>
-            ),
+            label: SOURCE_LABELS[value],
           }))}
         />
       </Field>
@@ -80,13 +94,11 @@ export function PracticeSetup({
           fullWidth
           aria-label="Cards this round"
           value={String(count)}
-          onChange={(next) =>
-            onCount(next === "all" ? "all" : (Number(next) as Count))
-          }
+          onChange={(next) => onCount(Number(next) as Count)}
           data={COUNTS.map((n) => ({
             value: String(n),
-            label: n === "all" ? "All" : String(n),
-            disabled: n !== "all" && n > available,
+            label: String(n),
+            disabled: !countAllowed(n, available),
           }))}
         />
       </Field>
