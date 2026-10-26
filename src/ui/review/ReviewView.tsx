@@ -388,12 +388,9 @@ function Session({
             </List>
           </Stack>
         )}
-        <Group>
-          <Button onClick={onRestart}>Practice again</Button>
-          <Button component={Link} href="/phrasebook" variant="default">
-            Back to phrasebook
-          </Button>
-        </Group>
+        <Button size="lg" fullWidth onClick={onRestart}>
+          Practice again
+        </Button>
       </Stack>
     );
   }

@@ -140,8 +140,8 @@ describe("ReviewView", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("One")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Back to phrasebook" }),
-    ).toHaveAttribute("href", "/phrasebook");
+      screen.queryByRole("link", { name: "Back to phrasebook" }),
+    ).not.toBeInTheDocument();
 
     await click("Practice again");
 
