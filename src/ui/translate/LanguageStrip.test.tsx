@@ -25,7 +25,7 @@ describe("LanguageStrip", () => {
     const { container } = render(<LanguageStrip languages={languages} />);
 
     expect(container.querySelector("[data-detected]")).toBeNull();
-    expect(screen.getByRole("group").getAttribute("aria-label")).not.toMatch(
+    expect(screen.getByRole("list").getAttribute("aria-label")).not.toMatch(
       /detected/i,
     );
   });
@@ -38,7 +38,7 @@ describe("LanguageStrip", () => {
     const marked = container.querySelectorAll("[data-detected]");
     expect(marked).toHaveLength(1);
     expect(marked[0]).toHaveTextContent("English");
-    expect(screen.getByRole("group")).toHaveAccessibleName(/Detected: English/);
+    expect(screen.getByRole("list")).toHaveAccessibleName(/Detected: English/);
   });
 
   it("is not a link, since nothing in it is pressable", () => {
@@ -48,7 +48,7 @@ describe("LanguageStrip", () => {
 
   it("names the languages for assistive technology", () => {
     render(<LanguageStrip languages={languages} detected="en" />);
-    expect(screen.getByRole("group")).toHaveAccessibleName(
+    expect(screen.getByRole("list")).toHaveAccessibleName(
       "Your languages: Español, English, Français. Detected: English.",
     );
   });

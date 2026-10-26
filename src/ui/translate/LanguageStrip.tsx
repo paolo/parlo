@@ -21,15 +21,14 @@ export function LanguageStrip({
   const names = languages.map((l) => LANGUAGES[l.lang].endonym);
   const detectedName = detected ? LANGUAGES[detected].endonym : null;
   return (
-    <div
-      role="group"
+    <ul
       className={classes.strip}
       aria-label={`Your languages: ${names.join(", ")}.${
         detectedName ? ` Detected: ${detectedName}.` : ""
       }`}
     >
       {languages.map((l, position) => (
-        <span
+        <li
           key={l.lang}
           className={classes.pill}
           data-role={ROLES[position]}
@@ -37,8 +36,8 @@ export function LanguageStrip({
         >
           <Flag region={l.region} size="20px" ring={ROLES[position]} />
           {LANGUAGES[l.lang].endonym}
-        </span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
