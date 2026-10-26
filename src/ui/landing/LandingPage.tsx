@@ -14,7 +14,7 @@ import { PracticeDemo } from "./PracticeDemo";
 const STEPS = [
   {
     title: "Save what you hear",
-    text: "Star a translation and it joins your phrasebook.",
+    text: "Add a translation to your favorites and it joins your phrasebook.",
   },
   {
     title: "Flip through on the go",

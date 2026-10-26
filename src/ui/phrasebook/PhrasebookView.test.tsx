@@ -73,7 +73,7 @@ function mockApi(
   return fetchMock;
 }
 
-/** The Phrasebook opens on Starred; most of these tests are about the full list. */
+/** The Phrasebook opens on Favorites; most of these tests are about the full list. */
 async function renderAll() {
   renderWithProviders(<PhrasebookView />);
   const filter = screen.getByRole("radiogroup", { name: "Phrases" });
@@ -96,7 +96,7 @@ describe("PhrasebookView", () => {
     expect(await screen.findByText("Uno")).toBeInTheDocument();
     expect(screen.getByText("Dos")).toBeInTheDocument();
     expect(
-      screen.getByText("Keeps your last 500 phrases. Starred phrases stay."),
+      screen.getByText("Keeps your last 500 phrases. Favorite phrases stay."),
     ).toBeInTheDocument();
   });
 
@@ -164,7 +164,7 @@ describe("PhrasebookView", () => {
   });
 
   describe("filtering", () => {
-    it("starts on Starred and asks only for the favorites", async () => {
+    it("starts on Favorites and asks only for the favorites", async () => {
       const api = mockApi([
         group("a", "Uno", "Un"),
         starred("b", "Dos", "Deux"),
@@ -175,7 +175,7 @@ describe("PhrasebookView", () => {
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();
       const filter = screen.getByRole("radiogroup", { name: "Phrases" });
       expect(
-        within(filter).getByRole("radio", { name: "Starred" }),
+        within(filter).getByRole("radio", { name: "Favorites" }),
       ).toBeChecked();
       expect(api).toHaveBeenCalledWith(
         "/api/phrase-groups?favorite=true&limit=20",
@@ -183,30 +183,30 @@ describe("PhrasebookView", () => {
       );
     });
 
-    it("lists only starred phrases, with the phrasebook limit, under Starred", async () => {
+    it("lists only favorite phrases, with the phrasebook limit, under Favorites", async () => {
       mockApi([group("a", "Uno", "Un"), starred("b", "Dos", "Deux")]);
       await renderAll();
       await screen.findByText("Uno");
       expect(screen.getByText("Dos")).toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole("radio", { name: "Starred" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
 
       expect(await screen.findByText("Dos")).toBeInTheDocument();
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();
       expect(
-        screen.getByText("Holds up to 100 starred phrases."),
+        screen.getByText("Holds up to 100 favorite phrases."),
       ).toBeInTheDocument();
     });
 
-    it("says how to star something when nothing is starred", async () => {
+    it("says how to add a favorite when there are none", async () => {
       mockApi([group("a", "Uno", "Un")]);
       await renderAll();
       await screen.findByText("Uno");
 
-      await userEvent.click(screen.getByRole("radio", { name: "Starred" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
 
       expect(
-        await screen.findByText(/haven't starred anything yet/i),
+        await screen.findByText(/haven't added any favorites yet/i),
       ).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
         "href",
@@ -222,7 +222,7 @@ describe("PhrasebookView", () => {
         await screen.findByRole("radio", { name: /Français/ }),
       );
 
-      await userEvent.click(screen.getByRole("radio", { name: "Starred" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
 
       expect(await screen.findByText("Un")).toBeInTheDocument();
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();

@@ -140,11 +140,11 @@ describe("ReviewView", () => {
     expect(screen.getByText("0 of 1")).toBeInTheDocument();
   });
 
-  it("says the deck is the starred phrases, and that a small one can grow", async () => {
+  it("says the deck is the favorite phrases, and that a small one can grow", async () => {
     mockApi([a, b]);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
-    expect(await screen.findByText("2 starred phrases")).toBeInTheDocument();
+    expect(await screen.findByText("2 favorite phrases")).toBeInTheDocument();
     expect(screen.getByText(/small deck so far/i)).toBeInTheDocument();
   });
 
@@ -178,17 +178,17 @@ describe("ReviewView", () => {
     mockApi(many);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
-    expect(await screen.findByText("5 starred phrases")).toBeInTheDocument();
+    expect(await screen.findByText("5 favorite phrases")).toBeInTheDocument();
     expect(screen.queryByText(/small deck so far/i)).not.toBeInTheDocument();
   });
 
-  it("explains that practice uses starred phrases when there are none", async () => {
+  it("explains that practice uses favorite phrases when there are none", async () => {
     mockApi([]);
     renderWithProviders(<ReviewView random={keepOrder} />);
 
     expect(await screen.findByText("Your deck is empty")).toBeInTheDocument();
     expect(
-      screen.getByText(/practice uses the phrases you star/i),
+      screen.getByText(/practice uses your favorite phrases/i),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /^Practice in:/ }),

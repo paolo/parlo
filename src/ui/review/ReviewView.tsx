@@ -124,7 +124,7 @@ export function ReviewView({ random }: { random?: () => number }) {
       {/* Below the card, so the nudge never pushes it down. */}
       {starred > 0 && starred < SMALL_DECK && (
         <Text size="sm" c="dimmed">
-          Small deck so far. Star more translations and they will join it.
+          Small deck so far. Favorite more translations and they will join it.
         </Text>
       )}
     </Stack>
@@ -137,7 +137,7 @@ function DeckSummary({ count }: { count: number }) {
     <Group gap={6} wrap="nowrap" className={classes.summary}>
       <IconStar size={18} stroke={1.8} aria-hidden="true" />
       <Text fw={600} size="sm">
-        {count} starred {count === 1 ? "phrase" : "phrases"}
+        {count} favorite {count === 1 ? "phrase" : "phrases"}
       </Text>
     </Group>
   );
@@ -273,8 +273,8 @@ function Session({
         </Title>
         <Text c="dimmed">
           {noVersion
-            ? `None of your starred phrases have a ${needed} version. Try another language.`
-            : "Practice uses the phrases you star. Translate something, tap its star, and it joins your deck."}
+            ? `None of your favorite phrases have a ${needed} version. Try another language.`
+            : "Practice uses your favorite phrases. Translate something, tap its star, and it joins your deck."}
         </Text>
         {skippedLine}
         <Button component={Link} href="/">
