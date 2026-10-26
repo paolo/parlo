@@ -1,0 +1,35 @@
+.lead {
+  margin: 0 0 var(--parlo-space-4);
+  color: var(--parlo-text-soft);
+}
+
+.steps {
+  list-style: none;
+  margin: 0 0 var(--parlo-space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--parlo-space-3);
+  color: var(--parlo-text);
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--parlo-size-touch);
+  height: var(--parlo-size-touch);
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-chip);
+  color: var(--parlo-text);
+}
+
+.add {
+  font: 600 13px / 1 var(--parlo-font-sans);
+}

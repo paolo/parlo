@@ -2,6 +2,7 @@
 
 import { notifications } from "@mantine/notifications";
 import { errorMessage } from "../errors";
+import { InstallBanner } from "../install/InstallBanner";
 import { useProfile, useTranslate } from "../queries";
 import { LanguageStrip } from "./LanguageStrip";
 import { TranslateForm } from "./TranslateForm";
@@ -25,30 +26,35 @@ export function TranslateView() {
   }
 
   return (
-    <div className={classes.grid}>
-      <div className={classes.input}>
-        {profile.data && (
-          <LanguageStrip
-            languages={profile.data.languages}
-            detected={translate.data?.group.phrases.find((p) => p.isRoot)?.lang}
-          />
-        )}
-        <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
+    <>
+      <div className={classes.grid}>
+        <div className={classes.input}>
+          {profile.data && (
+            <LanguageStrip
+              languages={profile.data.languages}
+              detected={
+                translate.data?.group.phrases.find((p) => p.isRoot)?.lang
+              }
+            />
+          )}
+          <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
+        </div>
+        <div className={classes.output}>
+          {translate.data ? (
+            <TranslationResult
+              key={translate.data.group.id}
+              group={translate.data.group}
+              profileLangs={profile.data?.languages.map((l) => l.lang)}
+              layout="stack"
+            />
+          ) : (
+            <p className={classes.empty}>
+              Your translations show up here, in your three languages.
+            </p>
+          )}
+        </div>
       </div>
-      <div className={classes.output}>
-        {translate.data ? (
-          <TranslationResult
-            key={translate.data.group.id}
-            group={translate.data.group}
-            profileLangs={profile.data?.languages.map((l) => l.lang)}
-            layout="stack"
-          />
-        ) : (
-          <p className={classes.empty}>
-            Your translations show up here, in your three languages.
-          </p>
-        )}
-      </div>
-    </div>
+      <InstallBanner />
+    </>
   );
 }
