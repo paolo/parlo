@@ -1,0 +1,2 @@
+ALTER TABLE "phrase_group" ADD COLUMN "bundle_ref" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "phrase_group_user_bundle_ref_idx" ON "phrase_group" USING btree ("user_id","bundle_ref") WHERE "phrase_group"."bundle_ref" is not null;

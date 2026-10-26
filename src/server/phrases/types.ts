@@ -11,6 +11,8 @@ export interface PhraseGroupDTO {
   id: string;
   createdAt: string;
   isFavorite: boolean;
+  /** "<bundleId>:<phraseId>" for a phrase saved from a bundle; null for the user's own translations. */
+  bundleRef: string | null;
   notes: string | null;
   correction: { text: string; explanation: string; accepted: boolean } | null;
   /** The root first, then the rest in catalog order. */
@@ -24,6 +26,9 @@ export interface NewPhraseGroup {
   phrases: { lang: Lang; text: string; isRoot: boolean }[];
 }
 
+/** A bundle phrase to save for a user: the group is favorited and found again by its ref. */
+export type NewBundleGroup = NewPhraseGroup & { bundleRef: string };
+
 export interface PhrasePage {
   items: PhraseGroupDTO[];
   /** Pass back as `cursor` for the next page; null on the last page. */
@@ -33,6 +38,13 @@ export interface PhrasePage {
 export interface PhraseRepository {
   /** Inserts the group and its phrases in one transaction. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
+  /**
+   * Favorites the user's group for the bundle phrase, creating it from `group` when there is none. Never makes
+   * a second group for the same ref. Throws PhrasebookFullError when it would be a new favorite past the cap.
+   */
+  favoriteBundleGroup(group: NewBundleGroup): Promise<PhraseGroupDTO>;
+  /** Deletes the user's group for the ref. Returns false when there was none. */
+  deleteBundleGroup(userId: string, bundleRef: string): Promise<boolean>;
   findById(userId: string, id: string): Promise<PhraseGroupDTO | null>;
   /**
    * Returns the updated group, or null when the user has no group with that id. Throws

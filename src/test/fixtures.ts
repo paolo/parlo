@@ -7,6 +7,7 @@ export function makeGroup(
     id: "g1",
     createdAt: "2026-10-20T10:00:00.000Z",
     isFavorite: false,
+    bundleRef: null,
     notes: null,
     correction: null,
     phrases: [

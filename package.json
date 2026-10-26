@@ -19,6 +19,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "flags:download": "tsx scripts/download-flags.mts",
+    "starter:review": "tsx scripts/starter-review.mts",
     "usage:cost": "tsx --env-file=.env.local scripts/usage-cost.mts",
     "smoke:haiku": "tsx --env-file=.env.local scripts/smoke-haiku.mts"
   },

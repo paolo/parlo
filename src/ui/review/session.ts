@@ -4,6 +4,8 @@ import { orderPhrases } from "../phrases";
 
 export interface ReviewCard {
   id: string;
+  /** Set for a card dealt from a bundle, or from a group saved from one; see PhraseGroupDTO.bundleRef. */
+  bundleRef: string | null;
   /** The phrase in the practice language. */
   front: PhraseDTO;
   /** The group's other phrases, shown on reveal. */
@@ -35,6 +37,7 @@ export function buildCards(
     }
     cards.push({
       id: group.id,
+      bundleRef: group.bundleRef,
       front,
       answer,
       back: orderPhrases(group.phrases, profileLangs).filter(
@@ -43,6 +46,20 @@ export function buildCards(
     });
   }
   return { cards, skipped };
+}
+
+/** A shuffled copy of `items`, cut to `count`: all of them when there are fewer. */
+export function pickRandom<T>(
+  items: T[],
+  count: number,
+  random: () => number = Math.random,
+): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
 }
 
 /** How many other cards come before a card graded "Again" is shown once more. */

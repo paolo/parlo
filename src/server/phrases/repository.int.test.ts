@@ -443,4 +443,95 @@ describe("DrizzlePhraseRepository", () => {
       );
     });
   });
+
+  describe("bundle favorites", () => {
+    const bundleGroup = (
+      userId: string,
+      bundleRef = "starter:starter-001",
+    ) => ({
+      userId,
+      bundleRef,
+      notes: null,
+      correction: null,
+      phrases: [
+        { lang: "en" as const, text: "Hi, how are you?", isRoot: true },
+        { lang: "es" as const, text: "Hola, ¿cómo estás?", isRoot: false },
+        { lang: "fr" as const, text: "Salut, comment ça va ?", isRoot: false },
+      ],
+    });
+
+    it("saves a bundle phrase as a favorite group carrying its ref", async () => {
+      const owner = await createTestUser();
+      const group = await repo().favoriteBundleGroup(bundleGroup(owner.id));
+
+      expect(group).toMatchObject({
+        isFavorite: true,
+        bundleRef: "starter:starter-001",
+      });
+      expect(group.phrases.map((p) => p.lang)).toEqual(["en", "es", "fr"]);
+      expect(
+        (await repo().listGroups(owner.id, { favorite: true, limit: 10 }))
+          .items,
+      ).toHaveLength(1);
+    });
+
+    it("never makes a second group for the same phrase", async () => {
+      const owner = await createTestUser();
+      const first = await repo().favoriteBundleGroup(bundleGroup(owner.id));
+      const second = await repo().favoriteBundleGroup(bundleGroup(owner.id));
+
+      expect(second.id).toBe(first.id);
+      expect(
+        (await repo().listGroups(owner.id, { limit: 10 })).items,
+      ).toHaveLength(1);
+    });
+
+    it("favorites again a group the user un-starred from the phrasebook", async () => {
+      const owner = await createTestUser();
+      const first = await repo().favoriteBundleGroup(bundleGroup(owner.id));
+      await repo().setFavorite(owner.id, first.id, false);
+
+      const again = await repo().favoriteBundleGroup(bundleGroup(owner.id));
+
+      expect(again).toMatchObject({ id: first.id, isFavorite: true });
+    });
+
+    it("keeps each user's copy separate", async () => {
+      const [a, b] = [await createTestUser(), await createTestUser()];
+      const first = await repo().favoriteBundleGroup(bundleGroup(a.id));
+      const second = await repo().favoriteBundleGroup(bundleGroup(b.id));
+
+      expect(second.id).not.toBe(first.id);
+    });
+
+    it("refuses a new favorite past the phrasebook cap, but lets an existing one through", async () => {
+      const owner = await createTestUser();
+      const small = repo({ historyLimit: 500, phrasebookLimit: 1 });
+      const first = await small.favoriteBundleGroup(bundleGroup(owner.id));
+
+      await expect(
+        small.favoriteBundleGroup(bundleGroup(owner.id, "starter:starter-002")),
+      ).rejects.toBeInstanceOf(PhrasebookFullError);
+      // Already a favorite, so it is not a new one.
+      expect((await small.favoriteBundleGroup(bundleGroup(owner.id))).id).toBe(
+        first.id,
+      );
+    });
+
+    it("deletes the group for a ref, quietly when there is none, and only the owner's", async () => {
+      const [owner, other] = [await createTestUser(), await createTestUser()];
+      await repo().favoriteBundleGroup(bundleGroup(owner.id));
+      await repo().favoriteBundleGroup(bundleGroup(other.id));
+
+      expect(
+        await repo().deleteBundleGroup(owner.id, "starter:starter-001"),
+      ).toBe(true);
+      expect(
+        await repo().deleteBundleGroup(owner.id, "starter:starter-001"),
+      ).toBe(false);
+      expect(
+        (await repo().listGroups(other.id, { limit: 10 })).items,
+      ).toHaveLength(1);
+    });
+  });
 });

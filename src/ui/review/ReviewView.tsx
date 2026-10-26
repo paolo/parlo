@@ -8,7 +8,6 @@ import {
   List,
   Loader,
   Menu,
-  SegmentedControl,
   Stack,
   Text,
   Title,
@@ -19,26 +18,70 @@ import {
   IconChevronDown,
   IconStar,
 } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
+import { BUNDLE_LOADERS } from "../../shared/bundles";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { errorMessage } from "../errors";
 import { LangLabel } from "../LangLabel";
-import { useAllFavorites, useProfile } from "../queries";
+import { useAllFavorites, useProfile, useRecentGroups } from "../queries";
+import { bundleToGroups } from "./bundles";
 import { PracticeDeck } from "./PracticeDeck";
 import { RevealPanel, TypedPanel } from "./PracticePanels";
+import { AnswerModeSelect, Field, PracticeSetup } from "./PracticeSetup";
+import {
+  dealtCount,
+  loadPrefs,
+  type PracticePrefs,
+  resolveCount,
+  resolveSource,
+  type Source,
+  savePrefs,
+} from "./prefs";
 import classes from "./ReviewView.module.css";
-import { buildCards, ReviewSession } from "./session";
+import { SetupSummary } from "./SetupSummary";
+import { buildCards, pickRandom, ReviewSession } from "./session";
 
 export function ReviewView({ random }: { random?: () => number }) {
   const profile = useProfile();
   const favorites = useAllFavorites();
+  const [saved] = useState(loadPrefs);
+  // What the user changed on this visit; the rest comes from the remembered choice.
+  const [picked, setPicked] = useState<Partial<PracticePrefs>>({});
+  const [started, setStarted] = useState(false);
   const [chosen, setChosen] = useState<Lang | null>(null);
   const [mode, setMode] = useState<Mode>("flip");
   const [chosenAnswer, setChosenAnswer] = useState<Lang | null>(null);
   const [round, setRound] = useState(0);
+  // How many cards the round dealt, fixed when it is dealt.
+  const [dealt, setDealt] = useState(0);
+  const favoriteCount = favorites.data?.items.length ?? 0;
+  // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
+  const source = picked.source ?? resolveSource(saved, favoriteCount);
+  const sources = useSources(
+    favorites.data?.items,
+    profile.data?.languages.map((l) => l.lang),
+  );
+  const counts = {
+    favorites: favorites.data?.items.length,
+    recent:
+      sources.recent.status === "ready"
+        ? sources.recent.groups.length
+        : undefined,
+    starter:
+      sources.starter.status === "ready"
+        ? sources.starter.groups.length
+        : undefined,
+  };
+  const deck = sources[source];
+  // A number of cards bigger than the source has becomes All.
+  const count = resolveCount(
+    picked.count ?? saved.count,
+    counts[source] ?? Number.POSITIVE_INFINITY,
+  );
 
   if (profile.isPending || favorites.isPending) return <Loader size="sm" />;
   if (profile.isError || favorites.isError) {
@@ -50,37 +93,53 @@ export function ReviewView({ random }: { random?: () => number }) {
   }
   const languages = profile.data.languages;
   const practice = chosen ?? languages[1]?.lang ?? languages[0].lang;
-  const starred = favorites.data.items.length;
   // Typing defaults to the first other language (the native one, unless that is the one being practiced).
   const others = languages.filter((l) => l.lang !== practice);
   const answerLang =
     chosenAnswer && chosenAnswer !== practice ? chosenAnswer : others[0]?.lang;
   const typing = mode === "type" && answerLang !== undefined;
   const restart = () => setRound((r) => r + 1);
-  return (
-    <Stack gap="md" maw={720}>
-      {starred > 0 && (
-        <>
-          {/* Two compact rows: what the deck is and how to practice it, then which languages. */}
-          <Group justify="space-between" gap="sm">
-            <DeckSummary count={starred} />
-            <ModeSelect
-              value={mode}
-              onChange={(next) => {
-                setMode(next);
-                restart();
-              }}
-            />
-          </Group>
+  /** Deals a new round from `from`; the card count is fixed here so favoriting never changes the summary. */
+  const dealRound = (from: Source) => {
+    const available = counts[from];
+    const wanted = picked.count ?? saved.count;
+    setDealt(
+      dealtCount(
+        resolveCount(wanted, available ?? Number.POSITIVE_INFINITY),
+        available ?? 0,
+      ),
+    );
+    restart();
+  };
+  const switchToStarter = () => {
+    setPicked((p) => ({ ...p, source: "starter" }));
+    dealRound("starter");
+  };
+
+  if (!started) {
+    return (
+      <PracticeSetup
+        source={source}
+        count={count}
+        counts={counts}
+        onSource={(next) => setPicked((p) => ({ ...p, source: next }))}
+        onCount={(next) => setPicked((p) => ({ ...p, count: next }))}
+        onStart={() => {
+          savePrefs({ source, count });
+          dealRound(source);
+          setStarted(true);
+        }}
+      >
+        <Field label="How you answer">
+          <AnswerModeSelect value={mode} onChange={setMode} />
+        </Field>
+        <Field label="Language">
           <Group gap="xs" wrap="nowrap">
             <LanguageMenu
               label="Practice in"
               languages={languages}
               value={practice}
-              onChange={(lang) => {
-                setChosen(lang);
-                restart();
-              }}
+              onChange={setChosen}
             />
             {typing && (
               <>
@@ -93,7 +152,6 @@ export function ReviewView({ random }: { random?: () => number }) {
                   onClick={() => {
                     setChosen(answerLang);
                     setChosenAnswer(practice);
-                    restart();
                   }}
                 >
                   <IconArrowsExchange size={20} stroke={1.8} />
@@ -102,70 +160,97 @@ export function ReviewView({ random }: { random?: () => number }) {
                   label="Type in"
                   languages={others}
                   value={answerLang}
-                  onChange={(lang) => {
-                    setChosenAnswer(lang);
-                    restart();
-                  }}
+                  onChange={setChosenAnswer}
                 />
               </>
             )}
           </Group>
-        </>
-      )}
-      <Session
-        key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
-        groups={favorites.data.items}
-        practice={practice}
-        answerLang={typing ? answerLang : undefined}
-        profileLangs={languages.map((l) => l.lang)}
-        random={random}
-        onRestart={restart}
+        </Field>
+      </PracticeSetup>
+    );
+  }
+
+  return (
+    <Stack gap="md" maw={720}>
+      <SetupSummary
+        source={source}
+        cards={dealt}
+        onSetup={() => setStarted(false)}
       />
-      {/* Below the card, so the nudge never pushes it down. */}
-      {starred > 0 && starred < SMALL_DECK && (
-        <Text size="sm" c="dimmed">
-          Small deck so far. Favorite more translations and they will join it.
-        </Text>
+      {deck.status === "pending" && <Loader size="sm" />}
+      {deck.status === "error" && (
+        <Alert color="red" title="Couldn't load these phrases">
+          {errorMessage(deck.error)}
+          <Group mt="sm">
+            <Button variant="default" onClick={switchToStarter}>
+              Use Starter
+            </Button>
+          </Group>
+        </Alert>
+      )}
+      {deck.status === "ready" && (
+        <Session
+          key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
+          groups={deck.groups}
+          source={source}
+          count={dealt}
+          practice={practice}
+          answerLang={typing ? answerLang : undefined}
+          profileLangs={languages.map((l) => l.lang)}
+          random={random}
+          onRestart={restart}
+          onUseStarter={switchToStarter}
+        />
       )}
     </Stack>
   );
 }
 
-/** Says which phrases the cards come from. A short deck gets a nudge, under the controls' first row. */
-function DeckSummary({ count }: { count: number }) {
-  return (
-    <Group gap={6} wrap="nowrap" className={classes.summary}>
-      <IconStar size={18} stroke={1.8} aria-hidden="true" />
-      <Text fw={600} size="sm">
-        {count} favorite {count === 1 ? "phrase" : "phrases"}
-      </Text>
-    </Group>
-  );
-}
+type DeckState =
+  | { status: "pending" }
+  | { status: "error"; error: unknown }
+  | { status: "ready"; groups: PhraseGroupDTO[] };
 
-const SMALL_DECK = 5;
+/** Every source's phrases; Recent and Starter load up front so the setup can show how many each has. */
+function useSources(
+  favorites: PhraseGroupDTO[] | undefined,
+  profileLangs: Lang[] | undefined,
+): Record<Source, DeckState> {
+  const recent = useRecentGroups();
+  const starter = useQuery({
+    queryKey: ["bundle", "starter"],
+    queryFn: () => BUNDLE_LOADERS.starter(),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  // Starter carries every language; a card only shows the viewer's own.
+  const langKey = profileLangs?.join();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: langKey stands for profileLangs
+  const starterGroups = useMemo(
+    () =>
+      starter.data && profileLangs
+        ? bundleToGroups(starter.data, profileLangs)
+        : undefined,
+    [starter.data, langKey],
+  );
+  const state = (
+    query: { isError: boolean; error: unknown },
+    groups: PhraseGroupDTO[] | undefined,
+  ): DeckState =>
+    query.isError
+      ? { status: "error", error: query.error }
+      : groups
+        ? { status: "ready", groups }
+        : { status: "pending" };
+  return {
+    favorites: favorites
+      ? { status: "ready", groups: favorites }
+      : { status: "pending" },
+    recent: state(recent, recent.data?.items),
+    starter: state(starter, starterGroups),
+  };
+}
 
 type Mode = "flip" | "type";
-
-function ModeSelect({
-  value,
-  onChange,
-}: {
-  value: Mode;
-  onChange: (mode: Mode) => void;
-}) {
-  return (
-    <SegmentedControl
-      aria-label="How to practice"
-      value={value}
-      onChange={(next) => onChange(next as Mode)}
-      data={[
-        { value: "flip", label: "Flip" },
-        { value: "type", label: "Type" },
-      ]}
-    />
-  );
-}
 
 /** A language as a pill that opens a short list: one row of controls instead of a segmented control each. */
 function LanguageMenu({
@@ -223,23 +308,31 @@ function snapshot(session: ReviewSession) {
 
 function Session({
   groups,
+  source,
+  count,
   practice,
   answerLang,
   profileLangs,
   random,
   onRestart,
+  onUseStarter,
 }: {
   groups: PhraseGroupDTO[];
+  source: Source;
+  /** How many cards to deal, drawn at random; fewer when the source has fewer. */
+  count: number;
   practice: Lang;
   /** Set when practicing by typing: the language of the phrase to write. */
   answerLang?: Lang;
   profileLangs: Lang[];
   random?: () => number;
   onRestart: () => void;
+  onUseStarter: () => void;
 }) {
-  const [built] = useState(() =>
-    buildCards(groups, practice, profileLangs, answerLang),
-  );
+  const [built] = useState(() => {
+    const all = buildCards(groups, practice, profileLangs, answerLang);
+    return { ...all, cards: pickRandom(all.cards, count, random) };
+  });
   const [session] = useState(() => new ReviewSession(built.cards, random));
   // Plain snapshots in state: the session object mutates, React only sees new values.
   const [view, setView] = useState(() => snapshot(session));
@@ -273,13 +366,18 @@ function Session({
         </Title>
         <Text c="dimmed">
           {noVersion
-            ? `None of your favorite phrases have a ${needed} version. Try another language.`
-            : "Practice uses your favorite phrases. Translate something, tap its star, and it joins your deck."}
+            ? `None of these phrases have a ${needed} version. Try another language.`
+            : source === "recent"
+              ? "Nothing translated yet. Translate something and it shows up here."
+              : "Practice uses your favorite phrases. Translate something, tap its star, and it joins your deck."}
         </Text>
         {skippedLine}
-        <Button component={Link} href="/">
-          Go to Translate
-        </Button>
+        <Group gap="sm">
+          <Button onClick={onUseStarter}>Use Starter</Button>
+          <Button component={Link} href="/" variant="default">
+            Go to Translate
+          </Button>
+        </Group>
       </div>
     );
   }
@@ -304,12 +402,9 @@ function Session({
             </List>
           </Stack>
         )}
-        <Group>
-          <Button onClick={onRestart}>Practice again</Button>
-          <Button component={Link} href="/phrasebook" variant="default">
-            Back to phrasebook
-          </Button>
-        </Group>
+        <Button size="lg" fullWidth onClick={onRestart}>
+          Practice again
+        </Button>
       </Stack>
     );
   }

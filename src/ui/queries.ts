@@ -32,6 +32,7 @@ export const queryKeys = {
   history: ["phrase-groups", { favorite: false }] as const,
   favorites: ["phrase-groups", { favorite: true }] as const,
   allFavorites: ["phrase-groups", { favorite: true, all: true }] as const,
+  recent: ["phrase-groups", { favorite: false, all: true }] as const,
 };
 
 export function useUsage() {
@@ -87,6 +88,15 @@ export function useAllFavorites() {
   });
 }
 
+/** The latest 100 translations in one request, for practicing from history. */
+export function useRecentGroups() {
+  return useQuery({
+    queryKey: queryKeys.recent,
+    queryFn: () =>
+      apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=false&limit=100"),
+  });
+}
+
 export function useSetFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -95,6 +105,29 @@ export function useSetFavorite() {
         method: "PATCH",
         body: JSON.stringify({ isFavorite }),
       }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
+  });
+}
+
+/** Favorites (PUT, saving it the first time) or removes (DELETE) a bundle phrase, like "starter" + "starter-014". */
+export function useSetBundleFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bundleRef,
+      isFavorite,
+    }: {
+      bundleRef: string;
+      isFavorite: boolean;
+    }) => {
+      const [bundleId, phraseId] = bundleRef.split(":");
+      return apiFetch<{ group: PhraseGroupDTO } | undefined>(
+        `/api/bundle-favorites/${bundleId}/${phraseId}`,
+        { method: isFavorite ? "PUT" : "DELETE" },
+      );
+    },
+    // Returned, so the mutation stays pending until the lists have reloaded and the star never flickers back.
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
   });

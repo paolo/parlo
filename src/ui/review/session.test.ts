@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import { makeGroup } from "@/test/fixtures";
-import { buildCards, type ReviewCard, ReviewSession } from "./session";
+import {
+  buildCards,
+  pickRandom,
+  type ReviewCard,
+  ReviewSession,
+} from "./session";
 
 // With this "random" Fisher-Yates swaps every element with itself, so the order is unchanged.
 const keepOrder = () => 0.999999;
 
 const card = (id: string): ReviewCard => ({
   id,
+  bundleRef: null,
   front: { lang: "fr", text: id, isRoot: false, correctedFrom: null },
   back: [],
 });
@@ -162,5 +168,23 @@ describe("ReviewSession", () => {
     expect(session.finished).toBe(true);
     expect(() => session.gotIt()).not.toThrow();
     expect(() => session.again()).not.toThrow();
+  });
+});
+
+describe("pickRandom", () => {
+  it("takes the asked number without duplicates", () => {
+    const picked = pickRandom([1, 2, 3, 4, 5], 3, () => 0);
+    expect(picked).toHaveLength(3);
+    expect(new Set(picked).size).toBe(3);
+  });
+
+  it("returns everything when fewer items exist than asked", () => {
+    expect(pickRandom([1, 2], 20).sort()).toEqual([1, 2]);
+  });
+
+  it("does not change its input", () => {
+    const items = [1, 2, 3];
+    pickRandom(items, 2, () => 0);
+    expect(items).toEqual([1, 2, 3]);
   });
 });

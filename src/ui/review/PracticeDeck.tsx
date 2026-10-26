@@ -3,6 +3,7 @@ import { LANGUAGES, type Lang } from "../../shared/languages";
 import { Flag } from "../Flag";
 import { useProfileRegion } from "../queries";
 import { type Role, roleFor } from "../roles";
+import { CardFavoriteButton } from "./CardFavoriteButton";
 import classes from "./PracticeDeck.module.css";
 import type { ReviewCard } from "./session";
 
@@ -39,10 +40,16 @@ export function PracticeDeck({
         className={classes.card}
         data-role={role}
       >
-        <span className={classes.label}>
-          <Flag region={region ?? LANGUAGES[lang].defaultRegion} size="20px" />
-          {LANGUAGES[lang].endonym}
-        </span>
+        <div className={classes.top}>
+          <span className={classes.label}>
+            <Flag
+              region={region ?? LANGUAGES[lang].defaultRegion}
+              size="20px"
+            />
+            {LANGUAGES[lang].endonym}
+          </span>
+          <CardFavoriteButton card={card} />
+        </div>
         <p className={classes.front} lang={lang} dir="auto">
           {card.front.text}
         </p>
