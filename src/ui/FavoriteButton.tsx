@@ -7,7 +7,7 @@ import type { PhraseGroupDTO } from "@/server/phrases/types";
 import { errorMessage } from "./errors";
 import { useSetFavorite } from "./queries";
 
-/** Stars or unstars a whole phrase group, which adds it to or removes it from the phrasebook. */
+/** Favorites or unfavorites a whole phrase group, which adds it to or removes it from the phrasebook. */
 export function FavoriteButton({ group }: { group: PhraseGroupDTO }) {
   const setFavorite = useSetFavorite();
   // Show the requested state while saving, then the saved one.

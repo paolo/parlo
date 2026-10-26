@@ -6,13 +6,13 @@ import { useState } from "react";
 import { PhraseGroupList } from "../history/PhraseGroupList";
 import { type ShowIn, ShowInSelect } from "../history/ShowInSelect";
 
-type Filter = "all" | "starred";
+type Filter = "all" | "favorites";
 
-/** The phrases the user starred, newest first; All shows everything they have translated. */
+/** The phrases the user favorited, newest first; All shows everything they have translated. */
 export function PhrasebookView() {
-  const [filter, setFilter] = useState<Filter>("starred");
+  const [filter, setFilter] = useState<Filter>("favorites");
   const [showIn, setShowIn] = useState<ShowIn>("all");
-  const starred = filter === "starred";
+  const favorites = filter === "favorites";
 
   return (
     <Stack gap="lg">
@@ -22,7 +22,7 @@ export function PhrasebookView() {
           value={filter}
           onChange={(next) => setFilter(next as Filter)}
           data={[
-            { value: "starred", label: "Starred" },
+            { value: "favorites", label: "Favorites" },
             { value: "all", label: "All" },
           ]}
         />
@@ -31,20 +31,20 @@ export function PhrasebookView() {
       <PhraseGroupList
         // Remount on a filter change so each list keeps its own scroll and loading state.
         key={filter}
-        favorite={starred}
+        favorite={favorites}
         showIn={showIn}
         note={(limit) => (
           <Text size="sm" c="dimmed">
-            {starred
-              ? `Holds up to ${limit} starred phrases.`
-              : `Keeps your last ${limit} phrases. Starred phrases stay.`}
+            {favorites
+              ? `Holds up to ${limit} favorite phrases.`
+              : `Keeps your last ${limit} phrases. Favorite phrases stay.`}
           </Text>
         )}
         empty={
           <Stack align="flex-start" gap="xs">
             <Text c="dimmed">
-              {starred
-                ? "You haven't starred anything yet. Star a translation to keep it here and practice it."
+              {favorites
+                ? "You haven't added any favorites yet. Add a translation to your favorites to keep it here and practice it."
                 : "Nothing here yet. Translate something and it will show up."}
             </Text>
             <Button component={Link} href="/">
