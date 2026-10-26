@@ -112,7 +112,8 @@ interface Bundle {
 }
 interface BundlePhrase {
   id: string;            // stable, e.g. "starter-014"; never reused or renumbered
-  topic?: string;        // e.g. "greetings", "transit"; for the author's review and future filtering
+  topic: string;         // e.g. "greetings", "transit"; for the author's review and future filtering
+  source: "en" | "fr";   // the language it was written in; the other 12 are translations
   text: Record<Lang, string>; // all 13 languages, enforced by the type
 }
 ```
