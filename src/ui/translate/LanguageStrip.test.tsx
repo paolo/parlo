@@ -10,10 +10,9 @@ const languages: ProfileLanguage[] = [
 ];
 
 describe("LanguageStrip", () => {
-  it("lists all three languages with the flag of the region picked for each, and links to the profile", () => {
+  it("lists all three languages with the flag of the region picked for each", () => {
     const { container } = render(<LanguageStrip languages={languages} />);
 
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/profile");
     expect(screen.getByText("Español")).toBeInTheDocument();
     expect(screen.getByText("English")).toBeInTheDocument();
     expect(screen.getByText("Français")).toBeInTheDocument();
@@ -26,7 +25,7 @@ describe("LanguageStrip", () => {
     const { container } = render(<LanguageStrip languages={languages} />);
 
     expect(container.querySelector("[data-detected]")).toBeNull();
-    expect(screen.getByRole("link").getAttribute("aria-label")).not.toMatch(
+    expect(screen.getByRole("group").getAttribute("aria-label")).not.toMatch(
       /detected/i,
     );
   });
@@ -39,7 +38,19 @@ describe("LanguageStrip", () => {
     const marked = container.querySelectorAll("[data-detected]");
     expect(marked).toHaveLength(1);
     expect(marked[0]).toHaveTextContent("English");
-    expect(screen.getByRole("link")).toHaveAccessibleName(/Detected: English/);
+    expect(screen.getByRole("group")).toHaveAccessibleName(/Detected: English/);
+  });
+
+  it("is not a link, since nothing in it is pressable", () => {
+    render(<LanguageStrip languages={languages} />);
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("names the languages for assistive technology", () => {
+    render(<LanguageStrip languages={languages} detected="en" />);
+    expect(screen.getByRole("group")).toHaveAccessibleName(
+      "Your languages: Español, English, Français. Detected: English.",
+    );
   });
 
   it("renders nothing without a profile", () => {

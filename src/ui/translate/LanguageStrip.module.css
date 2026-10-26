@@ -1,25 +1,31 @@
 .strip {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--parlo-space-2);
   width: fit-content;
   max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   color: var(--parlo-text);
-  text-decoration: none;
+}
+.strip::-webkit-scrollbar {
+  display: none;
 }
 
 .pill {
   --color: var(--parlo-native);
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: var(--parlo-space-2);
-  min-height: var(--parlo-size-touch);
-  padding: 0 var(--parlo-space-4) 0 10px;
+  min-height: 32px;
+  padding: 0 var(--parlo-space-3) 0 6px;
   border-radius: var(--parlo-radius-pill);
   background: var(--parlo-surface-chip);
   border: 1.5px solid var(--parlo-border-subtle);
-  font: 600 15px / 1 var(--parlo-font-sans);
+  font: 600 14px / 1 var(--parlo-font-sans);
   transition: border-color var(--parlo-dur-pop) var(--parlo-ease-out);
 }
 .pill[data-role="english"] {
@@ -29,12 +35,7 @@
   --color: var(--parlo-french);
 }
 
-.strip:hover .pill {
-  border-color: var(--parlo-border-strong);
-}
-
 /* The language the last phrase was in. */
-.pill[data-detected],
-.strip:hover .pill[data-detected] {
+.pill[data-detected] {
   border-color: var(--color);
 }
