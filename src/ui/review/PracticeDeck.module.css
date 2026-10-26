@@ -48,6 +48,20 @@
   --ink: var(--parlo-french-ink);
 }
 
+/* The language tag and the star, which sits at the far right. The star's 44px target overhangs the card's padding. */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--parlo-space-2);
+  margin: -10px -12px -10px 0;
+}
+
+.star {
+  flex: none;
+  color: var(--ink);
+}
+
 .label {
   display: flex;
   align-items: center;

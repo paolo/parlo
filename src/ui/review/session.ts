@@ -4,6 +4,8 @@ import { orderPhrases } from "../phrases";
 
 export interface ReviewCard {
   id: string;
+  /** Set for a card dealt from a bundle, or from a group saved from one; see PhraseGroupDTO.bundleRef. */
+  bundleRef: string | null;
   /** The phrase in the practice language. */
   front: PhraseDTO;
   /** The group's other phrases, shown on reveal. */
@@ -35,6 +37,7 @@ export function buildCards(
     }
     cards.push({
       id: group.id,
+      bundleRef: group.bundleRef,
       front,
       answer,
       back: orderPhrases(group.phrases, profileLangs).filter(

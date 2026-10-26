@@ -56,6 +56,8 @@ export function ReviewView({ random }: { random?: () => number }) {
   const [mode, setMode] = useState<Mode>("flip");
   const [chosenAnswer, setChosenAnswer] = useState<Lang | null>(null);
   const [round, setRound] = useState(0);
+  // How many cards the round dealt, fixed when it is dealt.
+  const [dealt, setDealt] = useState(0);
   const favoriteCount = favorites.data?.items.length ?? 0;
   // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
   const source = picked.source ?? resolveSource(saved, favoriteCount);
@@ -97,7 +99,22 @@ export function ReviewView({ random }: { random?: () => number }) {
     chosenAnswer && chosenAnswer !== practice ? chosenAnswer : others[0]?.lang;
   const typing = mode === "type" && answerLang !== undefined;
   const restart = () => setRound((r) => r + 1);
-  const switchToStarter = () => setPicked((p) => ({ ...p, source: "starter" }));
+  /** Deals a new round from `from`; the card count is fixed here so favoriting never changes the summary. */
+  const dealRound = (from: Source) => {
+    const available = counts[from];
+    const wanted = picked.count ?? saved.count;
+    setDealt(
+      dealtCount(
+        resolveCount(wanted, available ?? Number.POSITIVE_INFINITY),
+        available ?? 0,
+      ),
+    );
+    restart();
+  };
+  const switchToStarter = () => {
+    setPicked((p) => ({ ...p, source: "starter" }));
+    dealRound("starter");
+  };
 
   if (!started) {
     return (
@@ -109,7 +126,7 @@ export function ReviewView({ random }: { random?: () => number }) {
         onCount={(next) => setPicked((p) => ({ ...p, count: next }))}
         onStart={() => {
           savePrefs({ source, count });
-          restart();
+          dealRound(source);
           setStarted(true);
         }}
       >
@@ -157,7 +174,7 @@ export function ReviewView({ random }: { random?: () => number }) {
     <Stack gap="md" maw={720}>
       <SetupSummary
         source={source}
-        cards={dealtCount(count, counts[source] ?? 0)}
+        cards={dealt}
         onSetup={() => setStarted(false)}
       />
       {deck.status === "pending" && <Loader size="sm" />}
@@ -176,16 +193,13 @@ export function ReviewView({ random }: { random?: () => number }) {
           key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
           groups={deck.groups}
           source={source}
-          count={dealtCount(count, counts[source] ?? 0)}
+          count={dealt}
           practice={practice}
           answerLang={typing ? answerLang : undefined}
           profileLangs={languages.map((l) => l.lang)}
           random={random}
           onRestart={restart}
-          onUseStarter={() => {
-            switchToStarter();
-            restart();
-          }}
+          onUseStarter={switchToStarter}
         />
       )}
     </Stack>

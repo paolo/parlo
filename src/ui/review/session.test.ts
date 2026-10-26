@@ -13,6 +13,7 @@ const keepOrder = () => 0.999999;
 
 const card = (id: string): ReviewCard => ({
   id,
+  bundleRef: null,
   front: { lang: "fr", text: id, isRoot: false, correctedFrom: null },
   back: [],
 });

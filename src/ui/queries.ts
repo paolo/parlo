@@ -110,6 +110,29 @@ export function useSetFavorite() {
   });
 }
 
+/** Favorites (PUT, saving it the first time) or removes (DELETE) a bundle phrase, like "starter" + "starter-014". */
+export function useSetBundleFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bundleRef,
+      isFavorite,
+    }: {
+      bundleRef: string;
+      isFavorite: boolean;
+    }) => {
+      const [bundleId, phraseId] = bundleRef.split(":");
+      return apiFetch<{ group: PhraseGroupDTO } | undefined>(
+        `/api/bundle-favorites/${bundleId}/${phraseId}`,
+        { method: isFavorite ? "PUT" : "DELETE" },
+      );
+    },
+    // Returned, so the mutation stays pending until the lists have reloaded and the star never flickers back.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
+  });
+}
+
 export function useProfile() {
   return useQuery({
     queryKey: queryKeys.profile,
