@@ -10,6 +10,7 @@ import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
 import type { Lang } from "../shared/languages";
 import { ApiError, apiFetch } from "./api";
+import { countTranslation } from "./install/nudge";
 
 export interface PhraseGroupsPage {
   items: PhraseGroupDTO[];
@@ -51,8 +52,12 @@ export function useTranslate() {
     // Refresh the quota either way: a 429 also means our cached count is stale.
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.usage }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),
+    onSuccess: () => {
+      countTranslation();
+      return queryClient.invalidateQueries({
+        queryKey: queryKeys.phraseGroups,
+      });
+    },
   });
 }
 

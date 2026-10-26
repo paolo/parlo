@@ -4,6 +4,8 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
+// Imported for its side effect: it must be listening before the browser offers to install the app.
+import "@/ui/install/install";
 import { cssVariablesResolver, theme } from "@/ui/theme";
 
 export function Providers({ children }: { children: ReactNode }) {
