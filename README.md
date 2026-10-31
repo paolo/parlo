@@ -102,10 +102,3 @@ Vitest · Biome · GitHub Actions · Vercel.
 
 Design decisions are in the [spec](docs/specs/2026-10-09-parlo-design.md); the task-by-task log
 with the reasoning behind each step is in the [plan](docs/plans/2026-10-09-parlo-plan.md).
-
-## Timebox
-
-The scaffold was created at 01:33 UTC (create-next-app, before the timebox). Planning and the spec
-started at 02:20 UTC; implementation started at 02:49 UTC; this note was written at 04:15 UTC. I
-built it with Claude Code as a pair, working task by task and reviewing each step; the commit
-history shows one merge per feature.
