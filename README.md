@@ -2,7 +2,7 @@
 
 **Say it like a local, in your own languages.**
 
-Live: **https://parlo-flax.vercel.app** (sign in with Google)
+Live: **https://parlo.fun** (sign in with Google). It's installable on a phone's home screen.
 
 I'm a native Spanish speaker, advanced in English and intermediate in French, and I switch between
 the three every day. Word-for-word translators miss what I actually need: the colloquial meaning,
@@ -27,37 +27,51 @@ Translation runs on **Claude Haiku 5.5** with structured outputs.
 ## What works
 
 - Google sign-in (email/password exists in development only; it's disabled in production, client
-  and server).
-- Translate: language detection, three-way translation, corrections with explanations, notes, copy
-  buttons, and a Ctrl/⌘+Enter shortcut.
-- Every translation is persisted (group, three phrases, correction, notes) in Postgres (Neon). A
-  suggested correction can be accepted with one click, which replaces the stored phrase.
-- **History**: every saved phrase, newest first, 20 at a time, viewable in all your languages or one,
-  with delete. It keeps your last 500 phrases (`HISTORY_LIMIT`); starred ones are never pruned.
-- **Phrasebook**: your starred phrases (up to `PHRASEBOOK_LIMIT`, default 100) and **Review mode**,
-  a flashcard session in the language you choose, with no model calls.
-- Rate limiting per user: a **daily quota** (default 50, overridable per user) and a **burst limit**
-  (10/min). There's a usage badge in the header, and friendly messages for 429s, unsupported
-  languages and model failures. Failed attempts don't use quota.
-- CI on every push (lint, typecheck, unit, integration against Postgres, build); production
-  migrations run from CI on `main`.
+  and server). Signed-out visitors see a landing page with a rotating three-language phrase.
+- **Translate**: language detection, three-way translation, corrections with explanations (accepted
+  with one click, which replaces the stored phrase), notes, copy buttons, a Ctrl/⌘+Enter shortcut and
+  a favorite star. Every translation is saved (group, three phrases, correction, notes) in Postgres
+  (Neon).
+- **Phrasebook**: your **Favorites** and **All** saved phrases, newest first, 20 at a time, viewable in
+  all your languages or one, with delete. It keeps your last 500 phrases (`HISTORY_LIMIT`);
+  favorites are never pruned and are capped at `PHRASEBOOK_LIMIT` (default 100).
+- **Practice**: flashcards dealt as a deck, with no model calls and no quota. Pick a source
+  (**Favorites**, **Recent** or **Starter**), 5, 10 or 20 cards, reveal the answer or type it (checked
+  on the device) and the languages to practice. Starter is a built-in set of 100 everyday phrases
+  (greetings, transit, shops, restaurants, health, work and school, housing, phone and banking, small
+  talk, emergencies), pre-translated into all 13 languages. You can favorite a Starter phrase from
+  its card. Your last choices are remembered.
+- **Profile**: your three languages (13 are supported, each with an optional region such as Spanish
+  from Bolivia; the first is your native one) and a System, Light or Dark theme.
+- **Usage**: a **daily quota** (default 50 translations, overridable per user) and a **burst limit**
+  (10/min), shown as a ring around your avatar. Each use is recorded with its cost and token counts
+  (`npm run usage:cost` reports spend). There are friendly messages for 429s, unsupported languages
+  and model failures, and failed attempts don't use quota.
+- **Installable**: a web app manifest and icons, plus an install prompt (iOS steps included).
+- CI on every push and pull request (lint, typecheck, unit, integration against Postgres, build);
+  production migrations run from CI on `main`.
 
 ## What's incomplete
 
 Designed and planned, not built yet:
 
-- **Search** in History and the Phrasebook.
-- **Review mode extras**: listening, typed answers, spaced repetition.
+- **Search** in the Phrasebook.
+- **Practice extras**: listening and spaced repetition. Practice doesn't remember which cards were
+  hard.
 - **Profile levels**: your languages and regions are editable, but levels per language are not yet;
   your native language gets the explanations and the other two default to "intermediate".
+- More **bundles** besides Starter (seasonal sets, for example). Adding one is a data-only change in
+  `src/shared/bundles/`.
 
 Known limitations:
 
 - Haiku 5.5 sometimes misses subtle native-speaker slips (e.g. "fuistes" for "fuiste"). These are
   tracked as seed cases for a prompt eval set.
 - The rate limiter checks and then records, so concurrent bursts can overshoot by a request or two.
+- There are no end-to-end tests yet.
 
-The full roadmap is in the [plan](docs/plans/2026-10-09-parlo-plan.md).
+The original roadmap is in the [first plan](docs/plans/2026-10-09-parlo-plan.md); later features each
+have their own spec and plan in `docs/specs/` and `docs/plans/`.
 
 ## Run locally
 
@@ -83,6 +97,8 @@ npm run test:all  # both
 npm run smoke:haiku -- "me late the train"   # one live call to the real model (uses your key)
 ```
 
+Before a commit, also run `npm run lint` and `npm run typecheck`.
+
 The suite follows a test pyramid: mostly fast unit and component tests, a few integration tests
 against real Postgres, and no e2e tests yet. CI never calls the model; a fake translator stands in.
 
@@ -97,15 +113,10 @@ Vitest · Biome · GitHub Actions · Vercel.
   them together.
 - `src/app/api/` route handlers are thin: authenticate, validate with Zod, call the domain, map
   errors to status codes.
-- `src/ui/` holds Mantine components and data hooks. Styling uses the Mantine theme only (no CSS
-  files).
+- `src/shared/` holds what the server and the UI both use: the language list and the Starter bundle.
+- `src/ui/` holds Mantine components and data hooks. Styling is Mantine plus CSS Modules for bespoke
+  surfaces, all driven by the design tokens in `src/styles/tokens.css`.
 
-Design decisions are in the [spec](docs/specs/2026-10-09-parlo-design.md); the task-by-task log
-with the reasoning behind each step is in the [plan](docs/plans/2026-10-09-parlo-plan.md).
-
-## Timebox
-
-The scaffold was created at 01:33 UTC (create-next-app, before the timebox). Planning and the spec
-started at 02:20 UTC; implementation started at 02:49 UTC; this note was written at 04:15 UTC. I
-built it with Claude Code as a pair, working task by task and reviewing each step; the commit
-history shows one merge per feature.
+Design decisions are in the [specs](docs/specs/), starting with the
+[original design](docs/specs/2026-10-09-parlo-design.md); the task-by-task logs with the reasoning
+behind each step are in the [plans](docs/plans/).
