@@ -3,13 +3,12 @@
 import { Button } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
-import { LANG_CODES, LANGUAGES } from "../../shared/languages";
-import { Flag } from "../Flag";
 import { ThemeToggle } from "../ThemeToggle";
 import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
 import { LandingGame } from "./LandingGame";
 import classes from "./LandingPage.module.css";
+import { NextLesson } from "./NextLesson";
 
 const STEPS = [
   {
@@ -18,7 +17,7 @@ const STEPS = [
   },
   {
     title: "Flip through on the go",
-    text: "Say it out loud, reveal, mark it. A few minutes between stops.",
+    text: "Say it out loud, reveal, mark it. A few minutes a day.",
   },
   {
     title: "All your languages at once",
@@ -66,59 +65,33 @@ export function LandingPage() {
       </section>
 
       <section id="play" className={classes.band}>
-        <div className={`${classes.wrap} ${classes.practice}`}>
-          <LandingGame />
+        <div className={`${classes.wrap} ${classes.start}`}>
           <div className={classes.copy}>
-            <h2 className={classes.h2}>Practice on the bus ride.</h2>
-            <ol className={classes.steps}>
-              {STEPS.map((step, index) => (
-                <li key={step.title} className={classes.step}>
-                  <span
-                    className={classes.number}
-                    data-role={["native", "english", "french"][index]}
-                    aria-hidden="true"
-                  >
-                    {index + 1}
-                  </span>
-                  <span className={classes.stepText}>
-                    <strong>{step.title}</strong>
-                    <span>{step.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+            <h2 className={classes.h2}>Start here. We'll bring you there.</h2>
+            <p className={classes.lead}>
+              Pick the language you grew up with. Your cards take you to English
+              and French, one everyday phrase at a time.
+            </p>
           </div>
-        </div>
-      </section>
-
-      <section className={`${classes.wrap} ${classes.languages}`}>
-        <div className={classes.copy}>
-          <h2 className={classes.h2}>Start from home. Bring your three.</h2>
-          <p className={classes.lead}>
-            Pick your languages and where they are from, so the slang actually
-            fits.
-          </p>
-        </div>
-        <ul className={classes.grid}>
-          {LANG_CODES.map((code) => {
-            const { endonym, name, regions } = LANGUAGES[code];
-            return (
-              <li key={code} className={classes.language}>
-                <span className={classes.languageText}>
-                  <span className={classes.languageName}>{name}</span>
-                  <span lang={code} className={classes.endonym}>
-                    {endonym}
-                  </span>
+          <LandingGame />
+          <ol className={classes.steps}>
+            {STEPS.map((step, index) => (
+              <li key={step.title} className={classes.step}>
+                <span
+                  className={classes.number}
+                  data-role={["native", "english", "french"][index]}
+                  aria-hidden="true"
+                >
+                  {index + 1}
                 </span>
-                <span className={classes.flags} aria-hidden="true">
-                  {regions.slice(0, 4).map((region) => (
-                    <Flag key={region} region={region} size="34px" />
-                  ))}
+                <span className={classes.stepText}>
+                  <strong>{step.title}</strong>
+                  <span>{step.text}</span>
                 </span>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ol>
+        </div>
       </section>
 
       <section className={`${classes.wrap} ${classes.closing}`}>
@@ -128,9 +101,7 @@ export function LandingPage() {
             <i data-role="english" />
             <i data-role="french" />
           </span>
-          <h2 className={classes.closerTitle}>
-            Your next bus ride is a lesson.
-          </h2>
+          <NextLesson />
           <Link href="/sign-in" className={classes.closerLink}>
             Hop on
             <IconArrowRight size={18} stroke={2} aria-hidden="true" />

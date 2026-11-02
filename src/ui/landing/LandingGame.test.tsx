@@ -1,12 +1,15 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
+import { LANG_CODES, LANGUAGES } from "../../shared/languages";
 import { LandingGame } from "./LandingGame";
 
 const KEY = "parlo.visitor";
 const click = (name: string | RegExp) =>
   userEvent.click(screen.getByRole("button", { name }));
+const card = (name: RegExp) => screen.findByRole("button", { name });
+const natives = LANG_CODES.filter((c) => c !== "en" && c !== "fr");
 
 describe("LandingGame", () => {
   let fetchStub: ReturnType<typeof vi.fn>;
@@ -23,23 +26,41 @@ describe("LandingGame", () => {
     window.localStorage.clear();
   });
 
-  it("asks where you are from, listing countries and not English- or French-only ones", async () => {
-    renderWithProviders(<LandingGame />);
+  it("offers a card for every language except English and French, with up to four flags", async () => {
+    const { container } = renderWithProviders(<LandingGame />);
 
+    await card(/Español/);
     expect(
-      await screen.findByRole("button", { name: "Bolivia" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Brazil" })).toBeInTheDocument();
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Nigeria" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Español" })).toBeNull();
+      screen
+        .getAllByRole("button", { expanded: false })
+        .map((b) => b.textContent),
+    ).toEqual(
+      natives.map((c) => `${LANGUAGES[c].name}${LANGUAGES[c].endonym}`),
+    );
+    const spanish = (await card(/Español/)).closest("li") as HTMLElement;
+    expect(spanish.querySelectorAll("img")).toHaveLength(4);
+    expect(container.querySelector('img[src="/flags/es.svg"]')).not.toBeNull();
   });
 
-  it("starts a round with the Spanish phrase up front and Bolivia's flag, no star and no request", async () => {
-    const { container } = renderWithProviders(<LandingGame />);
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Bolivia" }),
+  it("shows every country of a language once it is picked, the first one selected", async () => {
+    renderWithProviders(<LandingGame />);
+
+    await userEvent.click(await card(/Español/));
+
+    const countries = screen.getByRole("group", { name: "Spanish countries" });
+    expect(within(countries).getAllByRole("button")).toHaveLength(
+      LANGUAGES.es.regions.length,
     );
+    expect(
+      within(countries).getByRole("button", { name: "Spain", pressed: true }),
+    ).toBeInTheDocument();
+  });
+
+  it("starts the round with the chosen country: Spanish up front, its flag, no star, no request", async () => {
+    const { container } = renderWithProviders(<LandingGame />);
+    await userEvent.click(await card(/Español/));
+    await click("Bolivia");
+    await click("Play");
 
     expect(await screen.findByText("0 of 10")).toBeInTheDocument();
     expect(document.querySelector('p[lang="es"]')).not.toBeNull();
@@ -58,74 +79,104 @@ describe("LandingGame", () => {
     expect(fetchStub).not.toHaveBeenCalled();
   });
 
-  it("asks which language for Ukraine, then plays in it", async () => {
+  it("plays with the first country when none is chosen", async () => {
     renderWithProviders(<LandingGame />);
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Ukraine" }),
-    );
+    await userEvent.click(await card(/Português/));
 
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Русский" }),
-    );
+    await click("Play");
 
     expect(await screen.findByText("0 of 10")).toBeInTheDocument();
-    expect(document.querySelector('p[lang="ru"]')).not.toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
+      lang: "pt",
+      region: "PT",
+    });
   });
 
-  it("remembers a pick saved as just a language, from before countries", async () => {
+  it("starts at once for a language spoken in one country", async () => {
+    renderWithProviders(<LandingGame />);
+
+    await userEvent.click(await card(/Українська/));
+
+    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(document.querySelector('p[lang="uk"]')).not.toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
+      lang: "uk",
+      region: "UA",
+    });
+  });
+
+  it("folds the countries away when another language is picked", async () => {
+    renderWithProviders(<LandingGame />);
+    await userEvent.click(await card(/Español/));
+
+    await userEvent.click(screen.getByRole("button", { name: /Português/ }));
+
+    expect(
+      screen.queryByRole("group", { name: "Spanish countries" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("group", { name: "Portuguese countries" }),
+    ).toBeInTheDocument();
+  });
+
+  it("starts the round on the next visit from a remembered language and country", async () => {
+    window.localStorage.setItem(
+      KEY,
+      JSON.stringify({ lang: "es", region: "BO" }),
+    );
+    renderWithProviders(<LandingGame />);
+
+    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Español/ })).toBeNull();
+  });
+
+  it("remembers a pick saved as just a language", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
 
     expect(await screen.findByText("0 of 10")).toBeInTheDocument();
     expect(document.querySelector('p[lang="uk"]')).not.toBeNull();
-    expect(screen.queryByRole("button", { name: "Español" })).toBeNull();
   });
 
   it.each([
     ["English", JSON.stringify("en")],
     ["garbage", "not json{"],
-  ])("falls back to the picker for a stored pick that is %s", async (_n, stored) => {
+  ])("falls back to the cards for a stored pick that is %s", async (_n, stored) => {
     window.localStorage.setItem(KEY, stored);
     renderWithProviders(<LandingGame />);
 
-    expect(
-      await screen.findByRole("button", { name: "Bolivia" }),
-    ).toBeInTheDocument();
+    expect(await card(/Español/)).toBeInTheDocument();
   });
 
-  it("returns to the picker with Change country, and forgets the pick", async () => {
+  it("returns to the cards with Change language, and forgets the pick", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
     await screen.findByText("0 of 10");
 
-    await click("Change country");
+    await click("Change language");
 
-    expect(
-      await screen.findByRole("button", { name: "Bolivia" }),
-    ).toBeInTheDocument();
+    expect(await card(/Español/)).toBeInTheDocument();
     expect(window.localStorage.getItem(KEY)).toBeNull();
   });
 
-  it("moves focus into the round after a country is picked", async () => {
+  it("moves focus into the round after a language is picked", async () => {
     renderWithProviders(<LandingGame />);
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Bolivia" }),
-    );
+    await userEvent.click(await card(/Українська/));
 
     expect(
       await screen.findByRole("region", { name: "Practice round" }),
     ).toHaveFocus();
   });
 
-  it("moves focus back to the picker after Change country", async () => {
+  it("moves focus back to the cards after Change language", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
     await screen.findByText("0 of 10");
 
-    await click("Change country");
+    await click("Change language");
 
     expect(
-      await screen.findByRole("region", { name: "Where are you from?" }),
+      await screen.findByRole("region", { name: "Pick your language" }),
     ).toHaveFocus();
   });
 

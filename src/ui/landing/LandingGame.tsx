@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BUNDLE_LOADERS } from "../../shared/bundles";
-import { CountryPicker } from "../CountryPicker";
+import { LANGUAGES, type Lang, regionName } from "../../shared/languages";
+import { Flag } from "../Flag";
 import { bundleToGroups } from "../review/bundles";
 import { PracticeRound } from "../review/PracticeRound";
 import {
@@ -29,6 +30,9 @@ export function LandingGame() {
   // Read after mount so the server and the first client render agree. Undefined until then; null means no pick.
   const [native, setNative] = useState<VisitorPick | null | undefined>();
   const [round, setRound] = useState(0);
+  // The language whose countries are showing, and the country picked among them (the first until changed).
+  const [chosen, setChosen] = useState<Lang | null>(null);
+  const [region, setRegion] = useState("");
   useEffect(() => setNative(loadVisitorNative()), []);
   // Picking a language (or changing it) swaps the whole section, which would drop keyboard and screen-reader
   // focus onto the page. Move it to the new section instead; not on the first load, which must not steal focus.
@@ -53,6 +57,12 @@ export function LandingGame() {
     [starter.data, native],
   );
 
+  function start(pick: VisitorPick) {
+    saveVisitorNative(pick);
+    setChosen(null);
+    setNative(pick);
+  }
+
   if (native === undefined) return <div className={classes.game} />;
 
   if (native === null) {
@@ -60,23 +70,74 @@ export function LandingGame() {
       <section
         ref={section}
         tabIndex={-1}
-        className={classes.game}
-        aria-labelledby="landing-game-title"
+        className={classes.picker}
+        aria-label="Pick your language"
       >
-        <h2 id="landing-game-title" className={classes.title}>
-          Where are you from?
-        </h2>
-        <p className={classes.hint}>
-          Pick your country and play ten cards. English and French are the other
-          two languages.
-        </p>
-        <CountryPicker
-          langs={VISITOR_NATIVES}
-          onPick={(pick) => {
-            saveVisitorNative(pick);
-            setNative(pick);
-          }}
-        />
+        <ul className={classes.grid}>
+          {VISITOR_NATIVES.map((lang) => {
+            const { name, endonym, regions } = LANGUAGES[lang];
+            const open = chosen === lang;
+            return (
+              <li
+                key={lang}
+                className={classes.language}
+                data-open={open || undefined}
+              >
+                <button
+                  type="button"
+                  className={classes.head}
+                  aria-expanded={open}
+                  onClick={() => {
+                    if (regions.length === 1) {
+                      start({ lang, region: regions[0] });
+                    } else {
+                      setChosen(lang);
+                      setRegion(regions[0]);
+                    }
+                  }}
+                >
+                  <span className={classes.languageText}>
+                    <span className={classes.languageName}>{name}</span>
+                    <span lang={lang} className={classes.endonym}>
+                      {endonym}
+                    </span>
+                  </span>
+                  {!open && (
+                    <span className={classes.flags} aria-hidden="true">
+                      {regions.slice(0, 4).map((code) => (
+                        <Flag key={code} region={code} size="34px" />
+                      ))}
+                    </span>
+                  )}
+                </button>
+                {open && (
+                  <div className={classes.countries}>
+                    <fieldset
+                      aria-label={`${name} countries`}
+                      className={classes.pills}
+                    >
+                      {regions.map((code) => (
+                        <button
+                          key={code}
+                          type="button"
+                          className={classes.pill}
+                          aria-pressed={region === code}
+                          onClick={() => setRegion(code)}
+                        >
+                          <Flag region={code} size="22px" />
+                          {regionName(code)}
+                        </button>
+                      ))}
+                    </fieldset>
+                    <Button onClick={() => start({ lang, region })}>
+                      Play
+                    </Button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </section>
     );
   }
@@ -95,7 +156,7 @@ export function LandingGame() {
           setNative(null);
         }}
       >
-        Change country
+        Change language
       </Button>
       {starter.isError && (
         <Alert color="red" title="Couldn't load the cards">

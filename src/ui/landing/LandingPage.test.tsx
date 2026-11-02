@@ -25,10 +25,10 @@ describe("LandingPage", () => {
     );
   });
 
-  it("lets a visitor pick their country and play, replacing the old fixed demo", async () => {
+  it("lets a visitor pick a language and play, replacing the old fixed demo", async () => {
     renderWithProviders(<LandingPage />);
     expect(
-      await screen.findByRole("button", { name: "Bolivia" }),
+      await screen.findByRole("button", { name: /Español/ }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Costar un ojo de la cara")).toBeNull();
   });
@@ -74,15 +74,37 @@ describe("LandingPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("lists every supported language", () => {
+  it("puts the start-here section in one place: pick a language, play, and it brings you to English and French", async () => {
     renderWithProviders(<LandingPage />);
-    const grid = screen
-      .getByRole("heading", { name: /bring your three/i })
-      .closest("section") as HTMLElement;
-    expect(within(grid).getAllByRole("listitem").length).toBeGreaterThanOrEqual(
-      13,
-    );
-    expect(within(grid).getByText("Українська")).toBeInTheDocument();
-    expect(within(grid).getByText("Punjabi")).toBeInTheDocument();
+
+    const heading = screen.getByRole("heading", {
+      name: "Start here. We'll bring you there.",
+    });
+    const section = heading.closest("section") as HTMLElement;
+    expect(section).toHaveAttribute("id", "play");
+    expect(within(section).getByText(/English and French/)).toBeInTheDocument();
+    expect(
+      await within(section).findByRole("button", { name: /Español/ }),
+    ).toBeInTheDocument();
+    expect(within(section).getByText("Punjabi")).toBeInTheDocument();
+  });
+
+  it("no longer has a separate languages section", () => {
+    renderWithProviders(<LandingPage />);
+
+    expect(
+      screen.queryByRole("heading", { name: /bring your three/i }),
+    ).toBeNull();
+    expect(screen.queryByText(/practice on the bus ride/i)).toBeNull();
+  });
+
+  it("closes with a title that starts on the bus ride", () => {
+    renderWithProviders(<LandingPage />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Your next bus ride could be a lesson.",
+      }),
+    ).toBeInTheDocument();
   });
 });
