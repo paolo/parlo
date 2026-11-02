@@ -23,9 +23,28 @@ const output = {
   notes: null,
 };
 
-function clientReturning(result: unknown) {
-  const parse = vi.fn(async () => result);
-  return { client: { messages: { parse } } as unknown as Anthropic, parse };
+/** A client whose stream emits `snapshots` (the answer so far, growing) as text events, then resolves to `result`. */
+function clientReturning(result: unknown, snapshots: string[] = []) {
+  const parse = vi.fn((_params: unknown, _options?: unknown) => {
+    const handlers: ((delta: string, snapshot: string) => void)[] = [];
+    const stream = {
+      on(_event: "text", handler: (delta: string, snapshot: string) => void) {
+        handlers.push(handler);
+        return stream;
+      },
+      async finalMessage() {
+        for (const snapshot of snapshots) {
+          for (const handler of handlers) handler("", snapshot);
+        }
+        return result;
+      },
+    };
+    return stream;
+  });
+  return {
+    client: { messages: { stream: parse } } as unknown as Anthropic,
+    parse,
+  };
 }
 
 describe("HaikuTranslator", () => {
@@ -97,6 +116,55 @@ describe("HaikuTranslator", () => {
     expect(params).toMatchObject({ output_config: { effort: "medium" } });
   });
 
+  it("reports each detected language and finished translation once, as the answer grows", async () => {
+    const snapshots = [
+      '{"detectedLang":"en","transl',
+      '{"detectedLang":"en","translations":[{"lang":"es","text":"Lleg',
+      '{"detectedLang":"en","translations":[{"lang":"es","text":"Llegué tarde"},{"lang":"en","text":"I w',
+      '{"detectedLang":"en","translations":[{"lang":"es","text":"Llegué tarde"},{"lang":"en","text":"I was late"}',
+    ];
+    const { client } = clientReturning(
+      { stop_reason: "end_turn", parsed_output: output },
+      snapshots,
+    );
+    const onProgress = vi.fn();
+
+    await new HaikuTranslator(client).translate(
+      { text: "hola", languages },
+      { onProgress },
+    );
+
+    expect(onProgress.mock.calls.map(([p]) => p)).toEqual([
+      { detectedLang: "en", translations: [] },
+      {
+        detectedLang: "en",
+        translations: [{ lang: "es", text: "Llegué tarde" }],
+      },
+      {
+        detectedLang: "en",
+        translations: [
+          { lang: "es", text: "Llegué tarde" },
+          { lang: "en", text: "I was late" },
+        ],
+      },
+    ]);
+  });
+
+  it("hands the abort signal to the API call", async () => {
+    const { client, parse } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: output,
+    });
+    const { signal } = new AbortController();
+
+    await new HaikuTranslator(client).translate(
+      { text: "hola", languages },
+      { signal },
+    );
+
+    expect(parse.mock.calls[0][1]).toEqual({ signal });
+  });
+
   it("fails on a refusal", async () => {
     const { client } = clientReturning({
       stop_reason: "refusal",
@@ -118,10 +186,18 @@ describe("HaikuTranslator", () => {
   });
 
   it("wraps API errors", async () => {
-    const parse = vi.fn(async () => {
-      throw new Anthropic.APIError(529, undefined, "overloaded", new Headers());
-    });
-    const client = { messages: { parse } } as unknown as Anthropic;
+    const stream = vi.fn(() => ({
+      on: () => undefined,
+      finalMessage: async () => {
+        throw new Anthropic.APIError(
+          529,
+          undefined,
+          "overloaded",
+          new Headers(),
+        );
+      },
+    }));
+    const client = { messages: { stream } } as unknown as Anthropic;
     const error = await new HaikuTranslator(client)
       .translate({ text: "hola", languages })
       .catch((e) => e);

@@ -16,6 +16,21 @@ const phrase = (lang: "pt" | "en" | "fr", text: string, isRoot = false) => ({
 });
 
 describe("TranslationResult", () => {
+  it("offers no star while the answer is still arriving, and does once it is stored", () => {
+    const group = makeGroup();
+    const { rerender } = renderWithProviders(
+      <TranslationResult group={group} pending />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /favorite|phrasebook/i }),
+    ).toBeNull();
+
+    rerender(<TranslationResult group={group} />);
+    expect(
+      screen.getByRole("button", { name: /favorite|phrasebook/i }),
+    ).toBeInTheDocument();
+  });
+
   it("renders one card per phrase for any languages and names the detected one", () => {
     const group = makeGroup({
       phrases: [

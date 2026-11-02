@@ -1,0 +1,98 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-4);
+  padding: var(--parlo-space-6);
+  background: var(--parlo-surface-raised);
+  border: 1.5px solid var(--parlo-border-subtle);
+  border-radius: var(--parlo-radius-card-l);
+}
+
+.caption {
+  color: var(--parlo-text-muted);
+  font: 600 14px / 1 var(--parlo-font-sans);
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--parlo-space-2);
+  margin: 0;
+  font: 600 22px / 1.2 var(--parlo-font-display);
+  overflow-wrap: anywhere;
+}
+
+.word,
+.chip {
+  --color: var(--parlo-native);
+  --i: 0;
+}
+.word[data-role="english"],
+.chip[data-role="english"] {
+  --color: var(--parlo-english);
+}
+.word[data-role="french"],
+.chip[data-role="french"] {
+  --color: var(--parlo-french);
+}
+
+/* Each word is struck in its role color, then settles; the delay walks along the phrase. */
+.word {
+  padding: var(--parlo-space-1) var(--parlo-space-3);
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-chip);
+  color: var(--parlo-text);
+  animation: strike calc(var(--parlo-dur-strike) * 3) var(--parlo-ease-out)
+    infinite;
+  animation-delay: calc(var(--i) * var(--parlo-dur-fast));
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--parlo-space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  min-height: 32px;
+  padding: 0 var(--parlo-space-3) 0 6px;
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-chip);
+  border: 1.5px solid var(--parlo-border-subtle);
+  color: var(--parlo-text);
+  font: 600 14px / 1 var(--parlo-font-sans);
+  animation: glow calc(var(--parlo-dur-rise) * 4) var(--parlo-ease-out) infinite;
+  animation-delay: calc(var(--i) * var(--parlo-dur-rise));
+}
+
+@keyframes strike {
+  0%,
+  45%,
+  100% {
+    background: var(--parlo-surface-chip);
+    color: var(--parlo-text);
+    transform: none;
+  }
+  15% {
+    background: var(--color);
+    color: var(--parlo-on-accent);
+    transform: scale(1.06);
+  }
+}
+
+@keyframes glow {
+  0%,
+  50%,
+  100% {
+    border-color: var(--parlo-border-subtle);
+  }
+  20% {
+    border-color: var(--color);
+  }
+}

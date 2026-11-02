@@ -20,6 +20,9 @@ export interface PhraseGroupDTO {
 }
 
 export interface NewPhraseGroup {
+  /** Set when the group was handed out before it is stored, so the row ends up with the same id and time. */
+  id?: string;
+  createdAt?: Date;
   userId: string;
   notes: string | null;
   correction: { text: string; explanation: string } | null;

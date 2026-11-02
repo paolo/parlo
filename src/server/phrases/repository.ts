@@ -1,8 +1,8 @@
 import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
-import { LANG_CODES } from "../../shared/languages";
 import type { Db } from "../db/client";
 import { phrase, phraseGroup } from "../db/schema";
 import { decodeCursor, encodeCursor } from "./cursor";
+import { orderPhraseDTOs } from "./service";
 import type {
   NewBundleGroup,
   NewPhraseGroup,
@@ -21,20 +21,16 @@ type GroupRow = typeof phraseGroup.$inferSelect & {
 };
 
 export function toDTO(row: GroupRow): PhraseGroupDTO {
-  const phrases = row.phrases
-    .map(
+  const phrases = orderPhraseDTOs(
+    row.phrases.map(
       (p): PhraseDTO => ({
         lang: p.lang,
         text: p.text,
         isRoot: p.isRoot,
         correctedFrom: p.correctedFrom,
       }),
-    )
-    .sort(
-      (a, b) =>
-        Number(b.isRoot) - Number(a.isRoot) ||
-        LANG_CODES.indexOf(a.lang) - LANG_CODES.indexOf(b.lang),
-    );
+    ),
+  );
   return {
     id: row.id,
     createdAt: row.createdAt.toISOString(),
@@ -64,6 +60,8 @@ export class DrizzlePhraseRepository implements PhraseRepository {
       const [inserted] = await tx
         .insert(phraseGroup)
         .values({
+          id: group.id,
+          createdAt: group.createdAt,
           userId: group.userId,
           notes: group.notes,
           correctionText: group.correction?.text ?? null,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PhraseDTO } from "@/server/phrases/types";
 import { makeGroup } from "@/test/fixtures";
-import { orderPhrases, pickPhrase } from "./phrases";
+import { orderPhrases, partialGroup, pickPhrase } from "./phrases";
 
 const phrase = (lang: PhraseDTO["lang"], isRoot = false): PhraseDTO => ({
   lang,
@@ -54,5 +54,31 @@ describe("pickPhrase", () => {
     expect(phrase.text).toBe("Llueve a cántaros");
     expect(phrase.isRoot).toBe(true);
     expect(fallback).toBe(true);
+  });
+});
+
+describe("partialGroup", () => {
+  it("has nothing to show before the language and a translation have arrived", () => {
+    expect(partialGroup("hi", { translations: [] })).toBeNull();
+    expect(partialGroup("hi", { detected: "en", translations: [] })).toBeNull();
+    expect(
+      partialGroup("hi", { translations: [{ lang: "es", text: "hola" }] }),
+    ).toBeNull();
+  });
+
+  it("keeps the viewer's own text as the original and adds the translations so far", () => {
+    const group = partialGroup("me late", {
+      detected: "en",
+      translations: [
+        { lang: "es", text: "Llego tarde" },
+        { lang: "en", text: "I'm late" },
+      ],
+    });
+
+    expect(group?.phrases).toEqual([
+      { lang: "en", text: "me late", isRoot: true, correctedFrom: null },
+      { lang: "es", text: "Llego tarde", isRoot: false, correctedFrom: null },
+    ]);
+    expect(group?.id).toBe("");
   });
 });
