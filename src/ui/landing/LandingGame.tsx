@@ -3,7 +3,7 @@
 import { Alert, Button, Loader } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BUNDLE_LOADERS } from "../../shared/bundles";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { Flag } from "../Flag";
@@ -30,6 +30,15 @@ export function LandingGame() {
   const [native, setNative] = useState<Lang | null | undefined>();
   const [round, setRound] = useState(0);
   useEffect(() => setNative(loadVisitorNative()), []);
+  // Picking a language (or changing it) swaps the whole section, which would drop keyboard and screen-reader
+  // focus onto the page. Move it to the new section instead; not on the first load, which must not steal focus.
+  const section = useRef<HTMLElement>(null);
+  const settled = useRef(false);
+  useEffect(() => {
+    if (native === undefined) return;
+    if (settled.current) section.current?.focus();
+    settled.current = true;
+  }, [native]);
   const starter = useQuery({
     queryKey: ["bundle", "starter"],
     queryFn: () => BUNDLE_LOADERS.starter(),
@@ -48,7 +57,12 @@ export function LandingGame() {
 
   if (native === null) {
     return (
-      <section className={classes.game} aria-labelledby="landing-game-title">
+      <section
+        ref={section}
+        tabIndex={-1}
+        className={classes.game}
+        aria-labelledby="landing-game-title"
+      >
         <h2 id="landing-game-title" className={classes.title}>
           Which language feels like home?
         </h2>
@@ -78,7 +92,12 @@ export function LandingGame() {
   }
 
   return (
-    <section className={classes.game} aria-label="Practice round">
+    <section
+      ref={section}
+      tabIndex={-1}
+      className={classes.game}
+      aria-label="Practice round"
+    >
       <Button
         variant="default"
         onClick={() => {
@@ -95,7 +114,9 @@ export function LandingGame() {
           </Button>
         </Alert>
       )}
-      {!groups && !starter.isError && <Loader size="sm" />}
+      {!groups && !starter.isError && (
+        <Loader size="sm" aria-label="Loading the cards" />
+      )}
       {groups && (
         <PracticeRound
           key={round}

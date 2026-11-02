@@ -7,6 +7,11 @@
   gap: var(--parlo-space-4);
 }
 
+/* Focused from code when the section changes; the section itself is not a control, so no ring. */
+.game:focus {
+  outline: none;
+}
+
 .title {
   margin: 0;
   font: 800 28px / 1.1 var(--parlo-font-display);

@@ -15,7 +15,7 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
 import { BUNDLE_LOADERS } from "../../shared/bundles";
@@ -52,6 +52,9 @@ export function ReviewView({ random }: { random?: () => number }) {
   // How many cards the round dealt, fixed when it is dealt. Null until the first Start: the round dealt on
   // arrival takes its size from the remembered choice, once that source has loaded.
   const [dealtNow, setDealt] = useState<number | null>(null);
+  // The source the round was dealt from, fixed with its size: un-starring the last favorite mid-round must
+  // not turn the summary into "Starter".
+  const [dealtSource, setDealtSource] = useState<Source | null>(null);
   const favoriteCount = favorites.data?.items.length ?? 0;
   // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
   const source = picked.source ?? resolveSource(saved, favoriteCount);
@@ -79,6 +82,14 @@ export function ReviewView({ random }: { random?: () => number }) {
   const available = counts[source];
   const dealt =
     dealtNow ?? (available === undefined ? 0 : dealtCount(count, available));
+  // Fix the arrival round's size and source as soon as its source has loaded, so later changes to the
+  // favorites (un-starring a card) leave the summary alone.
+  useEffect(() => {
+    if (dealtNow === null && available !== undefined) {
+      setDealt(dealtCount(count, available));
+      setDealtSource(source);
+    }
+  }, [dealtNow, available, count, source]);
 
   if (profile.isPending || favorites.isPending) return <Loader size="sm" />;
   if (profile.isError || favorites.isError) {
@@ -107,6 +118,7 @@ export function ReviewView({ random }: { random?: () => number }) {
         available ?? 0,
       ),
     );
+    setDealtSource(from);
     restart();
   };
   const switchToStarter = () => {
@@ -172,7 +184,7 @@ export function ReviewView({ random }: { random?: () => number }) {
     <Stack gap="md" maw={720}>
       {(dealtNow !== null || deck.status !== "pending") && (
         <SetupSummary
-          source={source}
+          source={dealtSource ?? source}
           cards={dealt}
           onSetup={() => setStarted(false)}
         />

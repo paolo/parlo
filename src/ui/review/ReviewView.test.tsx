@@ -696,6 +696,33 @@ describe("ReviewView", () => {
       ).toBeInTheDocument();
     });
 
+    it("keeps the arrival round's summary when a card is un-starred", async () => {
+      remember({ source: "favorites", count: 5 });
+      fakeServer([a, b]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await screen.findByText("Favorites · 2 cards");
+      await screen.findByText("Uno");
+
+      await click("Remove from favorites");
+      await screen.findByRole("button", { name: "Add to favorites" });
+
+      expect(screen.getByText("Favorites · 2 cards")).toBeInTheDocument();
+      expect(screen.getByText("0 of 2")).toBeInTheDocument();
+    });
+
+    it("keeps the arrival round's source when its last favorite is un-starred", async () => {
+      remember({ source: "favorites", count: 5 });
+      fakeServer([a]);
+      renderWithProviders(<ReviewView random={keepOrder} />);
+      await screen.findByText("Favorites · 1 card");
+
+      await click("Remove from favorites");
+      await screen.findByRole("button", { name: "Add to favorites" });
+
+      expect(screen.getByText("Favorites · 1 card")).toBeInTheDocument();
+      expect(screen.queryByText(/^Starter ·/)).toBeNull();
+    });
+
     it("deals Practice again from the favorites as they are now", async () => {
       remember({ source: "favorites", count: 5 });
       fakeServer([a, b]);

@@ -91,6 +91,41 @@ describe("LandingGame", () => {
     expect(window.localStorage.getItem(KEY)).toBeNull();
   });
 
+  it("moves focus into the round after a language is picked", async () => {
+    renderWithProviders(<LandingGame />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Español" }),
+    );
+
+    expect(
+      await screen.findByRole("region", { name: "Practice round" }),
+    ).toHaveFocus();
+  });
+
+  it("moves focus back to the picker after Change language", async () => {
+    window.localStorage.setItem(KEY, JSON.stringify("uk"));
+    renderWithProviders(<LandingGame />);
+    await screen.findByText("0 of 10");
+
+    await click("Change language");
+
+    expect(
+      await screen.findByRole("region", {
+        name: "Which language feels like home?",
+      }),
+    ).toHaveFocus();
+  });
+
+  it("does not take focus when the page loads with a remembered pick", async () => {
+    window.localStorage.setItem(KEY, JSON.stringify("uk"));
+    renderWithProviders(<LandingGame />);
+    await screen.findByText("0 of 10");
+
+    expect(
+      screen.getByRole("region", { name: "Practice round" }),
+    ).not.toHaveFocus();
+  });
+
   it("after ten cards invites the visitor to sign up, with no talk of progress", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("es"));
     renderWithProviders(<LandingGame />);
