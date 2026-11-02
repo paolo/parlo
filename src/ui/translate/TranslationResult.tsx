@@ -27,12 +27,15 @@ export function TranslationResult({
   group,
   profileLangs = [],
   layout = "row",
+  pending = false,
 }: {
   group: PhraseGroupDTO;
   /** The viewer's languages in profile order; the cards follow it. */
   profileLangs?: Lang[];
   /** "row" puts the cards side by side when there is room; "stack" always one under the other. */
   layout?: "row" | "stack";
+  /** The answer is still arriving: `group` is a partial one with no id, so there is nothing to favorite yet. */
+  pending?: boolean;
 }) {
   const accept = useAcceptCorrection();
   // Null until the user chooses: a suggestion not yet applied is shown, an applied one stays out of the way.
@@ -75,7 +78,7 @@ export function TranslationResult({
             </Tooltip>
           )}
           {/* Keyed so a new translation doesn't inherit the previous one's star. */}
-          <FavoriteButton key={group.id} group={current} />
+          {!pending && <FavoriteButton key={group.id} group={current} />}
         </Group>
       </Group>
       {root && current.correction && showCorrection && (

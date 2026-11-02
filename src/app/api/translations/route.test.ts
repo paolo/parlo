@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NewPhraseGroup, PhraseGroupDTO } from "@/server/phrases/types";
 import { buildProfile } from "@/server/profile/service";
+import type { TranslationEvent } from "@/server/translation/events";
 import { FakeTranslator } from "@/server/translation/fake";
 import {
   TranslationFailedError,
@@ -62,6 +63,14 @@ function post(body: unknown) {
   );
 }
 
+/** The lines of a streamed answer, parsed. Resolves when the stream has ended. */
+async function events(res: Response): Promise<TranslationEvent[]> {
+  return (await res.text())
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
 describe("POST /api/translations", () => {
   let translator: FakeTranslator;
 
@@ -80,9 +89,10 @@ describe("POST /api/translations", () => {
     const res = await post({ text: "  me late the train  " });
 
     expect(res.status).toBe(201);
+    await events(res);
     await Promise.all(background);
     expect(res.headers.get("Server-Timing")).toMatch(
-      /^profile;dur=.+, limit;dur=.+, model;dur=.+, record;dur=/,
+      /^profile;dur=.+, limit;dur=.+, detect;dur=/,
     );
     expect(translator.calls[0].text).toBe("me late the train");
     expect(translator.calls[0].languages).toEqual(esEnFr);
@@ -103,8 +113,9 @@ describe("POST /api/translations", () => {
 
   it("answers with the group it stores: same id and time, root first", async () => {
     const res = await post({ text: "me late the train" });
-    const { group } = await res.json();
+    const done = (await events(res)).at(-1);
     await Promise.all(background);
+    const group = (done as Extract<TranslationEvent, { type: "done" }>).group;
 
     const saved = deps.repository.insertGroup.mock
       .calls[0][0] as NewPhraseGroup;
@@ -119,11 +130,7 @@ describe("POST /api/translations", () => {
         accepted: false,
       },
     });
-    expect(group.phrases.map((p: { lang: string }) => p.lang)).toEqual([
-      "en",
-      "es",
-      "fr",
-    ]);
+    expect(group.phrases.map((p) => p.lang)).toEqual(["en", "es", "fr"]);
     expect(group.phrases[0]).toEqual({
       lang: "en",
       text: "me late the train",
@@ -132,7 +139,28 @@ describe("POST /api/translations", () => {
     });
   });
 
-  it("does not wait for the write: the response is out while it is still pending", async () => {
+  it("streams the language and each translation as they arrive, then the stored group", async () => {
+    const res = await post({ text: "me late the train" });
+
+    expect(res.headers.get("Content-Type")).toBe("application/x-ndjson");
+    const lines = await events(res);
+    expect(lines.map((e) => e.type)).toEqual([
+      "detected",
+      "translation",
+      "translation",
+      "translation",
+      "done",
+    ]);
+    expect(lines[0]).toEqual({ type: "detected", lang: "en" });
+    expect(lines[1]).toEqual({
+      type: "translation",
+      lang: "es",
+      text: "Voy a perder el tren",
+    });
+    await Promise.all(background);
+  });
+
+  it("does not wait for the write: the last line is out while it is still pending", async () => {
     let finishSave: (group: PhraseGroupDTO) => void = () => {};
     deps.repository.insertGroup.mockReturnValue(
       new Promise<PhraseGroupDTO>((resolve) => {
@@ -141,8 +169,10 @@ describe("POST /api/translations", () => {
     );
 
     const res = await post({ text: "me late the train" });
+    const lines = await events(res);
 
     expect(res.status).toBe(201);
+    expect(lines.at(-1)?.type).toBe("done");
     finishSave(savedGroup);
     await Promise.all(background);
   });
@@ -152,9 +182,11 @@ describe("POST /api/translations", () => {
     deps.repository.insertGroup.mockRejectedValue(new Error("db down"));
 
     const res = await post({ text: "me late the train" });
+    const lines = await events(res);
     await Promise.all(background);
 
     expect(res.status).toBe(201);
+    expect(lines.at(-1)?.type).toBe("done");
     expect(error).toHaveBeenCalledWith(
       "Saving a translation failed",
       expect.any(Error),
@@ -256,14 +288,18 @@ describe("POST /api/translations", () => {
     expect(deps.limiter.record).not.toHaveBeenCalled();
   });
 
-  it("returns 502 and stores nothing when the translations do not cover the profile", async () => {
+  it("ends the stream with an error line and stores nothing when the translations do not cover the profile", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     deps.translator = new FakeTranslator({
       ...result,
       translations: result.translations.slice(0, 2),
     });
     const res = await post({ text: "me late the train" });
-    expect(res.status).toBe(502);
+    const lines = await events(res);
+    expect(lines.at(-1)).toEqual({
+      type: "error",
+      error: "translation_failed",
+    });
     expect(deps.repository.insertGroup).not.toHaveBeenCalled();
     expect(deps.limiter.record).not.toHaveBeenCalled();
   });
@@ -287,6 +323,7 @@ describe("POST /api/translations", () => {
     });
     const res = await post({ text: "vou perder o trem" });
     expect(res.status).toBe(201);
+    await events(res);
     const saved = deps.repository.insertGroup.mock
       .calls[0][0] as NewPhraseGroup;
     expect(saved.phrases.map((p) => p.lang)).toEqual(["pt", "en", "fr"]);

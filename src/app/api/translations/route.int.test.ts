@@ -55,7 +55,11 @@ describe("POST /api/translations (integration)", () => {
   it("persists one group, three phrases and one usage row", async () => {
     const res = await post("Estoy hasta las narices de esperar");
     expect(res.status).toBe(201);
-    const { group } = await res.json();
+    const lines = (await res.text())
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    const { group } = lines.at(-1);
     await Promise.all(background);
 
     const db = getDb();

@@ -6,11 +6,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
 import type { Lang } from "../shared/languages";
 import { ApiError, apiFetch } from "./api";
 import { countTranslation } from "./install/nudge";
+import { NO_PROGRESS, streamTranslation } from "./translateStream";
 
 export interface PhraseGroupsPage {
   items: PhraseGroupDTO[];
@@ -42,14 +44,15 @@ export function useUsage() {
   });
 }
 
+/** A translation request. While it is pending, `progress` holds what has arrived of the answer so far. */
 export function useTranslate() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (text: string) =>
-      apiFetch<{ group: PhraseGroupDTO }>("/api/translations", {
-        method: "POST",
-        body: JSON.stringify({ text }),
-      }),
+  const [progress, setProgress] = useState(NO_PROGRESS);
+  const mutation = useMutation({
+    mutationFn: (text: string) => {
+      setProgress(NO_PROGRESS);
+      return streamTranslation(text, setProgress);
+    },
     // Refresh the quota either way: a 429 also means our cached count is stale.
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.usage }),
@@ -60,6 +63,7 @@ export function useTranslate() {
       });
     },
   });
+  return { ...mutation, progress };
 }
 
 const PAGE_SIZE = 20;

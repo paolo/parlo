@@ -6,15 +6,15 @@ import {
   getTranslator,
   getUsageLimiter,
 } from "@/server/container";
+import { NdjsonStream } from "@/server/http/ndjson";
 import { jsonError, withSession } from "@/server/http/responses";
 import { ServerTimer } from "@/server/http/timing";
 import { parseJson } from "@/server/http/validation";
 import { buildNewGroup, describeNewGroup } from "@/server/phrases/service";
 import { isProfileComplete } from "@/server/profile/service";
-import {
-  TranslationFailedError,
-  type TranslationResult,
-} from "@/server/translation/types";
+import type { TranslationEvent } from "@/server/translation/events";
+import { TranslationFailedError } from "@/server/translation/types";
+import type { Lang } from "@/shared/languages";
 
 export const MAX_PHRASE_LENGTH = 500;
 
@@ -57,51 +57,95 @@ export const POST = withSession(async (req, { userId }) => {
     );
   }
 
-  let group: ReturnType<typeof buildNewGroup>;
-  let tokens: TranslationResult["usage"];
+  // The model's answer is streamed. Nothing is sent until it has said which language the phrase is in, so
+  // a phrase we can't translate still gets a plain 422; after that, status 201 and one JSON line per event.
+  const events = new NdjsonStream<TranslationEvent>();
+  const profileLangs = languages.map((l) => l.lang);
+  const detected = Promise.withResolvers<Lang | "other">();
+  const abort = new AbortController();
+  let sentDetected = false;
+  let sentTranslations = 0;
+  const run = getTranslator().translate(
+    { text, languages },
+    {
+      signal: abort.signal,
+      onProgress: (progress) => {
+        if (progress.detectedLang && !sentDetected) {
+          sentDetected = true;
+          if (progress.detectedLang !== "other") {
+            events.push({ type: "detected", lang: progress.detectedLang });
+          }
+          detected.resolve(progress.detectedLang);
+        }
+        for (const t of progress.translations.slice(sentTranslations)) {
+          events.push({ type: "translation", ...t });
+        }
+        sentTranslations = progress.translations.length;
+      },
+    },
+  );
+  run.then(
+    (result) => detected.resolve(result.detectedLang),
+    (error) => detected.reject(error),
+  );
+
+  let detectedLang: Lang | "other";
   try {
-    const result = await timer.time("model", () =>
-      getTranslator().translate({ text, languages }),
-    );
-    const profileLangs = languages.map((l) => l.lang);
-    if (
-      result.detectedLang === "other" ||
-      !profileLangs.includes(result.detectedLang)
-    ) {
-      return jsonError(422, "unsupported_language", {
-        languages: profileLangs,
-      });
-    }
-    group = buildNewGroup(userId, text, result, languages);
-    tokens = result.usage;
+    detectedLang = await timer.time("detect", () => detected.promise);
   } catch (error) {
     if (!(error instanceof TranslationFailedError)) throw error;
     console.error("Translation failed", error);
     return jsonError(502, "translation_failed");
   }
+  if (detectedLang === "other" || !profileLangs.includes(detectedLang)) {
+    abort.abort();
+    return jsonError(422, "unsupported_language", { languages: profileLangs });
+  }
 
-  // The answer goes out as soon as the model has given it. The group gets its id and time here so the
-  // response can describe it, and the write runs beside the usage record and on past the response. Usage is
-  // still awaited: the quota meter refetches right away, and the ledger is what stops runaway spend.
-  const stored = { ...group, id: crypto.randomUUID(), createdAt: new Date() };
-  const saveStarted = performance.now();
-  after(
-    getPhraseRepository()
-      .insertGroup(stored)
-      .then(
-        () =>
-          console.info(
-            `Translation saved in ${(performance.now() - saveStarted).toFixed(1)}ms`,
+  const modelStarted = performance.now();
+  void (async () => {
+    try {
+      const result = await run;
+      const group = buildNewGroup(userId, text, result, languages);
+      // The answer is on screen already; the group gets its id and time here so the last line can describe
+      // it, and the write runs beside the usage record and on past the response. Usage is still awaited:
+      // the quota meter refetches right after, and the ledger is what stops runaway spend.
+      const stored = {
+        ...group,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+      };
+      const saveStarted = performance.now();
+      after(
+        getPhraseRepository()
+          .insertGroup(stored)
+          .then(
+            () =>
+              console.info(
+                `Translation saved in ${(performance.now() - saveStarted).toFixed(1)}ms`,
+              ),
+            (error) => console.error("Saving a translation failed", error),
           ),
-        (error) => console.error("Saving a translation failed", error),
-      ),
-  );
-  await timer.time("record", () =>
-    limiter.record(userId, "translation", tokens),
-  );
-  console.info("Translation timing", timer.header());
-  return Response.json(
-    { group: describeNewGroup(stored) },
-    { status: 201, headers: { "Server-Timing": timer.header() } },
-  );
+      );
+      await timer.time("record", () =>
+        limiter.record(userId, "translation", result.usage),
+      );
+      console.info(
+        "Translation timing",
+        timer.header(),
+        `answer;dur=${(performance.now() - modelStarted).toFixed(1)}`,
+      );
+      events.push({ type: "done", group: describeNewGroup(stored) });
+    } catch (error) {
+      console.error("Translation failed", error);
+      events.push({ type: "error", error: "translation_failed" });
+    } finally {
+      events.close();
+    }
+  })();
+
+  return events.response({
+    status: 201,
+    headers: { "Server-Timing": timer.header() },
+  });
 });
