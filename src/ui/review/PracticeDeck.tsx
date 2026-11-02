@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { Flag } from "../Flag";
-import { useProfileRegion } from "../queries";
 import { type Role, roleFor } from "../roles";
 import { CardFavoriteButton } from "./CardFavoriteButton";
 import classes from "./PracticeDeck.module.css";
@@ -14,6 +13,8 @@ import type { ReviewCard } from "./session";
 export function PracticeDeck({
   card,
   lang,
+  region,
+  favorite,
   profileLangs,
   remaining,
   step,
@@ -21,13 +22,16 @@ export function PracticeDeck({
 }: {
   card: ReviewCard;
   lang: Lang;
+  /** The region the viewer picked for `lang`; its flag is shown, or the language's default. */
+  region?: string;
+  /** Whether the card carries a star (needs an account). */
+  favorite: boolean;
   profileLangs: Lang[];
   /** Cards not yet got: decides how many cards show behind this one. */
   remaining: number;
   step: number;
   children: ReactNode;
 }) {
-  const region = useProfileRegion(lang);
   const role: Role | undefined = roleFor(lang, profileLangs);
   return (
     <div className={classes.deck}>
@@ -48,7 +52,7 @@ export function PracticeDeck({
             />
             {LANGUAGES[lang].endonym}
           </span>
-          <CardFavoriteButton card={card} />
+          {favorite && <CardFavoriteButton card={card} />}
         </div>
         <p className={classes.front} lang={lang} dir="auto">
           {card.front.text}

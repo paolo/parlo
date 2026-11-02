@@ -21,7 +21,7 @@ describe("AppLayout", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     expect(screen.getByRole("link", { name: "parlo, home" })).toHaveAttribute(
       "href",
-      "/",
+      "/practice",
     );
     expect(screen.getByRole("img", { name: "parlo" })).toBeInTheDocument();
     expect(screen.queryByText("Parlo")).toBeNull();
@@ -34,6 +34,15 @@ describe("AppLayout", () => {
         "link",
       ),
     ).toHaveLength(3);
+  });
+
+  it("lists the sections in the order Practice, Translate, Phrasebook", () => {
+    renderWithProviders(<AppLayout>content</AppLayout>);
+    expect(
+      within(screen.getByRole("navigation", { name: "Main" }))
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Practice", "Translate", "Phrasebook"]);
   });
 
   it("renders the three main sections as links", () => {

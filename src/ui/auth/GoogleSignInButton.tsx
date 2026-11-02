@@ -41,7 +41,10 @@ export function GoogleSignInButton() {
       size="md"
       leftSection={<GoogleMark />}
       onClick={() =>
-        authClient.signIn.social({ provider: "google", callbackURL: "/" })
+        authClient.signIn.social({
+          provider: "google",
+          callbackURL: "/practice",
+        })
       }
     >
       Continue with Google

@@ -1,0 +1,12 @@
+/* The moment in the closing title changes: it fades in, unless the visitor asked for less motion. */
+.activity {
+  display: inline-block;
+  animation: fadeIn var(--parlo-dur-pop) var(--parlo-ease-out);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.15em);
+  }
+}

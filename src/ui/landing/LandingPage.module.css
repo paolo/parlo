@@ -79,11 +79,10 @@
   border-block: 1px solid var(--parlo-border-subtle);
 }
 
-.practice {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--parlo-space-12);
-  align-items: center;
+.start {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-9);
   padding-block: var(--parlo-space-12);
 }
 
@@ -131,66 +130,6 @@
 .stepText strong {
   font-size: 18px;
   color: var(--parlo-text);
-}
-
-.languages {
-  display: flex;
-  flex-direction: column;
-  gap: var(--parlo-space-9);
-  padding-block: var(--parlo-space-12);
-}
-
-.grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-  gap: var(--parlo-space-4);
-}
-
-.language {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--parlo-space-4);
-  padding: var(--parlo-space-5) 22px;
-  background: var(--parlo-surface-raised);
-  border: 1px solid var(--parlo-border-subtle);
-  border-radius: 24px;
-}
-
-.languageText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--parlo-space-1);
-  min-width: 0;
-}
-
-.languageName {
-  font: 600 12px / 1.2 var(--parlo-font-sans);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--parlo-text-muted);
-}
-
-.endonym {
-  font: 700 24px / 1.1 var(--parlo-font-display);
-  letter-spacing: -0.02em;
-}
-
-/* Overlapping flags, each ringed in the card color so they read as a stack. */
-.flags {
-  display: flex;
-  align-items: center;
-  flex: none;
-}
-.flags > * {
-  margin-left: -8px;
-  box-shadow: 0 0 0 3px var(--parlo-surface-raised);
-}
-.flags > *:first-child {
-  margin-left: 0;
 }
 
 .closing {
@@ -273,17 +212,21 @@
     padding-inline: var(--parlo-space-6);
   }
 
-  .hero,
-  .practice {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-block: var(--parlo-space-12) 96px;
   }
 
-  .practice,
-  .languages {
+  .start {
     padding-block: 96px;
+  }
+
+  /* Under the cards, the three steps sit side by side. */
+  .steps {
+    flex-direction: row;
+  }
+
+  .step {
+    flex: 1;
   }
 }

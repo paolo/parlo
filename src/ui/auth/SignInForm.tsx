@@ -43,7 +43,7 @@ export function SignInForm({
       setError(result.error.message ?? "Something went wrong");
       return;
     }
-    router.push("/");
+    router.push("/practice");
   }
 
   function onSubmit(event: FormEvent) {

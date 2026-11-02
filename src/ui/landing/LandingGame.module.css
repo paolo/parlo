@@ -1,0 +1,167 @@
+.game {
+  width: 100%;
+  max-width: 440px;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-4);
+}
+
+/* Focused from code when the section changes; the section itself is not a control, so no ring. */
+.game:focus,
+.picker:focus {
+  outline: none;
+}
+
+.picker {
+  width: 100%;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: var(--parlo-space-4);
+}
+
+.also {
+  margin: var(--parlo-space-9) 0 var(--parlo-space-4);
+  color: var(--parlo-text-soft);
+  font: 600 16px / 1.3 var(--parlo-font-sans);
+}
+
+.language {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-4);
+  background: var(--parlo-surface-raised);
+  border: 1px solid var(--parlo-border-subtle);
+  border-radius: 24px;
+}
+/* The language whose countries are showing takes the whole row, so every flag fits. */
+.language[data-open] {
+  grid-column: 1 / -1;
+  border-color: var(--parlo-accent);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--parlo-space-4);
+  width: 100%;
+  min-height: var(--parlo-size-touch);
+  padding: var(--parlo-space-5) 22px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.head:hover {
+  background: var(--parlo-surface-chip);
+}
+.head:focus-visible {
+  outline: 2px solid var(--parlo-accent);
+  outline-offset: 2px;
+}
+
+.languageText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-1);
+  min-width: 0;
+}
+
+.languageName {
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parlo-text-muted);
+}
+
+.endonym {
+  font: 700 24px / 1.1 var(--parlo-font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Overlapping flags, each ringed in the card color so they read as a stack. */
+.flags {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.flags > * {
+  margin-left: -8px;
+  box-shadow: 0 0 0 3px var(--parlo-surface-raised);
+}
+.flags > *:first-child {
+  margin-left: 0;
+}
+
+.countries {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--parlo-space-4);
+  padding: 0 22px var(--parlo-space-5);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--parlo-space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-2);
+  min-height: var(--parlo-size-touch);
+  padding: 0 var(--parlo-space-4) 0 var(--parlo-space-3);
+  border: 1.5px solid var(--parlo-border-strong);
+  border-radius: var(--parlo-radius-pill);
+  background: var(--parlo-surface-chip);
+  color: var(--parlo-text);
+  font: 600 15px / 1 var(--parlo-font-sans);
+  cursor: pointer;
+  transition: border-color var(--parlo-dur-fast) var(--parlo-ease-out);
+}
+.pill[aria-pressed="true"] {
+  border-color: var(--parlo-accent);
+}
+.pill:hover {
+  border-color: var(--parlo-accent);
+}
+.pill:focus-visible {
+  outline: 2px solid var(--parlo-accent);
+  outline-offset: 2px;
+}
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--parlo-space-3);
+  padding: var(--parlo-space-5);
+  border: 1.5px solid var(--parlo-border-subtle);
+  border-radius: var(--parlo-radius-card);
+  background: var(--parlo-surface-raised);
+}
+
+.inviteTitle {
+  margin: 0;
+  font: 700 20px / 1.2 var(--parlo-font-display);
+}
+
+.inviteText {
+  margin: 0;
+  color: var(--parlo-text-soft);
+}

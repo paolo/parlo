@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import classes from "./NavLinks.module.css";
 
 const links = [
+  { href: "/practice", label: "Practice", icon: IconCards },
   { href: "/", label: "Translate", icon: IconLanguage },
   { href: "/phrasebook", label: "Phrasebook", icon: IconBook },
-  { href: "/practice", label: "Practice", icon: IconCards },
 ] as const;
 
 export function NavLinks() {
