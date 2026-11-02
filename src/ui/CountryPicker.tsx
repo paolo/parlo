@@ -2,11 +2,7 @@
 
 import { Button, TextInput } from "@mantine/core";
 import { useState } from "react";
-import {
-  countriesFor,
-  FEATURED_COUNTRIES,
-  languagesIn,
-} from "../shared/countries";
+import { countriesFor, languagesIn } from "../shared/countries";
 import { LANGUAGES, type Lang, regionName } from "../shared/languages";
 import classes from "./CountryPicker.module.css";
 import { Flag } from "./Flag";
@@ -67,13 +63,9 @@ export function CountryPicker({
   }
 
   const needle = query.trim().toLowerCase();
-  const available = countriesFor(langs);
-  // Until something is typed, only the common countries; typing searches all of them.
-  const countries = needle
-    ? available.filter((code) =>
-        regionName(code).toLowerCase().includes(needle),
-      )
-    : FEATURED_COUNTRIES.filter((code) => available.includes(code));
+  const countries = countriesFor(langs).filter((code) =>
+    regionName(code).toLowerCase().includes(needle),
+  );
   return (
     <div className={classes.root}>
       <TextInput
@@ -83,9 +75,6 @@ export function CountryPicker({
         value={query}
         onChange={(event) => setQuery(event.currentTarget.value)}
       />
-      {!needle && (
-        <p className={classes.hint}>Not here? Search for your country.</p>
-      )}
       {countries.length === 0 ? (
         <p className={classes.empty}>
           No country matches that. Try another spelling, or pick your language.

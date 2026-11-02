@@ -26,10 +26,6 @@ async function pick(slot: string, kind: "language" | "region", chip: RegExp) {
   );
 }
 
-/** The native slot starts as "Where are you from?": press a country (or a button in its next step). */
-const pickNative = (name: string | RegExp) =>
-  userEvent.click(screen.getByRole("button", { name }));
-
 describe("LanguagePicker", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -61,13 +57,19 @@ describe("LanguagePicker", () => {
     expect(row("Third language")).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("picks the native language and country in one go, and sends the country", async () => {
+  it("preselects the default region of the native language and sends the chosen one", async () => {
     mockSave();
     renderWithProviders(<LanguagePicker />);
 
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
-    await pickNative("Bolivia");
-    expect(row("Native language")).toHaveTextContent("Español · Bolivia");
+    await pick("Native language", "language", /Español/);
+    expect(
+      within(group("Native language region")).getByRole("button", {
+        name: "Spain",
+        pressed: true,
+      }),
+    ).toBeInTheDocument();
+
+    await pick("Native language", "region", /Bolivia/);
     await pick("Second language", "language", /English/);
     await pick("Third language", "language", /Français/);
     await userEvent.click(save());
@@ -87,54 +89,6 @@ describe("LanguagePicker", () => {
     );
   });
 
-  it("asks which language for a country with several", async () => {
-    renderWithProviders(<LanguagePicker />);
-
-    await pickNative("Ukraine");
-    await pickNative("Русский");
-
-    expect(row("Native language")).toHaveTextContent("Русский · Ukraine");
-  });
-
-  it("lets someone whose country is missing pick a language directly", async () => {
-    renderWithProviders(<LanguagePicker />);
-
-    await pickNative("My country isn't listed");
-    await pickNative("Español");
-
-    expect(row("Native language")).toHaveTextContent("Español · Spain");
-  });
-
-  it("shows English and French countries too, since any language can be native", async () => {
-    renderWithProviders(<LanguagePicker />);
-
-    await userEvent.type(screen.getByRole("searchbox"), "canada");
-    await pickNative("Canada");
-    await pickNative("Français");
-
-    expect(row("Native language")).toHaveTextContent("Français · Canada");
-  });
-
-  it("keeps the language and country chips once the native language is chosen, so it can be changed", async () => {
-    renderWithProviders(<LanguagePicker />);
-    await pickNative("Bolivia");
-
-    await userEvent.click(row("Native language"));
-
-    expect(
-      within(group("Native language region")).getByRole("button", {
-        name: "Bolivia",
-        pressed: true,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      within(group("Native language language")).getByRole("button", {
-        name: /Español/,
-        pressed: true,
-      }),
-    ).toBeInTheDocument();
-  });
-
   it("does not ask for a region on the learning languages", async () => {
     renderWithProviders(<LanguagePicker />);
     await pick("Second language", "language", /English/);
@@ -146,7 +100,7 @@ describe("LanguagePicker", () => {
 
   it("keeps Save disabled until all three languages are chosen", async () => {
     renderWithProviders(<LanguagePicker />);
-    await pickNative("Bolivia");
+    await pick("Native language", "language", /Español/);
     await pick("Second language", "language", /English/);
 
     expect(save()).toBeDisabled();
@@ -157,9 +111,8 @@ describe("LanguagePicker", () => {
 
   it("removes a chosen language from the other slots", async () => {
     renderWithProviders(<LanguagePicker />);
-    await pickNative("Bolivia");
-    // Choosing the country moves on to the next slot.
-    expect(row("Second language")).toHaveAttribute("aria-expanded", "true");
+    await pick("Native language", "language", /Español/);
+    await userEvent.click(row("Second language"));
 
     const chips = within(group("Second language language")).getAllByRole(
       "button",

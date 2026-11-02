@@ -12,7 +12,6 @@ import {
   PROFILE_SIZE,
   regionName,
 } from "../../shared/languages";
-import { CountryPicker } from "../CountryPicker";
 import { errorMessage } from "../errors";
 import { Flag } from "../Flag";
 import { useSaveProfile } from "../queries";
@@ -121,19 +120,7 @@ export function LanguagePicker({
                   aria-hidden="true"
                 />
               </button>
-              {isOpen && index === 0 && slot.lang === null && (
-                <div id={panelId} className={classes.panel}>
-                  {/* Where you are from comes first: it settles the language, and the region that tunes slang. */}
-                  <CountryPicker
-                    langs={LANG_CODES.filter((code) => !taken.includes(code))}
-                    onPick={({ lang, region }) => {
-                      update(0, { lang, region });
-                      setOpen(slots[1].lang === null ? 1 : null);
-                    }}
-                  />
-                </div>
-              )}
-              {isOpen && !(index === 0 && slot.lang === null) && (
+              {isOpen && (
                 <div id={panelId} className={classes.panel}>
                   <fieldset
                     aria-label={`${name} language`}

@@ -26,7 +26,7 @@ flag shown on the cards.
 ### Non-goals
 
 - New languages (Haitian Creole, Wolof, Hausa, Yoruba and so on): each would need about 100 reviewed Starter phrases.
-- Ranking all countries by how many newcomers come from them: there is no data. Only a short list the author chose is shown first.
+- Ranking countries by how many newcomers come from them: there is no data, so the grid is alphabetical.
 - Changing the second and third slots of the signup picker.
 
 ### Anti-goals
@@ -48,9 +48,6 @@ flag shown on the cards.
   the countries of every language except English and French; for the signup picker, those of all 13.
 - The saved visitor pick becomes a language plus a country. A pick saved by the earlier version (just a language)
   still works and takes that language's default country.
-- Until something is typed, the picker shows only ten common countries, in the author's order: Bolivia, Mexico,
-  Colombia, Argentina, Brazil, Ukraine, India, China, Philippines, Taiwan (those with none of the languages on
-  offer are left out). Typing searches every country, alphabetically.
 - The country search matches the country's English name, ignoring case.
 - **Calls made by the author of this document:** the "My country isn't listed" fallback shows languages as text pills
   without flags (a flag would repeat the problem); after the fallback the country is the language's default one;

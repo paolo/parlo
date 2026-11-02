@@ -14,20 +14,3 @@ export function languagesIn(country: string, langs: readonly Lang[]): Lang[] {
     (lang) => langs.includes(lang) && LANGUAGES[lang].regions.includes(country),
   );
 }
-
-/**
- * The countries shown before anyone types in a country search, in this order: the places newcomers to Canada
- * most often come from, as the author knows them. Everything else is one search away.
- */
-export const FEATURED_COUNTRIES: readonly string[] = [
-  "BO",
-  "MX",
-  "CO",
-  "AR",
-  "BR",
-  "UA",
-  "IN",
-  "CN",
-  "PH",
-  "TW",
-];
