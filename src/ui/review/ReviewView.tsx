@@ -5,21 +5,16 @@ import {
   Alert,
   Button,
   Group,
-  List,
   Loader,
   Menu,
   Stack,
-  Text,
-  Title,
 } from "@mantine/core";
 import {
   IconArrowsExchange,
   IconCheck,
   IconChevronDown,
-  IconStar,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import type { ProfileLanguage } from "@/server/profile/types";
@@ -29,8 +24,7 @@ import { errorMessage } from "../errors";
 import { LangLabel } from "../LangLabel";
 import { useAllFavorites, useProfile, useRecentGroups } from "../queries";
 import { bundleToGroups } from "./bundles";
-import { PracticeDeck } from "./PracticeDeck";
-import { RevealPanel, TypedPanel } from "./PracticePanels";
+import { PracticeRound } from "./PracticeRound";
 import { AnswerModeSelect, Field, PracticeSetup } from "./PracticeSetup";
 import {
   dealtCount,
@@ -41,9 +35,7 @@ import {
   type Source,
   savePrefs,
 } from "./prefs";
-import classes from "./ReviewView.module.css";
 import { SetupSummary } from "./SetupSummary";
-import { buildCards, pickRandom, ReviewSession } from "./session";
 
 export function ReviewView({ random }: { random?: () => number }) {
   const profile = useProfile();
@@ -189,14 +181,15 @@ export function ReviewView({ random }: { random?: () => number }) {
         </Alert>
       )}
       {deck.status === "ready" && (
-        <Session
+        <PracticeRound
           key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
           groups={deck.groups}
           source={source}
           count={dealt}
           practice={practice}
           answerLang={typing ? answerLang : undefined}
-          profileLangs={languages.map((l) => l.lang)}
+          languages={languages}
+          favorites
           random={random}
           onRestart={restart}
           onUseStarter={switchToStarter}
@@ -293,155 +286,5 @@ function LanguageMenu({
         ))}
       </Menu.Dropdown>
     </Menu>
-  );
-}
-
-function snapshot(session: ReviewSession) {
-  return {
-    current: session.current,
-    finished: session.finished,
-    done: session.done,
-    total: session.total,
-    summary: session.summary(),
-  };
-}
-
-function Session({
-  groups,
-  source,
-  count,
-  practice,
-  answerLang,
-  profileLangs,
-  random,
-  onRestart,
-  onUseStarter,
-}: {
-  groups: PhraseGroupDTO[];
-  source: Source;
-  /** How many cards to deal, drawn at random; fewer when the source has fewer. */
-  count: number;
-  practice: Lang;
-  /** Set when practicing by typing: the language of the phrase to write. */
-  answerLang?: Lang;
-  profileLangs: Lang[];
-  random?: () => number;
-  onRestart: () => void;
-  onUseStarter: () => void;
-}) {
-  const [built] = useState(() => {
-    const all = buildCards(groups, practice, profileLangs, answerLang);
-    return { ...all, cards: pickRandom(all.cards, count, random) };
-  });
-  const [session] = useState(() => new ReviewSession(built.cards, random));
-  // Plain snapshots in state: the session object mutates, React only sees new values.
-  const [view, setView] = useState(() => snapshot(session));
-  // Counts graded cards, so a card shown again after "Again" is dealt in afresh.
-  const [step, setStep] = useState(0);
-
-  function grade(result: "gotIt" | "again") {
-    session[result]();
-    setView(snapshot(session));
-    setStep((n) => n + 1);
-  }
-
-  // Cards need a phrase in the practice language, and in the answer language when typing.
-  const needed = answerLang
-    ? `${LANGUAGES[practice].name} or ${LANGUAGES[answerLang].name}`
-    : LANGUAGES[practice].name;
-  const skippedLine = built.skipped > 0 && (
-    <Text size="sm" c="dimmed">
-      {built.skipped} {built.skipped === 1 ? "phrase" : "phrases"} skipped: no{" "}
-      {needed} version
-    </Text>
-  );
-
-  if (built.cards.length === 0) {
-    const noVersion = built.skipped > 0;
-    return (
-      <div className={classes.empty}>
-        <IconStar size={32} stroke={1.8} aria-hidden="true" />
-        <Title order={3}>
-          {noVersion ? `No ${needed} versions yet` : "Your deck is empty"}
-        </Title>
-        <Text c="dimmed">
-          {noVersion
-            ? `None of these phrases have a ${needed} version. Try another language.`
-            : source === "recent"
-              ? "Nothing translated yet. Translate something and it shows up here."
-              : "Practice uses your favorite phrases. Translate something, tap its star, and it joins your deck."}
-        </Text>
-        {skippedLine}
-        <Group gap="sm">
-          <Button onClick={onUseStarter}>Use Starter</Button>
-          <Button component={Link} href="/" variant="default">
-            Go to Translate
-          </Button>
-        </Group>
-      </div>
-    );
-  }
-
-  if (view.finished) {
-    const { firstTry, retried } = view.summary;
-    return (
-      <Stack gap="md">
-        <Title order={3}>Done</Title>
-        <Text>
-          {firstTry} of {view.total} right on the first try
-        </Text>
-        {retried.length > 0 && (
-          <Stack gap={4}>
-            <Text size="sm" c="dimmed">
-              Worth another look
-            </Text>
-            <List size="sm">
-              {retried.map((card) => (
-                <List.Item key={card.id}>{card.front.text}</List.Item>
-              ))}
-            </List>
-          </Stack>
-        )}
-        <Button size="lg" fullWidth onClick={onRestart}>
-          Practice again
-        </Button>
-      </Stack>
-    );
-  }
-
-  const card = view.current;
-  return (
-    <Stack gap="md">
-      <Group justify="space-between">
-        <Text size="sm" c="dimmed">
-          {view.done} of {view.total}
-        </Text>
-        {skippedLine}
-      </Group>
-      {card && (
-        <PracticeDeck
-          card={card}
-          lang={practice}
-          profileLangs={profileLangs}
-          remaining={view.total - view.done}
-          step={step}
-        >
-          {answerLang ? (
-            <TypedPanel
-              card={card}
-              answerLang={answerLang}
-              profileLangs={profileLangs}
-              onGrade={grade}
-            />
-          ) : (
-            <RevealPanel
-              card={card}
-              profileLangs={profileLangs}
-              onGrade={grade}
-            />
-          )}
-        </PracticeDeck>
-      )}
-    </Stack>
   );
 }
