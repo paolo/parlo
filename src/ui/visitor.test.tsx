@@ -16,10 +16,25 @@ describe("the visitor's native pick", () => {
     window.localStorage.clear();
   });
 
-  it("round-trips a valid pick", () => {
-    saveVisitorNative("uk");
+  it("round-trips a language with its country", () => {
+    saveVisitorNative({ lang: "es", region: "BO" });
 
-    expect(loadVisitorNative()).toBe("uk");
+    expect(loadVisitorNative()).toEqual({ lang: "es", region: "BO" });
+  });
+
+  it("reads a pick saved as just a language, with that language's default country", () => {
+    window.localStorage.setItem(KEY, JSON.stringify("uk"));
+
+    expect(loadVisitorNative()).toEqual({ lang: "uk", region: "UA" });
+  });
+
+  it("falls back to the default country when the stored one does not fit the language", () => {
+    window.localStorage.setItem(
+      KEY,
+      JSON.stringify({ lang: "es", region: "JP" }),
+    );
+
+    expect(loadVisitorNative()).toEqual({ lang: "es", region: "ES" });
   });
 
   it("is null when nothing is stored", () => {
@@ -33,6 +48,8 @@ describe("the visitor's native pick", () => {
     ["an unknown code", JSON.stringify("zz")],
     ["a number", "42"],
     ["null", "null"],
+    ["English in an object", JSON.stringify({ lang: "en", region: "CA" })],
+    ["an object without a language", JSON.stringify({ region: "BO" })],
   ])("is null for %s", (_name, stored) => {
     window.localStorage.setItem(KEY, stored);
 
@@ -40,7 +57,7 @@ describe("the visitor's native pick", () => {
   });
 
   it("clears the pick", () => {
-    saveVisitorNative("es");
+    saveVisitorNative({ lang: "es", region: "BO" });
     clearVisitorNative();
 
     expect(loadVisitorNative()).toBeNull();
@@ -58,7 +75,7 @@ describe("the visitor's native pick", () => {
     });
 
     expect(loadVisitorNative()).toBeNull();
-    expect(() => saveVisitorNative("es")).not.toThrow();
+    expect(() => saveVisitorNative({ lang: "es", region: "BO" })).not.toThrow();
     expect(() => clearVisitorNative()).not.toThrow();
   });
 
@@ -69,9 +86,9 @@ describe("the visitor's native pick", () => {
     expect(VISITOR_NATIVES).toContain("es");
   });
 
-  it("puts the pick first, English (Canada) second and French (France) third", () => {
-    expect(visitorLanguages("uk")).toEqual([
-      { lang: "uk", region: "UA", level: "native", position: 0 },
+  it("puts the pick first with its country, English (Canada) second and French (France) third", () => {
+    expect(visitorLanguages({ lang: "es", region: "BO" })).toEqual([
+      { lang: "es", region: "BO", level: "native", position: 0 },
       { lang: "en", region: "CA", level: "intermediate", position: 1 },
       { lang: "fr", region: "FR", level: "intermediate", position: 2 },
     ]);

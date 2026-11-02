@@ -2,12 +2,13 @@
 
 import { Alert, Center, Loader, Stack, Text, Title } from "@mantine/core";
 import { type ReactNode, useEffect, useState } from "react";
-import { type Lang, PROFILE_SIZE } from "../../shared/languages";
+import { PROFILE_SIZE } from "../../shared/languages";
 import { errorMessage } from "../errors";
 import { useProfile } from "../queries";
 import {
   clearVisitorNative,
   loadVisitorNative,
+  type VisitorPick,
   visitorLanguages,
 } from "../visitor";
 import { LanguagePicker } from "./LanguagePicker";
@@ -19,7 +20,9 @@ import { LanguagePicker } from "./LanguagePicker";
 export function ProfileGate({ children }: { children: ReactNode }) {
   const profile = useProfile();
   // Read after mount, so the server and the first client render agree. Undefined until then.
-  const [visitorNative, setVisitorNative] = useState<Lang | null | undefined>();
+  const [visitorNative, setVisitorNative] = useState<
+    VisitorPick | null | undefined
+  >();
   useEffect(() => setVisitorNative(loadVisitorNative()), []);
   const complete = profile.data?.languages.length === PROFILE_SIZE;
   // Once there is a profile the pick has done its job, whether it was just saved or already existed.

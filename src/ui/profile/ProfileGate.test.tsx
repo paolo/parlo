@@ -53,12 +53,15 @@ describe("ProfileGate", () => {
   });
 
   describe("with a native language picked on the landing page", () => {
-    it("prefills the picker when the profile is empty", async () => {
-      window.localStorage.setItem(VISITOR_KEY, JSON.stringify("uk"));
+    it("prefills the picker with the language and country when the profile is empty", async () => {
+      window.localStorage.setItem(
+        VISITOR_KEY,
+        JSON.stringify({ lang: "es", region: "BO" }),
+      );
       mockProfile([]);
       renderWithProviders(<ProfileGate>the app</ProfileGate>);
 
-      expect(await screen.findByText(/Українська/)).toBeInTheDocument();
+      expect(await screen.findByText(/Español · Bolivia/)).toBeInTheDocument();
       expect(screen.getByText(/English · Canada/)).toBeInTheDocument();
       expect(screen.getByText(/Français · France/)).toBeInTheDocument();
       expect(

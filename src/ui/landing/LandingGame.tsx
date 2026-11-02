@@ -5,8 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BUNDLE_LOADERS } from "../../shared/bundles";
-import { LANGUAGES, type Lang } from "../../shared/languages";
-import { Flag } from "../Flag";
+import { CountryPicker } from "../CountryPicker";
 import { bundleToGroups } from "../review/bundles";
 import { PracticeRound } from "../review/PracticeRound";
 import {
@@ -14,6 +13,7 @@ import {
   loadVisitorNative,
   saveVisitorNative,
   VISITOR_NATIVES,
+  type VisitorPick,
   visitorLanguages,
 } from "../visitor";
 import classes from "./LandingGame.module.css";
@@ -27,7 +27,7 @@ const CARDS = 10;
  */
 export function LandingGame() {
   // Read after mount so the server and the first client render agree. Undefined until then; null means no pick.
-  const [native, setNative] = useState<Lang | null | undefined>();
+  const [native, setNative] = useState<VisitorPick | null | undefined>();
   const [round, setRound] = useState(0);
   useEffect(() => setNative(loadVisitorNative()), []);
   // Picking a language (or changing it) swaps the whole section, which would drop keyboard and screen-reader
@@ -48,7 +48,7 @@ export function LandingGame() {
   const groups = useMemo(
     () =>
       starter.data && native
-        ? bundleToGroups(starter.data, [native, "en", "fr"])
+        ? bundleToGroups(starter.data, [native.lang, "en", "fr"])
         : undefined,
     [starter.data, native],
   );
@@ -64,29 +64,19 @@ export function LandingGame() {
         aria-labelledby="landing-game-title"
       >
         <h2 id="landing-game-title" className={classes.title}>
-          Which language feels like home?
+          Where are you from?
         </h2>
         <p className={classes.hint}>
-          Pick it and play ten cards. English and French are the other two.
+          Pick your country and play ten cards. English and French are the other
+          two languages.
         </p>
-        <ul className={classes.pills}>
-          {VISITOR_NATIVES.map((lang) => (
-            <li key={lang}>
-              <button
-                type="button"
-                className={classes.pill}
-                lang={lang}
-                onClick={() => {
-                  saveVisitorNative(lang);
-                  setNative(lang);
-                }}
-              >
-                <Flag region={LANGUAGES[lang].defaultRegion} size="22px" />
-                {LANGUAGES[lang].endonym}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <CountryPicker
+          langs={VISITOR_NATIVES}
+          onPick={(pick) => {
+            saveVisitorNative(pick);
+            setNative(pick);
+          }}
+        />
       </section>
     );
   }
@@ -105,7 +95,7 @@ export function LandingGame() {
           setNative(null);
         }}
       >
-        Change language
+        Change country
       </Button>
       {starter.isError && (
         <Alert color="red" title="Couldn't load the cards">
@@ -123,7 +113,7 @@ export function LandingGame() {
           groups={groups}
           source="starter"
           count={CARDS}
-          practice={native}
+          practice={native.lang}
           languages={visitorLanguages(native)}
           favorites={false}
           onRestart={() => setRound((r) => r + 1)}

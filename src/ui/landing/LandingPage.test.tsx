@@ -25,10 +25,10 @@ describe("LandingPage", () => {
     );
   });
 
-  it("lets a visitor pick a language and play, replacing the old fixed demo", async () => {
+  it("lets a visitor pick their country and play, replacing the old fixed demo", async () => {
     renderWithProviders(<LandingPage />);
     expect(
-      await screen.findByRole("button", { name: "Español" }),
+      await screen.findByRole("button", { name: "Bolivia" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Costar un ojo de la cara")).toBeNull();
   });
