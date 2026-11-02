@@ -49,20 +49,30 @@ function mockApi(groups: PhraseGroupDTO[], history: PhraseGroupDTO[] = groups) {
 const click = (name: string | RegExp) =>
   userEvent.click(screen.getByRole("button", { name }));
 
-/** Presses Start on the setup screen once it has loaded. */
+/** Opens the setup screen if the page opened on a dealt round (it does, once everything has loaded). */
+async function ensureSetup() {
+  const button = await screen.findByRole("button", {
+    name: /^(start|setup)$/i,
+  });
+  if (/setup/i.test(button.textContent ?? "")) await userEvent.click(button);
+}
+/** Presses Start on the setup screen, opening it first when needed. */
 async function start() {
+  await ensureSetup();
   await userEvent.click(
     await screen.findByRole("button", { name: /^start$/i }),
   );
 }
 /** Picks the radio whose name starts with `name` ("Favorites" also matches "Favorites 6"). */
-const pickRadio = async (group: string, name: string) =>
-  userEvent.click(
+const pickRadio = async (group: string, name: string) => {
+  await ensureSetup();
+  await userEvent.click(
     within(await screen.findByRole("radiogroup", { name: group })).getByRole(
       "radio",
       { name: new RegExp(`^${name}`) },
     ),
   );
+};
 const many = (n: number) =>
   Array.from({ length: n }, (_, i) =>
     card(`m${i}`, `es${i}`, `en${i}`, `fr${i}`),
@@ -70,12 +80,18 @@ const many = (n: number) =>
 
 /** Opens a language pill ("Practice in" or "Type in") and picks a language from its list. */
 async function pickLanguage(label: string, language: RegExp) {
+  await ensureSetup();
   await userEvent.click(
     await screen.findByRole("button", { name: new RegExp(`^${label}:`) }),
   );
   await userEvent.click(
     await screen.findByRole("menuitem", { name: language }),
   );
+}
+
+/** The page deals with the native language up front; these tests were written around drilling English. */
+async function practiceEnglish() {
+  await pickLanguage("Practice in", /English/);
 }
 
 describe("ReviewView", () => {
@@ -90,24 +106,64 @@ describe("ReviewView", () => {
     window.localStorage.clear();
   });
 
-  it("starts in the second language and hides the other versions until Reveal", async () => {
+  it("deals a round on arrival with the native language on the front, the rest hidden until Reveal", async () => {
     mockApi([a]);
     renderWithProviders(<ReviewView random={keepOrder} />);
-    await start();
 
-    expect(await screen.findByText("One")).toBeInTheDocument();
-    expect(screen.queryByText("Uno")).not.toBeInTheDocument();
+    expect(await screen.findByText("Uno")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^start$/i })).toBeNull();
+    expect(screen.queryByText("One")).not.toBeInTheDocument();
     expect(screen.queryByText("Un")).not.toBeInTheDocument();
 
     await click("Reveal");
 
-    expect(screen.getByText("Uno")).toBeInTheDocument();
+    expect(screen.getByText("One")).toBeInTheDocument();
     expect(screen.getByText("Un")).toBeInTheDocument();
+  });
+
+  it("deals Starter, 10 cards, on a first visit", async () => {
+    window.localStorage.clear();
+    mockApi([]);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(await screen.findByText("Starter · 10 cards")).toBeInTheDocument();
+    expect(await screen.findByText("Español")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^start$/i })).toBeNull();
+  });
+
+  it("deals the saved source and count on arrival", async () => {
+    remember({ source: "recent", count: 5 });
+    mockApi([a], many(25));
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(await screen.findByText("Recent · 5 cards")).toBeInTheDocument();
+  });
+
+  it("deals Starter when the saved source is Favorites and there are none", async () => {
+    mockApi([]);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(await screen.findByText("Starter · 20 cards")).toBeInTheDocument();
+    expect(screen.queryByText("Your deck is empty")).not.toBeInTheDocument();
+  });
+
+  it("returns to the setup with Setup, and Start deals a new round", async () => {
+    window.localStorage.clear();
+    mockApi([]);
+    renderWithProviders(<ReviewView random={keepOrder} />);
+    await screen.findByText("Starter · 10 cards");
+
+    await click("Setup");
+    await pickRadio("Cards this round", "5");
+    await click(/^start$/i);
+
+    expect(await screen.findByText("Starter · 5 cards")).toBeInTheDocument();
   });
 
   it("advances on Got it and updates the progress", async () => {
     mockApi([a, b]);
     renderWithProviders(<ReviewView random={keepOrder} />);
+    await practiceEnglish();
     await start();
     await screen.findByText("One");
     expect(screen.getByText("0 of 2")).toBeInTheDocument();
@@ -123,6 +179,7 @@ describe("ReviewView", () => {
   it("shows an Again card once more, then ends in a summary that can restart", async () => {
     mockApi([a, b]);
     renderWithProviders(<ReviewView random={keepOrder} />);
+    await practiceEnglish();
     await start();
     await screen.findByText("One");
 
@@ -169,6 +226,7 @@ describe("ReviewView", () => {
     });
     mockApi([a, noEnglish]);
     renderWithProviders(<ReviewView random={keepOrder} />);
+    await practiceEnglish();
     await start();
 
     expect(await screen.findByText("One")).toBeInTheDocument();
@@ -183,22 +241,22 @@ describe("ReviewView", () => {
     renderWithProviders(<ReviewView random={keepOrder} />);
     await pickRadio("How to practice", "Type");
     expect(
-      screen.getByRole("button", { name: "Practice in: English" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Type in: Español" }),
-    ).toBeInTheDocument();
-
-    await click("Swap languages");
-
-    expect(
       screen.getByRole("button", { name: "Practice in: Español" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Type in: English" }),
     ).toBeInTheDocument();
+
+    await click("Swap languages");
+
+    expect(
+      screen.getByRole("button", { name: "Practice in: English" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Type in: Español" }),
+    ).toBeInTheDocument();
     await start();
-    expect(await screen.findByText("Uno")).toBeInTheDocument();
+    expect(await screen.findByText("One")).toBeInTheDocument();
   });
 
   it("explains that practice uses favorite phrases when there are none", async () => {
@@ -226,6 +284,7 @@ describe("ReviewView", () => {
   it("only ever reads the profile and phrase lists, never translating", async () => {
     const api = mockApi([a]);
     renderWithProviders(<ReviewView random={keepOrder} />);
+    await practiceEnglish();
     await start();
     await screen.findByText("One");
     await click("Reveal");
@@ -246,6 +305,7 @@ describe("ReviewView", () => {
       window.localStorage.clear();
       mockApi([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
@@ -257,6 +317,7 @@ describe("ReviewView", () => {
       remember({ source: "recent", count: 20 });
       mockApi([a], many(25));
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: /^Recent/ })).toBeChecked();
@@ -278,6 +339,7 @@ describe("ReviewView", () => {
     it("falls back to Starter when the saved Favorites is empty", async () => {
       mockApi([]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
@@ -289,6 +351,7 @@ describe("ReviewView", () => {
       });
       mockApi([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: /^Starter/ })).toBeChecked();
@@ -351,6 +414,7 @@ describe("ReviewView", () => {
     it("says how many phrases the chosen source has", async () => {
       mockApi([a, b], [a, b, card("c", "Tres", "Three", "Trois")]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       expect(await screen.findByText("2 phrases")).toBeInTheDocument();
       await pickRadio("Where cards come from", "Recent");
@@ -362,6 +426,7 @@ describe("ReviewView", () => {
     it("disables counts bigger than the source and uses the biggest that fits", async () => {
       mockApi(many(6));
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: "5" })).toBeEnabled();
@@ -376,6 +441,7 @@ describe("ReviewView", () => {
     it("deals everything a tiny source has, with the smallest count selected", async () => {
       mockApi(many(3));
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
       expect(screen.getByRole("radio", { name: "5" })).toBeChecked();
@@ -388,6 +454,7 @@ describe("ReviewView", () => {
       remember({ source: "starter", count: 5 });
       mockApi([]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("radio", { name: "Starter" });
       await start();
 
@@ -403,6 +470,7 @@ describe("ReviewView", () => {
     it("shows speaking as on its way, not selectable", async () => {
       mockApi([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await ensureSetup();
 
       const speak = await screen.findByRole("radio", { name: /^Say it/ });
       expect(speak).toBeDisabled();
@@ -458,6 +526,7 @@ describe("ReviewView", () => {
         ),
       );
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await pickLanguage("Practice in", /العربية/);
       await start();
 
       await screen.findByText("0 of 10");
@@ -468,6 +537,7 @@ describe("ReviewView", () => {
       remember({ source: "favorites", count: 5 });
       mockApi([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await start();
       await screen.findByText("One");
       await click("Reveal");
@@ -533,6 +603,7 @@ describe("ReviewView", () => {
       remember({ source: "starter", count: 5 });
       const api = fakeServer([]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("radio", { name: "Starter" });
       await start();
       await screen.findByText("Hi, how are you?");
@@ -566,6 +637,7 @@ describe("ReviewView", () => {
         }),
       ]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("radio", { name: "Starter" });
       await start();
       await screen.findByText("Hi, how are you?");
@@ -579,6 +651,7 @@ describe("ReviewView", () => {
       remember({ source: "recent", count: 5 });
       const api = fakeServer([], [a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("radio", { name: "Recent" });
       await start();
       await screen.findByText("One");
@@ -597,6 +670,7 @@ describe("ReviewView", () => {
       remember({ source: "favorites", count: 5 });
       fakeServer([a, b]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("button", { name: /^start$/i });
       await start();
       await screen.findByText("One");
@@ -626,6 +700,7 @@ describe("ReviewView", () => {
       remember({ source: "favorites", count: 5 });
       fakeServer([a, b]);
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("button", { name: /^start$/i });
       await start();
       await screen.findByText("One");
@@ -659,6 +734,7 @@ describe("ReviewView", () => {
           : ok(url, init),
       );
       renderWithProviders(<ReviewView random={keepOrder} />);
+      await practiceEnglish();
       await screen.findByRole("radio", { name: "Starter" });
       await start();
       await screen.findByText("Hi, how are you?");
@@ -675,10 +751,12 @@ describe("ReviewView", () => {
   describe("typing", () => {
     const group = (name: string) => screen.getByRole("radiogroup", { name });
     async function startTyping(before?: () => Promise<void>) {
+      await ensureSetup();
       await screen.findByRole("radiogroup", { name: "How to practice" });
       await userEvent.click(
         within(group("How to practice")).getByRole("radio", { name: /^Type/ }),
       );
+      await practiceEnglish();
       await before?.();
       await start();
     }

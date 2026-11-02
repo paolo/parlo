@@ -43,13 +43,15 @@ export function ReviewView({ random }: { random?: () => number }) {
   const [saved] = useState(loadPrefs);
   // What the user changed on this visit; the rest comes from the remembered choice.
   const [picked, setPicked] = useState<Partial<PracticePrefs>>({});
-  const [started, setStarted] = useState(false);
+  // Opens on a dealt round; Setup goes back to the setup screen.
+  const [started, setStarted] = useState(true);
   const [chosen, setChosen] = useState<Lang | null>(null);
   const [mode, setMode] = useState<Mode>("flip");
   const [chosenAnswer, setChosenAnswer] = useState<Lang | null>(null);
   const [round, setRound] = useState(0);
-  // How many cards the round dealt, fixed when it is dealt.
-  const [dealt, setDealt] = useState(0);
+  // How many cards the round dealt, fixed when it is dealt. Null until the first Start: the round dealt on
+  // arrival takes its size from the remembered choice, once that source has loaded.
+  const [dealtNow, setDealt] = useState<number | null>(null);
   const favoriteCount = favorites.data?.items.length ?? 0;
   // A remembered Favorites with nothing in it starts on Starter; picking it by hand is respected.
   const source = picked.source ?? resolveSource(saved, favoriteCount);
@@ -74,6 +76,9 @@ export function ReviewView({ random }: { random?: () => number }) {
     picked.count ?? saved.count,
     counts[source] ?? Number.POSITIVE_INFINITY,
   );
+  const available = counts[source];
+  const dealt =
+    dealtNow ?? (available === undefined ? 0 : dealtCount(count, available));
 
   if (profile.isPending || favorites.isPending) return <Loader size="sm" />;
   if (profile.isError || favorites.isError) {
@@ -84,8 +89,9 @@ export function ReviewView({ random }: { random?: () => number }) {
     );
   }
   const languages = profile.data.languages;
-  const practice = chosen ?? languages[1]?.lang ?? languages[0].lang;
-  // Typing defaults to the first other language (the native one, unless that is the one being practiced).
+  // The native language on the front: read it, then recall the other two.
+  const practice = chosen ?? languages[0].lang;
+  // Typing defaults to the first other language.
   const others = languages.filter((l) => l.lang !== practice);
   const answerLang =
     chosenAnswer && chosenAnswer !== practice ? chosenAnswer : others[0]?.lang;
@@ -164,11 +170,13 @@ export function ReviewView({ random }: { random?: () => number }) {
 
   return (
     <Stack gap="md" maw={720}>
-      <SetupSummary
-        source={source}
-        cards={dealt}
-        onSetup={() => setStarted(false)}
-      />
+      {(dealtNow !== null || deck.status !== "pending") && (
+        <SetupSummary
+          source={source}
+          cards={dealt}
+          onSetup={() => setStarted(false)}
+        />
+      )}
       {deck.status === "pending" && <Loader size="sm" />}
       {deck.status === "error" && (
         <Alert color="red" title="Couldn't load these phrases">
