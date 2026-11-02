@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 import {
   getPhraseRepository,
@@ -8,7 +9,7 @@ import {
 import { jsonError, withSession } from "@/server/http/responses";
 import { ServerTimer } from "@/server/http/timing";
 import { parseJson } from "@/server/http/validation";
-import { buildNewGroup } from "@/server/phrases/service";
+import { buildNewGroup, describeNewGroup } from "@/server/phrases/service";
 import { isProfileComplete } from "@/server/profile/service";
 import {
   TranslationFailedError,
@@ -79,15 +80,28 @@ export const POST = withSession(async (req, { userId }) => {
     return jsonError(502, "translation_failed");
   }
 
-  const saved = await timer.time("save", () =>
-    getPhraseRepository().insertGroup(group),
+  // The answer goes out as soon as the model has given it. The group gets its id and time here so the
+  // response can describe it, and the write runs beside the usage record and on past the response. Usage is
+  // still awaited: the quota meter refetches right away, and the ledger is what stops runaway spend.
+  const stored = { ...group, id: crypto.randomUUID(), createdAt: new Date() };
+  const saveStarted = performance.now();
+  after(
+    getPhraseRepository()
+      .insertGroup(stored)
+      .then(
+        () =>
+          console.info(
+            `Translation saved in ${(performance.now() - saveStarted).toFixed(1)}ms`,
+          ),
+        (error) => console.error("Saving a translation failed", error),
+      ),
   );
   await timer.time("record", () =>
     limiter.record(userId, "translation", tokens),
   );
   console.info("Translation timing", timer.header());
   return Response.json(
-    { group: saved },
+    { group: describeNewGroup(stored) },
     { status: 201, headers: { "Server-Timing": timer.header() } },
   );
 });

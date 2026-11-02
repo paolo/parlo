@@ -11,6 +11,12 @@ import { POST } from "./route";
 const getSession = vi.hoisted(() => vi.fn());
 vi.mock("@/server/auth/session", () => ({ getSession }));
 
+// `after` only works inside a Next request; here it just keeps the promise so tests can wait for it.
+const background = vi.hoisted(() => [] as Promise<unknown>[]);
+vi.mock("next/server", () => ({
+  after: (task: Promise<unknown>) => background.push(task),
+}));
+
 const deps = vi.hoisted(() => ({
   limiter: { check: vi.fn(), record: vi.fn(), usage: vi.fn() },
   repository: { insertGroup: vi.fn(), findById: vi.fn() },
@@ -61,6 +67,7 @@ describe("POST /api/translations", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    background.length = 0;
     getSession.mockResolvedValue({ userId: "u1" });
     deps.limiter.check.mockResolvedValue({ ok: true });
     deps.repository.insertGroup.mockResolvedValue(savedGroup);
@@ -73,9 +80,9 @@ describe("POST /api/translations", () => {
     const res = await post({ text: "  me late the train  " });
 
     expect(res.status).toBe(201);
-    expect(await res.json()).toEqual({ group: savedGroup });
+    await Promise.all(background);
     expect(res.headers.get("Server-Timing")).toMatch(
-      /^profile;dur=.+, limit;dur=.+, model;dur=.+, save;dur=.+, record;dur=/,
+      /^profile;dur=.+, limit;dur=.+, model;dur=.+, record;dur=/,
     );
     expect(translator.calls[0].text).toBe("me late the train");
     expect(translator.calls[0].languages).toEqual(esEnFr);
@@ -91,6 +98,66 @@ describe("POST /api/translations", () => {
       "u1",
       "translation",
       undefined,
+    );
+  });
+
+  it("answers with the group it stores: same id and time, root first", async () => {
+    const res = await post({ text: "me late the train" });
+    const { group } = await res.json();
+    await Promise.all(background);
+
+    const saved = deps.repository.insertGroup.mock
+      .calls[0][0] as NewPhraseGroup;
+    expect(saved.id).toBe(group.id);
+    expect(saved.createdAt?.toISOString()).toBe(group.createdAt);
+    expect(group).toMatchObject({
+      isFavorite: false,
+      bundleRef: null,
+      correction: {
+        text: "I'm going to miss the train",
+        explanation: "«Me late» no es inglés.",
+        accepted: false,
+      },
+    });
+    expect(group.phrases.map((p: { lang: string }) => p.lang)).toEqual([
+      "en",
+      "es",
+      "fr",
+    ]);
+    expect(group.phrases[0]).toEqual({
+      lang: "en",
+      text: "me late the train",
+      isRoot: true,
+      correctedFrom: null,
+    });
+  });
+
+  it("does not wait for the write: the response is out while it is still pending", async () => {
+    let finishSave: (group: PhraseGroupDTO) => void = () => {};
+    deps.repository.insertGroup.mockReturnValue(
+      new Promise<PhraseGroupDTO>((resolve) => {
+        finishSave = resolve;
+      }),
+    );
+
+    const res = await post({ text: "me late the train" });
+
+    expect(res.status).toBe(201);
+    finishSave(savedGroup);
+    await Promise.all(background);
+  });
+
+  it("still answers 201 when the write fails, and logs it", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    deps.repository.insertGroup.mockRejectedValue(new Error("db down"));
+
+    const res = await post({ text: "me late the train" });
+    await Promise.all(background);
+
+    expect(res.status).toBe(201);
+    expect(error).toHaveBeenCalledWith(
+      "Saving a translation failed",
+      expect.any(Error),
     );
   });
 

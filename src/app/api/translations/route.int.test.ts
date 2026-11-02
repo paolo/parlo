@@ -10,6 +10,12 @@ import { POST } from "./route";
 const session = vi.hoisted(() => ({ userId: "" }));
 vi.mock("@/server/auth/session", () => ({ getSession: async () => session }));
 
+// `after` only works inside a Next request; here it just keeps the promise so tests can wait for the write.
+const background = vi.hoisted(() => [] as Promise<unknown>[]);
+vi.mock("next/server", () => ({
+  after: (task: Promise<unknown>) => background.push(task),
+}));
+
 const translator = new FakeTranslator({
   detectedLang: "es",
   correction: null,
@@ -38,6 +44,7 @@ const post = (text: string) =>
 describe("POST /api/translations (integration)", () => {
   beforeEach(async () => {
     await resetDb();
+    background.length = 0;
     session.userId = (await createTestUser()).id;
     await new DrizzleProfileRepository(getDb()).replaceProfile(
       session.userId,
@@ -49,6 +56,7 @@ describe("POST /api/translations (integration)", () => {
     const res = await post("Estoy hasta las narices de esperar");
     expect(res.status).toBe(201);
     const { group } = await res.json();
+    await Promise.all(background);
 
     const db = getDb();
     const groups = await db.query.phraseGroup.findMany({
@@ -57,6 +65,7 @@ describe("POST /api/translations (integration)", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
       id: group.id,
+      createdAt: new Date(group.createdAt),
       userId: session.userId,
       notes: "Expresión coloquial.",
     });

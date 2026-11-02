@@ -1,10 +1,10 @@
-import type { Lang } from "../../shared/languages";
+import { LANG_CODES, type Lang } from "../../shared/languages";
 import type { ProfileLanguage } from "../profile/types";
 import {
   TranslationFailedError,
   type TranslationResult,
 } from "../translation/types";
-import type { NewPhraseGroup } from "./types";
+import type { NewPhraseGroup, PhraseDTO, PhraseGroupDTO } from "./types";
 
 /**
  * Maps a translation into a phrase group. The detected language is the root, and the root keeps the
@@ -50,5 +50,31 @@ export function buildNewGroup(
       text: lang === root ? text : (translated.get(lang) as string),
       isRoot: lang === root,
     })),
+  };
+}
+
+/** The root first, then the rest in catalog order. */
+export function orderPhraseDTOs(phrases: PhraseDTO[]): PhraseDTO[] {
+  return [...phrases].sort(
+    (a, b) =>
+      Number(b.isRoot) - Number(a.isRoot) ||
+      LANG_CODES.indexOf(a.lang) - LANG_CODES.indexOf(b.lang),
+  );
+}
+
+/** What the stored group will look like, so a translation can be returned before it is written. */
+export function describeNewGroup(
+  group: NewPhraseGroup & { id: string; createdAt: Date },
+): PhraseGroupDTO {
+  return {
+    id: group.id,
+    createdAt: group.createdAt.toISOString(),
+    isFavorite: false,
+    bundleRef: null,
+    notes: group.notes,
+    correction: group.correction && { ...group.correction, accepted: false },
+    phrases: orderPhraseDTOs(
+      group.phrases.map((p) => ({ ...p, correctedFrom: null })),
+    ),
   };
 }
