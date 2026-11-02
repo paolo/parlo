@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "@/test/render";
 import { LandingPage } from "./LandingPage";
@@ -7,16 +7,30 @@ describe("LandingPage", () => {
   it("shows the headline and subline", () => {
     renderWithProviders(<LandingPage />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Say it like a local." }),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Learn it the way locals say it.",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/never word for word/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/all three of your languages/i),
+    ).toBeInTheDocument();
   });
 
-  it("sends the hero call to action to the sign-in page", () => {
+  it("takes the hero call to action to the game, not to sign-in", () => {
+    renderWithProviders(<LandingPage />);
+    expect(screen.getByRole("link", { name: "Play a round" })).toHaveAttribute(
+      "href",
+      "#play",
+    );
+  });
+
+  it("lets a visitor pick a language and play, replacing the old fixed demo", async () => {
     renderWithProviders(<LandingPage />);
     expect(
-      screen.getByRole("link", { name: "Start with a phrase" }),
-    ).toHaveAttribute("href", "/sign-in");
+      await screen.findByRole("button", { name: "Español" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Costar un ojo de la cara")).toBeNull();
   });
 
   it("sends the closing call to action to the sign-in page", () => {
@@ -62,8 +76,13 @@ describe("LandingPage", () => {
 
   it("lists every supported language", () => {
     renderWithProviders(<LandingPage />);
-    expect(screen.getAllByRole("listitem").length).toBeGreaterThanOrEqual(13);
-    expect(screen.getByText("Українська")).toBeInTheDocument();
-    expect(screen.getByText("Punjabi")).toBeInTheDocument();
+    const grid = screen
+      .getByRole("heading", { name: /bring your three/i })
+      .closest("section") as HTMLElement;
+    expect(within(grid).getAllByRole("listitem").length).toBeGreaterThanOrEqual(
+      13,
+    );
+    expect(within(grid).getByText("Українська")).toBeInTheDocument();
+    expect(within(grid).getByText("Punjabi")).toBeInTheDocument();
   });
 });

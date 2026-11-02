@@ -8,8 +8,8 @@ import { Flag } from "../Flag";
 import { ThemeToggle } from "../ThemeToggle";
 import { Wordmark } from "../Wordmark";
 import { Conversation } from "./Conversation";
+import { LandingGame } from "./LandingGame";
 import classes from "./LandingPage.module.css";
-import { PracticeDemo } from "./PracticeDemo";
 
 const STEPS = [
   {
@@ -45,29 +45,29 @@ export function LandingPage() {
       <section className={`${classes.wrap} ${classes.hero}`}>
         <div className={classes.copy}>
           <span className={classes.eyebrow}>Made for newcomers</span>
-          <h1 className={classes.h1}>Say it like a local.</h1>
+          <h1 className={classes.h1}>Learn it the way locals say it.</h1>
           <p className={classes.lead}>
-            The phrases you grew up with, turned into the way people actually
-            say them in your other languages. Three languages, one meaning:
-            never word for word.
+            Everyday phrases, the way people really say them. Every card has all
+            three of your languages, so each one helps the other two. Pick yours
+            and play a round.
           </p>
           <div className={classes.cta}>
             <Button
               component={Link}
-              href="/sign-in"
+              href="#play"
               size="lg"
               rightSection={<IconArrowRight size={18} stroke={2} />}
             >
-              Start with a phrase
+              Play a round
             </Button>
           </div>
         </div>
         <Conversation />
       </section>
 
-      <section className={classes.band}>
+      <section id="play" className={classes.band}>
         <div className={`${classes.wrap} ${classes.practice}`}>
-          <PracticeDemo />
+          <LandingGame />
           <div className={classes.copy}>
             <h2 className={classes.h2}>Practice on the bus ride.</h2>
             <ol className={classes.steps}>
