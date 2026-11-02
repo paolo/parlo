@@ -82,12 +82,12 @@ The signed-in Practice page and the landing game share this round, so they look 
 
 ### 3.2 The landing page game
 
-Replace `PracticeDemo` (a fixed three-card deck) with a playable round of ten Starter cards.
+Replace `PracticeDemo` (a fixed three-card deck) with a playable round of five Starter cards.
 
 - A **native-language picker** comes first, as a row of pills (flag plus the language's own name). It lists the
   languages Parlo supports except English and French. The second and third languages are not asked for.
 - Defaults for the other two: English with region Canada (`CA`) and French with region France (`FR`).
-- Picking a language starts the round at once. The round is the in-app one: ten random Starter cards in flip
+- Picking a language starts the round at once. The round is the in-app one: five random Starter cards in flip
   mode. **The front of each card is the visitor's native language**; Reveal shows English and French. So a
   Spanish speaker sees the Spanish phrase and then recalls and reveals the English and the French.
 - The pick is remembered in the browser, so a returning visitor lands in the game already set up.

@@ -20,7 +20,7 @@ import {
 } from "../visitor";
 import classes from "./LandingGame.module.css";
 
-const CARDS = 10;
+const CARDS = 5;
 
 /**
  * The flags previewed on a language's card, where they should differ from the first four countries of its list.
@@ -34,7 +34,7 @@ const byCountryName = (a: string, b: string) =>
   regionName(a).localeCompare(regionName(b));
 
 /**
- * A round of Starter cards for someone who has not signed up: pick your language, then flip through ten cards
+ * A round of Starter cards for someone who has not signed up: pick your language, then flip through five cards
  * with it up front and English and French behind. It needs no account and makes no request of ours: the deck is
  * static. The pick is remembered, so the signup picker can start from it.
  */

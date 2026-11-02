@@ -91,7 +91,7 @@ describe("LandingGame", () => {
     await click("Bolivia");
     await click("Play");
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="es"]')).not.toBeNull();
     expect(screen.queryByText("English")).toBeNull();
     expect(screen.queryByRole("button", { name: /favorites/i })).toBeNull();
@@ -114,7 +114,7 @@ describe("LandingGame", () => {
     await click("Nigeria");
     await click("Play");
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="en"]')).not.toBeNull();
     expect(container.querySelector('img[src="/flags/ng.svg"]')).not.toBeNull();
     await click("Reveal");
@@ -133,7 +133,7 @@ describe("LandingGame", () => {
     await click("Haiti");
     await click("Play");
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="fr"]')).not.toBeNull();
     await click("Reveal");
     expect(screen.getByText("English")).toBeInTheDocument();
@@ -150,7 +150,7 @@ describe("LandingGame", () => {
 
     await click("Play");
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
       lang: "pt",
       region: "PT",
@@ -162,7 +162,7 @@ describe("LandingGame", () => {
 
     await userEvent.click(await card(/Українська/));
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="uk"]')).not.toBeNull();
     expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
       lang: "uk",
@@ -191,7 +191,7 @@ describe("LandingGame", () => {
     );
     renderWithProviders(<LandingGame />);
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Español/ })).toBeNull();
   });
 
@@ -202,7 +202,7 @@ describe("LandingGame", () => {
     );
     renderWithProviders(<LandingGame />);
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="en"]')).not.toBeNull();
   });
 
@@ -210,7 +210,7 @@ describe("LandingGame", () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="uk"]')).not.toBeNull();
   });
 
@@ -227,7 +227,7 @@ describe("LandingGame", () => {
   it("returns to the cards with Change language, and forgets the pick", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
-    await screen.findByText("0 of 10");
+    await screen.findByText("0 of 5");
 
     await click("Change language");
 
@@ -247,7 +247,7 @@ describe("LandingGame", () => {
   it("moves focus back to the cards after Change language", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
-    await screen.findByText("0 of 10");
+    await screen.findByText("0 of 5");
 
     await click("Change language");
 
@@ -259,22 +259,22 @@ describe("LandingGame", () => {
   it("does not take focus when the page loads with a remembered pick", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
-    await screen.findByText("0 of 10");
+    await screen.findByText("0 of 5");
 
     expect(
       screen.getByRole("region", { name: "Practice round" }),
     ).not.toHaveFocus();
   });
 
-  it("after ten cards invites the visitor to sign up, with no talk of progress", async () => {
+  it("after five cards invites the visitor to sign up, with no talk of progress", async () => {
     window.localStorage.setItem(
       KEY,
       JSON.stringify({ lang: "es", region: "BO" }),
     );
     renderWithProviders(<LandingGame />);
-    await screen.findByText("0 of 10");
+    await screen.findByText("0 of 5");
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await click("Reveal");
       await click("Got it");
     }
@@ -287,7 +287,7 @@ describe("LandingGame", () => {
 
     await click("Practice again");
 
-    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(fetchStub).not.toHaveBeenCalled();
   });
 });
