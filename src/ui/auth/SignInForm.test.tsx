@@ -22,7 +22,7 @@ describe("SignInForm", () => {
     );
     expect(authClient.signIn.social).toHaveBeenCalledWith({
       provider: "google",
-      callbackURL: "/",
+      callbackURL: "/practice",
     });
   });
 
@@ -44,7 +44,7 @@ describe("SignInForm", () => {
       email: "me@test.dev",
       password: "password123",
     });
-    expect(push).toHaveBeenCalledWith("/");
+    expect(push).toHaveBeenCalledWith("/practice");
   });
 
   it("shows the error message when sign-in fails", async () => {

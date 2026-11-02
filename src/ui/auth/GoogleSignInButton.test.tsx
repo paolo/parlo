@@ -17,7 +17,7 @@ describe("GoogleSignInButton", () => {
     );
     expect(authClient.signIn.social).toHaveBeenCalledWith({
       provider: "google",
-      callbackURL: "/",
+      callbackURL: "/practice",
     });
   });
 

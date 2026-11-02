@@ -16,7 +16,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className={classes.shell}>
       <header className={classes.header}>
         <div className={classes.bar}>
-          <Link href="/" className={classes.home} aria-label="parlo, home">
+          <Link
+            href="/practice"
+            className={classes.home}
+            aria-label="parlo, home"
+          >
             <Wordmark size={28} />
           </Link>
           <nav className={classes.nav} aria-label="Main">
