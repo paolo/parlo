@@ -108,6 +108,7 @@ describe("LanguagePicker", () => {
   it("shows English and French countries too, since any language can be native", async () => {
     renderWithProviders(<LanguagePicker />);
 
+    await userEvent.type(screen.getByRole("searchbox"), "canada");
     await pickNative("Canada");
     await pickNative("Français");
 

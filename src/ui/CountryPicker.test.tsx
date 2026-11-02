@@ -26,6 +26,44 @@ describe("CountryPicker", () => {
     expect(container.querySelector('img[src="/flags/bo.svg"]')).not.toBeNull();
   });
 
+  it("shows only a short list of common countries until something is typed", () => {
+    pickerOf();
+
+    expect(
+      screen.getAllByRole("listitem").map((item) => item.textContent),
+    ).toEqual([
+      "Bolivia",
+      "Mexico",
+      "Colombia",
+      "Argentina",
+      "Brazil",
+      "Ukraine",
+      "India",
+      "China",
+      "Philippines",
+      "Taiwan",
+    ]);
+    expect(screen.queryByRole("button", { name: "Peru" })).toBeNull();
+    expect(screen.getByText(/search for your country/i)).toBeInTheDocument();
+  });
+
+  it("leaves out common countries that have none of the languages on offer", () => {
+    pickerOf(["pt"]);
+
+    expect(
+      screen.getAllByRole("listitem").map((item) => item.textContent),
+    ).toEqual(["Brazil"]);
+  });
+
+  it("searches every country, not just the common ones", async () => {
+    pickerOf();
+
+    await userEvent.type(screen.getByRole("searchbox"), "per");
+
+    expect(country("Peru")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bolivia" })).toBeNull();
+  });
+
   it("filters the countries by what is typed, ignoring case", async () => {
     pickerOf();
 
@@ -67,6 +105,7 @@ describe("CountryPicker", () => {
   it("offers English and French for Canada when they are on offer", async () => {
     const onPick = pickerOf(LANG_CODES);
 
+    await userEvent.type(screen.getByRole("searchbox"), "canada");
     await userEvent.click(country("Canada"));
     await userEvent.click(country("Français"));
 
