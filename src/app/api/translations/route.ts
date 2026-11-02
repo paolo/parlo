@@ -6,6 +6,7 @@ import {
   getUsageLimiter,
 } from "@/server/container";
 import { jsonError, withSession } from "@/server/http/responses";
+import { ServerTimer } from "@/server/http/timing";
 import { parseJson } from "@/server/http/validation";
 import { buildNewGroup } from "@/server/phrases/service";
 import { isProfileComplete } from "@/server/profile/service";
@@ -29,12 +30,17 @@ export const POST = withSession(async (req, { userId }) => {
   if ("response" in parsed) return parsed.response;
   const { text } = parsed.data;
 
-  const languages = await getProfileRepository().getProfile(userId);
+  const timer = new ServerTimer();
+  const languages = await timer.time("profile", () =>
+    getProfileRepository().getProfile(userId),
+  );
   if (!isProfileComplete(languages))
     return jsonError(409, "profile_incomplete");
 
   const limiter = getUsageLimiter();
-  const decision = await limiter.check(userId, "translation");
+  const decision = await timer.time("limit", () =>
+    limiter.check(userId, "translation"),
+  );
   if (!decision.ok) {
     const retryAfter = Math.max(
       1,
@@ -53,7 +59,9 @@ export const POST = withSession(async (req, { userId }) => {
   let group: ReturnType<typeof buildNewGroup>;
   let tokens: TranslationResult["usage"];
   try {
-    const result = await getTranslator().translate({ text, languages });
+    const result = await timer.time("model", () =>
+      getTranslator().translate({ text, languages }),
+    );
     const profileLangs = languages.map((l) => l.lang);
     if (
       result.detectedLang === "other" ||
@@ -71,7 +79,15 @@ export const POST = withSession(async (req, { userId }) => {
     return jsonError(502, "translation_failed");
   }
 
-  const saved = await getPhraseRepository().insertGroup(group);
-  await limiter.record(userId, "translation", tokens);
-  return Response.json({ group: saved }, { status: 201 });
+  const saved = await timer.time("save", () =>
+    getPhraseRepository().insertGroup(group),
+  );
+  await timer.time("record", () =>
+    limiter.record(userId, "translation", tokens),
+  );
+  console.info("Translation timing", timer.header());
+  return Response.json(
+    { group: saved },
+    { status: 201, headers: { "Server-Timing": timer.header() } },
+  );
 });

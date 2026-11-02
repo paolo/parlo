@@ -74,6 +74,9 @@ describe("POST /api/translations", () => {
 
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ group: savedGroup });
+    expect(res.headers.get("Server-Timing")).toMatch(
+      /^profile;dur=.+, limit;dur=.+, model;dur=.+, save;dur=.+, record;dur=/,
+    );
     expect(translator.calls[0].text).toBe("me late the train");
     expect(translator.calls[0].languages).toEqual(esEnFr);
     const saved = deps.repository.insertGroup.mock
