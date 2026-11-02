@@ -69,8 +69,21 @@ describe("ProfileGate", () => {
       ).toBeEnabled();
     });
 
+    it("prefills English and Spanish after a French pick", async () => {
+      window.localStorage.setItem(
+        VISITOR_KEY,
+        JSON.stringify({ lang: "fr", region: "HT" }),
+      );
+      mockProfile([]);
+      renderWithProviders(<ProfileGate>the app</ProfileGate>);
+
+      expect(await screen.findByText(/Français · Haiti/)).toBeInTheDocument();
+      expect(screen.getByText(/English · Canada/)).toBeInTheDocument();
+      expect(screen.getByText(/Español · Spain/)).toBeInTheDocument();
+    });
+
     it("shows the normal empty picker when the stored pick is not usable", async () => {
-      window.localStorage.setItem(VISITOR_KEY, JSON.stringify("en"));
+      window.localStorage.setItem(VISITOR_KEY, JSON.stringify("zz"));
       mockProfile([]);
       renderWithProviders(<ProfileGate>the app</ProfileGate>);
 

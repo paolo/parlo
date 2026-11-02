@@ -4,6 +4,7 @@ import {
   clearVisitorNative,
   loadVisitorNative,
   saveVisitorNative,
+  VISITOR_ALSO,
   VISITOR_NATIVES,
   visitorLanguages,
 } from "./visitor";
@@ -37,18 +38,23 @@ describe("the visitor's native pick", () => {
     expect(loadVisitorNative()).toEqual({ lang: "es", region: "ES" });
   });
 
+  it("accepts English and French, as languages to start from", () => {
+    saveVisitorNative({ lang: "en", region: "NG" });
+    expect(loadVisitorNative()).toEqual({ lang: "en", region: "NG" });
+
+    window.localStorage.setItem(KEY, JSON.stringify("fr"));
+    expect(loadVisitorNative()).toEqual({ lang: "fr", region: "FR" });
+  });
+
   it("is null when nothing is stored", () => {
     expect(loadVisitorNative()).toBeNull();
   });
 
   it.each([
     ["garbage", "not json{"],
-    ["English", JSON.stringify("en")],
-    ["French", JSON.stringify("fr")],
     ["an unknown code", JSON.stringify("zz")],
     ["a number", "42"],
     ["null", "null"],
-    ["English in an object", JSON.stringify({ lang: "en", region: "CA" })],
     ["an object without a language", JSON.stringify({ region: "BO" })],
   ])("is null for %s", (_name, stored) => {
     window.localStorage.setItem(KEY, stored);
@@ -79,11 +85,12 @@ describe("the visitor's native pick", () => {
     expect(() => clearVisitorNative()).not.toThrow();
   });
 
-  it("offers every language except English and French as the native pick", () => {
+  it("lists every language except English and French as the main picks, and those two as the other way in", () => {
     expect(VISITOR_NATIVES).toEqual(
       LANG_CODES.filter((lang) => lang !== "en" && lang !== "fr"),
     );
     expect(VISITOR_NATIVES).toContain("es");
+    expect(VISITOR_ALSO).toEqual(["en", "fr"]);
   });
 
   it("puts the pick first with its country, English (Canada) second and French (France) third", () => {
@@ -91,6 +98,22 @@ describe("the visitor's native pick", () => {
       { lang: "es", region: "BO", level: "native", position: 0 },
       { lang: "en", region: "CA", level: "intermediate", position: 1 },
       { lang: "fr", region: "FR", level: "intermediate", position: 2 },
+    ]);
+  });
+
+  it("brings an English speaker to French and Spanish", () => {
+    expect(visitorLanguages({ lang: "en", region: "NG" })).toEqual([
+      { lang: "en", region: "NG", level: "native", position: 0 },
+      { lang: "fr", region: "FR", level: "intermediate", position: 1 },
+      { lang: "es", region: "ES", level: "intermediate", position: 2 },
+    ]);
+  });
+
+  it("brings a French speaker to English (Canada) and Spanish", () => {
+    expect(visitorLanguages({ lang: "fr", region: "HT" })).toEqual([
+      { lang: "fr", region: "HT", level: "native", position: 0 },
+      { lang: "en", region: "CA", level: "intermediate", position: 1 },
+      { lang: "es", region: "ES", level: "intermediate", position: 2 },
     ]);
   });
 });

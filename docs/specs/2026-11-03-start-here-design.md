@@ -42,7 +42,10 @@ journey: **start here** (the language you grew up with), **we'll bring you there
 - Work stays on the `practice-landing-game` branch.
 - Revert the in-app language and region picker to language first for now.
 - One "start here, we'll bring you there" section: language cards, then all flags once one is picked, then the game.
-- English and French are the destination, not a starting choice (not offered as cards).
+- English and French are the destination by default, but they also get their own two cards, set apart under "Already
+  speak English or French? Start from it." Starting from English brings French and Spanish; starting from French
+  brings English and Spanish (Spanish is the author's pick for the third). Everyone else gets their language, then
+  English and French.
 - The closing line rotates through everyday moments instead of fixing on the bus.
 
 ## 3. Calls made by the author of this document
@@ -51,4 +54,5 @@ journey: **start here** (the language you grew up with), **we'll bring you there
 - The first country of a language is selected when its countries show, so Play works without choosing.
 - The three "how it works" steps stay, now in a row under the cards, with the "between stops" wording changed to
   "a few minutes a day".
+- Their countries are listed too, so someone from Nigeria, India, Haiti or Senegal has a card to start from.
 - The hero button stays "Play a round" and jumps to this section.

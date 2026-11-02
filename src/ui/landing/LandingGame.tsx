@@ -13,6 +13,7 @@ import {
   clearVisitorNative,
   loadVisitorNative,
   saveVisitorNative,
+  VISITOR_ALSO,
   VISITOR_NATIVES,
   type VisitorPick,
   visitorLanguages,
@@ -63,7 +64,10 @@ export function LandingGame() {
   const groups = useMemo(
     () =>
       starter.data && native
-        ? bundleToGroups(starter.data, [native.lang, "en", "fr"])
+        ? bundleToGroups(
+            starter.data,
+            visitorLanguages(native).map((l) => l.lang),
+          )
         : undefined,
     [starter.data, native],
   );
@@ -72,6 +76,64 @@ export function LandingGame() {
     saveVisitorNative(pick);
     setChosen(null);
     setNative(pick);
+  }
+
+  function languageCard(lang: Lang) {
+    const { name, endonym, regions } = LANGUAGES[lang];
+    const open = chosen === lang;
+    return (
+      <li key={lang} className={classes.language} data-open={open || undefined}>
+        <button
+          type="button"
+          className={classes.head}
+          aria-expanded={open}
+          onClick={() => {
+            if (regions.length === 1) {
+              start({ lang, region: regions[0] });
+            } else {
+              setChosen(lang);
+              setRegion(regions[0]);
+            }
+          }}
+        >
+          <span className={classes.languageText}>
+            <span className={classes.languageName}>{name}</span>
+            <span lang={lang} className={classes.endonym}>
+              {endonym}
+            </span>
+          </span>
+          {!open && (
+            <span className={classes.flags} aria-hidden="true">
+              {(PREVIEW_REGIONS[lang] ?? regions.slice(0, 4)).map((code) => (
+                <Flag key={code} region={code} size="34px" />
+              ))}
+            </span>
+          )}
+        </button>
+        {open && (
+          <div className={classes.countries}>
+            <fieldset
+              aria-label={`${name} countries`}
+              className={classes.pills}
+            >
+              {[...regions].sort(byCountryName).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={classes.pill}
+                  aria-pressed={region === code}
+                  onClick={() => setRegion(code)}
+                >
+                  <Flag region={code} size="22px" />
+                  {regionName(code)}
+                </button>
+              ))}
+            </fieldset>
+            <Button onClick={() => start({ lang, region })}>Play</Button>
+          </div>
+        )}
+      </li>
+    );
   }
 
   if (native === undefined) return <div className={classes.game} />;
@@ -84,72 +146,12 @@ export function LandingGame() {
         className={classes.picker}
         aria-label="Pick your language"
       >
-        <ul className={classes.grid}>
-          {VISITOR_NATIVES.map((lang) => {
-            const { name, endonym, regions } = LANGUAGES[lang];
-            const open = chosen === lang;
-            return (
-              <li
-                key={lang}
-                className={classes.language}
-                data-open={open || undefined}
-              >
-                <button
-                  type="button"
-                  className={classes.head}
-                  aria-expanded={open}
-                  onClick={() => {
-                    if (regions.length === 1) {
-                      start({ lang, region: regions[0] });
-                    } else {
-                      setChosen(lang);
-                      setRegion(regions[0]);
-                    }
-                  }}
-                >
-                  <span className={classes.languageText}>
-                    <span className={classes.languageName}>{name}</span>
-                    <span lang={lang} className={classes.endonym}>
-                      {endonym}
-                    </span>
-                  </span>
-                  {!open && (
-                    <span className={classes.flags} aria-hidden="true">
-                      {(PREVIEW_REGIONS[lang] ?? regions.slice(0, 4)).map(
-                        (code) => (
-                          <Flag key={code} region={code} size="34px" />
-                        ),
-                      )}
-                    </span>
-                  )}
-                </button>
-                {open && (
-                  <div className={classes.countries}>
-                    <fieldset
-                      aria-label={`${name} countries`}
-                      className={classes.pills}
-                    >
-                      {[...regions].sort(byCountryName).map((code) => (
-                        <button
-                          key={code}
-                          type="button"
-                          className={classes.pill}
-                          aria-pressed={region === code}
-                          onClick={() => setRegion(code)}
-                        >
-                          <Flag region={code} size="22px" />
-                          {regionName(code)}
-                        </button>
-                      ))}
-                    </fieldset>
-                    <Button onClick={() => start({ lang, region })}>
-                      Play
-                    </Button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
+        <ul className={classes.grid}>{VISITOR_NATIVES.map(languageCard)}</ul>
+        <p id="landing-also" className={classes.also}>
+          Already speak English or French? Start from it.
+        </p>
+        <ul className={classes.grid} aria-labelledby="landing-also">
+          {VISITOR_ALSO.map(languageCard)}
         </ul>
       </section>
     );

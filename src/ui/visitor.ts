@@ -3,10 +3,13 @@ import { LANG_CODES, LANGUAGES, type Lang } from "../shared/languages";
 
 const KEY = "parlo.visitor";
 
-/** English and French are the languages being learned, so a visitor's native pick is any of the others. */
+/** The languages a visitor starts from on the landing page's main cards: all but English and French. */
 export const VISITOR_NATIVES: Lang[] = LANG_CODES.filter(
   (lang) => lang !== "en" && lang !== "fr",
 );
+
+/** English and French are what the cards bring most visitors to, but someone can start from either one too. */
+export const VISITOR_ALSO: Lang[] = ["en", "fr"];
 
 /** Where a visitor says they are from: a native language and the country it is theirs in. */
 export interface VisitorPick {
@@ -26,7 +29,7 @@ export function loadVisitorNative(): VisitorPick | null {
       typeof stored === "string"
         ? { lang: stored, region: undefined }
         : ((stored ?? {}) as { lang?: unknown; region?: unknown });
-    const known = VISITOR_NATIVES.find((l) => l === lang);
+    const known = LANG_CODES.find((l) => l === lang);
     if (!known) return null;
     return {
       lang: known,
@@ -56,14 +59,35 @@ export function clearVisitorNative(): void {
   }
 }
 
-/** The three languages of a visitor's round and of the signup picker: their own, English (Canada), French (France). */
+/**
+ * The three languages of a visitor's round and of the signup picker: their own, then English (Canada) and French
+ * (France). Starting from English the other two are French and Spanish; starting from French, English and Spanish.
+ */
 export function visitorLanguages({
   lang,
   region,
 }: VisitorPick): ProfileLanguage[] {
+  const others: { lang: Lang; region: string }[] =
+    lang === "en"
+      ? [
+          { lang: "fr", region: "FR" },
+          { lang: "es", region: LANGUAGES.es.defaultRegion },
+        ]
+      : lang === "fr"
+        ? [
+            { lang: "en", region: "CA" },
+            { lang: "es", region: LANGUAGES.es.defaultRegion },
+          ]
+        : [
+            { lang: "en", region: "CA" },
+            { lang: "fr", region: "FR" },
+          ];
   return [
     { lang, region, level: "native", position: 0 },
-    { lang: "en", region: "CA", level: "intermediate", position: 1 },
-    { lang: "fr", region: "FR", level: "intermediate", position: 2 },
+    ...others.map((other, i) => ({
+      ...other,
+      level: "intermediate" as const,
+      position: i + 1,
+    })),
   ];
 }

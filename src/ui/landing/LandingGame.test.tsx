@@ -26,13 +26,14 @@ describe("LandingGame", () => {
     window.localStorage.clear();
   });
 
-  it("offers a card for every language except English and French, with up to four flags", async () => {
+  it("offers a card for each language but English and French, with up to four flags", async () => {
     const { container } = renderWithProviders(<LandingGame />);
 
     await card(/Español/);
+    const main = screen.getAllByRole("list")[0];
     expect(
-      screen
-        .getAllByRole("button", { expanded: false })
+      within(main)
+        .getAllByRole("button")
         .map((b) => b.textContent),
     ).toEqual(
       natives.map((c) => `${LANGUAGES[c].name}${LANGUAGES[c].endonym}`),
@@ -49,6 +50,21 @@ describe("LandingGame", () => {
       "/flags/bo.svg",
     ]);
     expect(container.querySelector('img[src="/flags/ar.svg"]')).toBeNull();
+  });
+
+  it("sets English and French apart as another way in", async () => {
+    renderWithProviders(<LandingGame />);
+    await card(/Español/);
+
+    expect(
+      screen.getByText("Already speak English or French? Start from it."),
+    ).toBeInTheDocument();
+    const also = screen.getAllByRole("list")[1];
+    expect(
+      within(also)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["EnglishEnglish", "FrenchFrançais"]);
   });
 
   it("shows every country of a language once it is picked, the first one selected", async () => {
@@ -90,6 +106,42 @@ describe("LandingGame", () => {
       region: "BO",
     });
     expect(fetchStub).not.toHaveBeenCalled();
+  });
+
+  it("starts from English with its own country, then brings French and Spanish", async () => {
+    const { container } = renderWithProviders(<LandingGame />);
+    await userEvent.click(await card(/^EnglishEnglish$/));
+    await click("Nigeria");
+    await click("Play");
+
+    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(document.querySelector('p[lang="en"]')).not.toBeNull();
+    expect(container.querySelector('img[src="/flags/ng.svg"]')).not.toBeNull();
+    await click("Reveal");
+    expect(screen.getByText("Français")).toBeInTheDocument();
+    expect(screen.getByText("Español")).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
+      lang: "en",
+      region: "NG",
+    });
+    expect(fetchStub).not.toHaveBeenCalled();
+  });
+
+  it("starts from French with its own country, then brings English and Spanish", async () => {
+    renderWithProviders(<LandingGame />);
+    await userEvent.click(await card(/^FrenchFrançais$/));
+    await click("Haiti");
+    await click("Play");
+
+    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(document.querySelector('p[lang="fr"]')).not.toBeNull();
+    await click("Reveal");
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("Español")).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem(KEY) ?? "")).toEqual({
+      lang: "fr",
+      region: "HT",
+    });
   });
 
   it("plays with the first country when none is chosen", async () => {
@@ -143,6 +195,17 @@ describe("LandingGame", () => {
     expect(screen.queryByRole("button", { name: /Español/ })).toBeNull();
   });
 
+  it("starts the round from a remembered English", async () => {
+    window.localStorage.setItem(
+      KEY,
+      JSON.stringify({ lang: "en", region: "IN" }),
+    );
+    renderWithProviders(<LandingGame />);
+
+    expect(await screen.findByText("0 of 10")).toBeInTheDocument();
+    expect(document.querySelector('p[lang="en"]')).not.toBeNull();
+  });
+
   it("remembers a pick saved as just a language", async () => {
     window.localStorage.setItem(KEY, JSON.stringify("uk"));
     renderWithProviders(<LandingGame />);
@@ -152,7 +215,7 @@ describe("LandingGame", () => {
   });
 
   it.each([
-    ["English", JSON.stringify("en")],
+    ["an unknown language", JSON.stringify("zz")],
     ["garbage", "not json{"],
   ])("falls back to the cards for a stored pick that is %s", async (_n, stored) => {
     window.localStorage.setItem(KEY, stored);
