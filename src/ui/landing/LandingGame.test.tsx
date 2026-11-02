@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
-import { LANG_CODES, LANGUAGES } from "../../shared/languages";
+import { LANG_CODES, LANGUAGES, regionName } from "../../shared/languages";
 import { LandingGame } from "./LandingGame";
 
 const KEY = "parlo.visitor";
@@ -38,8 +38,17 @@ describe("LandingGame", () => {
       natives.map((c) => `${LANGUAGES[c].name}${LANGUAGES[c].endonym}`),
     );
     const spanish = (await card(/Español/)).closest("li") as HTMLElement;
-    expect(spanish.querySelectorAll("img")).toHaveLength(4);
-    expect(container.querySelector('img[src="/flags/es.svg"]')).not.toBeNull();
+    expect(
+      [...spanish.querySelectorAll("img")].map((img) =>
+        img.getAttribute("src"),
+      ),
+    ).toEqual([
+      "/flags/es.svg",
+      "/flags/mx.svg",
+      "/flags/co.svg",
+      "/flags/bo.svg",
+    ]);
+    expect(container.querySelector('img[src="/flags/ar.svg"]')).toBeNull();
   });
 
   it("shows every country of a language once it is picked, the first one selected", async () => {
@@ -48,8 +57,12 @@ describe("LandingGame", () => {
     await userEvent.click(await card(/Español/));
 
     const countries = screen.getByRole("group", { name: "Spanish countries" });
-    expect(within(countries).getAllByRole("button")).toHaveLength(
-      LANGUAGES.es.regions.length,
+    const names = within(countries)
+      .getAllByRole("button")
+      .map((b) => b.textContent ?? "");
+    expect(names).toHaveLength(LANGUAGES.es.regions.length);
+    expect(names).toEqual(
+      LANGUAGES.es.regions.map(regionName).sort((a, b) => a.localeCompare(b)),
     );
     expect(
       within(countries).getByRole("button", { name: "Spain", pressed: true }),

@@ -22,6 +22,17 @@ import classes from "./LandingGame.module.css";
 const CARDS = 10;
 
 /**
+ * The flags previewed on a language's card, where they should differ from the first four countries of its list.
+ * Spanish shows Bolivia instead of Argentina, since a Bolivian is among the people this is for.
+ */
+const PREVIEW_REGIONS: Partial<Record<Lang, readonly string[]>> = {
+  es: ["ES", "MX", "CO", "BO"],
+};
+
+const byCountryName = (a: string, b: string) =>
+  regionName(a).localeCompare(regionName(b));
+
+/**
  * A round of Starter cards for someone who has not signed up: pick your language, then flip through ten cards
  * with it up front and English and French behind. It needs no account and makes no request of ours: the deck is
  * static. The pick is remembered, so the signup picker can start from it.
@@ -104,9 +115,11 @@ export function LandingGame() {
                   </span>
                   {!open && (
                     <span className={classes.flags} aria-hidden="true">
-                      {regions.slice(0, 4).map((code) => (
-                        <Flag key={code} region={code} size="34px" />
-                      ))}
+                      {(PREVIEW_REGIONS[lang] ?? regions.slice(0, 4)).map(
+                        (code) => (
+                          <Flag key={code} region={code} size="34px" />
+                        ),
+                      )}
                     </span>
                   )}
                 </button>
@@ -116,7 +129,7 @@ export function LandingGame() {
                       aria-label={`${name} countries`}
                       className={classes.pills}
                     >
-                      {regions.map((code) => (
+                      {[...regions].sort(byCountryName).map((code) => (
                         <button
                           key={code}
                           type="button"
