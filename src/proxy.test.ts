@@ -39,10 +39,17 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost:3000/");
   });
 
-  it("lets a signed-in visitor through to the app at /", () => {
+  it("sends a signed-in visitor from / to Practice", () => {
     const response = proxy(request("/", SESSION_COOKIE));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/practice",
+    );
+  });
+
+  it("lets a signed-in visitor through to Translate", () => {
+    const response = proxy(request("/translate", SESSION_COOKIE));
     expect(response.headers.get("x-middleware-next")).toBe("1");
-    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
 
   it("lets a signed-in visitor through on other paths", () => {
@@ -71,6 +78,7 @@ describe("proxy", () => {
       "/welcome",
       "/phrasebook",
       "/practice",
+      "/translate",
     ])("guards %s", (path) => {
       expect(matcher.test(path)).toBe(true);
     });

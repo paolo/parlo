@@ -48,7 +48,7 @@ describe("AppLayout", () => {
   it("renders the three main sections as links", () => {
     renderWithProviders(<AppLayout>content</AppLayout>);
     for (const [name, href] of [
-      ["Translate", "/"],
+      ["Translate", "/translate"],
       ["Phrasebook", "/phrasebook"],
       ["Practice", "/practice"],
     ]) {

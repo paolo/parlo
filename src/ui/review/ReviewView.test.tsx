@@ -274,7 +274,7 @@ describe("ReviewView", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
       "href",
-      "/",
+      "/translate",
     );
     // A way forward in place: Starter always has cards.
     await click("Use Starter");
