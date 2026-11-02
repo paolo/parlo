@@ -7,6 +7,7 @@ import { useProfile, useTranslate } from "../queries";
 import { LanguageStrip } from "./LanguageStrip";
 import { TranslateForm } from "./TranslateForm";
 import classes from "./TranslateView.module.css";
+import { TranslatingPhrase } from "./TranslatingPhrase";
 import { TranslationResult } from "./TranslationResult";
 
 /** Two columns from 900px: the phrase on the left, what it really means on the right. One column on a phone. */
@@ -40,7 +41,12 @@ export function TranslateView() {
           <TranslateForm onSubmit={onSubmit} pending={translate.isPending} />
         </div>
         <div className={classes.output}>
-          {translate.data ? (
+          {translate.isPending ? (
+            <TranslatingPhrase
+              text={translate.variables}
+              languages={profile.data?.languages ?? []}
+            />
+          ) : translate.data ? (
             <TranslationResult
               key={translate.data.group.id}
               group={translate.data.group}
