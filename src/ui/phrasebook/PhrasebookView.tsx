@@ -47,7 +47,7 @@ export function PhrasebookView() {
                 ? "You haven't added any favorites yet. Add a translation to your favorites to keep it here and practice it."
                 : "Nothing here yet. Translate something and it will show up."}
             </Text>
-            <Button component={Link} href="/">
+            <Button component={Link} href="/translate">
               Go to Translate
             </Button>
           </Stack>

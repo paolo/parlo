@@ -104,7 +104,7 @@ export function PracticeRound({
         {onUseStarter && (
           <Group gap="sm">
             <Button onClick={onUseStarter}>Use Starter</Button>
-            <Button component={Link} href="/" variant="default">
+            <Button component={Link} href="/translate" variant="default">
               Go to Translate
             </Button>
           </Group>

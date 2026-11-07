@@ -3,7 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 // Optimistic check only (cookie present?), so unauthenticated visitors land on /sign-in quickly.
 // Real authorization happens in every route handler via withSession.
-// The one exception is the root: signed-out visitors get the landing page, rewritten so the URL stays "/".
+// The one exception is the root: signed-out visitors get the landing page, rewritten so the URL stays "/", and
+// signed-in ones go to Practice, the front door of the app.
 export function proxy(request: NextRequest) {
   // /welcome only exists as the rewrite target below; visiting it directly goes to the real address.
   if (request.nextUrl.pathname === "/welcome") {
@@ -14,6 +15,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(new URL("/welcome", request.url));
     }
     return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+  if (request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/practice", request.url));
   }
   return NextResponse.next();
 }

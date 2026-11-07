@@ -159,7 +159,7 @@ describe("PhrasebookView", () => {
     expect(await screen.findByText(/nothing here yet/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
       "href",
-      "/",
+      "/translate",
     );
   });
 
@@ -210,7 +210,7 @@ describe("PhrasebookView", () => {
       ).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
         "href",
-        "/",
+        "/translate",
       );
     });
 

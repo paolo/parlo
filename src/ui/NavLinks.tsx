@@ -7,7 +7,7 @@ import classes from "./NavLinks.module.css";
 
 const links = [
   { href: "/practice", label: "Practice", icon: IconCards },
-  { href: "/", label: "Translate", icon: IconLanguage },
+  { href: "/translate", label: "Translate", icon: IconLanguage },
   { href: "/phrasebook", label: "Phrasebook", icon: IconBook },
 ] as const;
 
