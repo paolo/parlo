@@ -104,4 +104,47 @@ describe("PhraseCard", () => {
     );
     expect(screen.getByText("Дощ іде")).toHaveAttribute("lang", "uk");
   });
+  it("shows a given badge on the root instead of Original", () => {
+    renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "es",
+          text: "¿Qué hora es?",
+          isRoot: true,
+          correctedFrom: "que hora es",
+        }}
+        badge={<span>Corrected</span>}
+      />,
+    );
+    expect(screen.getByText("Corrected")).toBeInTheDocument();
+    expect(screen.queryByText(/original/i)).toBeNull();
+  });
+
+  it("morphs from the previous text, keeping the phrase's language", () => {
+    const { container } = renderWithProviders(
+      <PhraseCard
+        phrase={{
+          lang: "es",
+          text: "¿Qué hora es?",
+          isRoot: true,
+          correctedFrom: "que hora es",
+        }}
+        morphFrom="que hora es"
+      />,
+    );
+    const phrase = container.querySelector("p[lang='es']");
+    expect(phrase).toHaveAttribute("dir", "auto");
+    expect(phrase?.querySelector("[aria-hidden='true']")).not.toBeNull();
+    expect(screen.getByText("¿Qué hora es?")).toBeInTheDocument();
+  });
+
+  it("does not morph when the text did not change", () => {
+    const { container } = renderWithProviders(
+      <PhraseCard
+        phrase={{ lang: "es", text: "Hola", isRoot: true, correctedFrom: null }}
+        morphFrom="Hola"
+      />,
+    );
+    expect(container.querySelector("[aria-hidden='true']")).toBeNull();
+  });
 });

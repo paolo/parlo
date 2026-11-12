@@ -1,0 +1,62 @@
+/* A text turning into another: removed letters fold away, then added ones spring in under a shade that fades. */
+.part {
+  display: inline-block;
+  white-space: pre-wrap;
+  vertical-align: bottom;
+}
+
+.del {
+  overflow: hidden;
+  animation: fold-out var(--parlo-dur-strike) var(--parlo-ease-draw) forwards;
+}
+
+.add {
+  border-radius: 4px;
+  animation:
+    spring-in var(--parlo-dur-pop) var(--parlo-ease-spring)
+    calc(var(--parlo-dur-strike) * 0.5) both,
+    shade-out calc(var(--parlo-dur-strike) * 2) ease-out
+    calc(var(--parlo-dur-strike) * 0.5) both;
+}
+
+/* Assistive tech reads the final text only; the animated letters are hidden from it. */
+.final {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes fold-out {
+  from {
+    opacity: 1;
+    max-width: 2em;
+  }
+  to {
+    opacity: 0;
+    max-width: 0;
+    transform: translateY(-0.2em);
+  }
+}
+
+@keyframes spring-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shade-out {
+  from {
+    background: var(--parlo-icon-btn-on-accent);
+  }
+  to {
+    background: transparent;
+  }
+}
