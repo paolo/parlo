@@ -13,7 +13,7 @@ import { NextLesson } from "./NextLesson";
 const STEPS = [
   {
     title: "Save what you hear",
-    text: "Add a translation to your favorites and it joins your phrasebook.",
+    text: "Save a translation and it joins your phrasebook.",
   },
   {
     title: "Flip through on the go",

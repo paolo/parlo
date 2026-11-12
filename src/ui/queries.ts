@@ -34,7 +34,6 @@ export const queryKeys = {
   history: ["phrase-groups", { recent: true }] as const,
   favorites: ["phrase-groups", { favorite: true }] as const,
   allFavorites: ["phrase-groups", { favorite: true, all: true }] as const,
-  recent: ["phrase-groups", { favorite: false, all: true }] as const,
 };
 
 export function useUsage() {
@@ -90,15 +89,6 @@ export function useAllFavorites() {
     queryKey: queryKeys.allFavorites,
     queryFn: () =>
       apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=true&limit=100"),
-  });
-}
-
-/** The latest 100 translations in one request, for practicing from history. */
-export function useRecentGroups() {
-  return useQuery({
-    queryKey: queryKeys.recent,
-    queryFn: () =>
-      apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=false&limit=100"),
   });
 }
 

@@ -5,10 +5,13 @@ import { makeGroup } from "@/test/fixtures";
 import { renderWithProviders } from "@/test/render";
 import { FavoriteButton } from "./FavoriteButton";
 
+const notify = vi.hoisted(() => vi.fn());
+vi.mock("@mantine/notifications", () => ({ notifications: { show: notify } }));
+
 describe("FavoriteButton", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("stars the group and then offers to remove it", async () => {
+  it("saves the group and then offers to remove it", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -17,12 +20,10 @@ describe("FavoriteButton", () => {
     );
     renderWithProviders(<FavoriteButton group={makeGroup()} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Add to phrasebook" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
-      await screen.findByRole("button", { name: "Remove from phrasebook" }),
+      await screen.findByRole("button", { name: "Remove from saved" }),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(
       "/api/phrase-groups/g1",
@@ -33,7 +34,7 @@ describe("FavoriteButton", () => {
     );
   });
 
-  it("unstars a favorite", async () => {
+  it("removes a saved group", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => Response.json({ group: makeGroup() })),
@@ -43,11 +44,11 @@ describe("FavoriteButton", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Remove from phrasebook" }),
+      screen.getByRole("button", { name: "Remove from saved" }),
     );
 
     expect(
-      await screen.findByRole("button", { name: "Add to phrasebook" }),
+      await screen.findByRole("button", { name: "Save" }),
     ).toBeInTheDocument();
   });
 
@@ -58,13 +59,38 @@ describe("FavoriteButton", () => {
     );
     renderWithProviders(<FavoriteButton group={makeGroup()} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Add to phrasebook" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
-      await screen.findByRole("button", { name: "Add to phrasebook" }),
+      await screen.findByRole("button", { name: "Save" }),
     ).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a bookmark, filled once saved", () => {
+    renderWithProviders(
+      <FavoriteButton group={makeGroup({ isFavorite: true })} />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Remove from saved" }),
+    ).toHaveAttribute("data-saved", "true");
+  });
+
+  it("warns that the saved phrases could not be updated", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: "not_found" }, { status: 404 })),
+    );
+    renderWithProviders(<FavoriteButton group={makeGroup()} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await vi.waitFor(() =>
+      expect(notify).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Couldn't update your saved phrases",
+        }),
+      ),
+    );
   });
 });

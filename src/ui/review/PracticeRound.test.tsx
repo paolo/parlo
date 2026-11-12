@@ -30,7 +30,6 @@ function round(props: Partial<Parameters<typeof PracticeRound>[0]> = {}) {
   return renderWithProviders(
     <PracticeRound
       groups={groups}
-      source="starter"
       count={2}
       practice="es"
       languages={languages}
@@ -57,7 +56,7 @@ describe("PracticeRound", () => {
     round();
 
     expect(await screen.findByText("Uno")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /favorites/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
     expect(fetchStub).not.toHaveBeenCalled();
   });
 
@@ -65,7 +64,7 @@ describe("PracticeRound", () => {
     round({ favorites: true });
 
     expect(
-      await screen.findByRole("button", { name: "Add to favorites" }),
+      await screen.findByRole("button", { name: "Save" }),
     ).toBeInTheDocument();
   });
 

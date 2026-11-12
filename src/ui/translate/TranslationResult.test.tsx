@@ -21,14 +21,10 @@ describe("TranslationResult", () => {
     const { rerender } = renderWithProviders(
       <TranslationResult group={group} pending />,
     );
-    expect(
-      screen.queryByRole("button", { name: /favorite|phrasebook/i }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
 
     rerender(<TranslationResult group={group} />);
-    expect(
-      screen.getByRole("button", { name: /favorite|phrasebook/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
   });
 
   it("renders one card per phrase for any languages and names the detected one", () => {

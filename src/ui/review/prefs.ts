@@ -1,4 +1,5 @@
-export type Source = "favorites" | "recent" | "starter";
+/** `favorites` is shown as Saved; the id stays so remembered choices still match. */
+export type Source = "favorites" | "starter";
 export const COUNTS = [5, 10, 20] as const;
 export type Count = (typeof COUNTS)[number];
 
@@ -10,7 +11,7 @@ export interface PracticePrefs {
 export const DEFAULT_PREFS: PracticePrefs = { source: "starter", count: 10 };
 
 const KEY = "parlo.practice";
-const SOURCES: readonly Source[] = ["favorites", "recent", "starter"];
+const SOURCES: readonly Source[] = ["favorites", "starter"];
 
 /** How many cards a round deals: the count, or every phrase when the source has fewer. */
 export function dealtCount(count: Count, available: number): number {
@@ -52,7 +53,7 @@ export function savePrefs(prefs: PracticePrefs): void {
   }
 }
 
-/** Favorites with nothing in it can't be practiced, so a user with none starts on Starter. */
+/** Saved with nothing in it can't be practiced, so a user with none starts on Starter. */
 export function resolveSource(
   prefs: PracticePrefs,
   favoritesCount: number,

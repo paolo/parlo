@@ -22,7 +22,7 @@ import { BUNDLE_LOADERS } from "../../shared/bundles";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { errorMessage } from "../errors";
 import { LangLabel } from "../LangLabel";
-import { useAllFavorites, useProfile, useRecentGroups } from "../queries";
+import { useAllFavorites, useProfile } from "../queries";
 import { bundleToGroups } from "./bundles";
 import { PracticeRound } from "./PracticeRound";
 import { AnswerModeSelect, Field, PracticeSetup } from "./PracticeSetup";
@@ -64,10 +64,6 @@ export function ReviewView({ random }: { random?: () => number }) {
   );
   const counts = {
     favorites: favorites.data?.items.length,
-    recent:
-      sources.recent.status === "ready"
-        ? sources.recent.groups.length
-        : undefined,
     starter:
       sources.starter.status === "ready"
         ? sources.starter.groups.length
@@ -204,7 +200,6 @@ export function ReviewView({ random }: { random?: () => number }) {
         <PracticeRound
           key={`${practice}-${typing ? answerLang : "flip"}-${round}`}
           groups={deck.groups}
-          source={source}
           count={dealt}
           practice={practice}
           answerLang={typing ? answerLang : undefined}
@@ -224,12 +219,11 @@ type DeckState =
   | { status: "error"; error: unknown }
   | { status: "ready"; groups: PhraseGroupDTO[] };
 
-/** Every source's phrases; Recent and Starter load up front so the setup can show how many each has. */
+/** Every source's phrases; Starter loads up front so the setup can show how many it has. */
 function useSources(
   favorites: PhraseGroupDTO[] | undefined,
   profileLangs: Lang[] | undefined,
 ): Record<Source, DeckState> {
-  const recent = useRecentGroups();
   const starter = useQuery({
     queryKey: ["bundle", "starter"],
     queryFn: () => BUNDLE_LOADERS.starter(),
@@ -258,7 +252,6 @@ function useSources(
     favorites: favorites
       ? { status: "ready", groups: favorites }
       : { status: "pending" },
-    recent: state(recent, recent.data?.items),
     starter: state(starter, starterGroups),
   };
 }

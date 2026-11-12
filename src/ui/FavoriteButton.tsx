@@ -2,19 +2,19 @@
 
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import { IconBookmark, IconBookmarkFilled } from "@tabler/icons-react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import { errorMessage } from "./errors";
 import { useSetFavorite } from "./queries";
 
-/** Favorites or unfavorites a whole phrase group, which adds it to or removes it from the phrasebook. */
+/** Saves or un-saves a whole phrase group, which adds it to or removes it from the phrasebook. */
 export function FavoriteButton({ group }: { group: PhraseGroupDTO }) {
   const setFavorite = useSetFavorite();
   // Show the requested state while saving, then the saved one.
   const isFavorite = setFavorite.isPending
     ? setFavorite.variables.isFavorite
     : (setFavorite.data?.group.isFavorite ?? group.isFavorite);
-  const label = isFavorite ? "Remove from phrasebook" : "Add to phrasebook";
+  const label = isFavorite ? "Remove from saved" : "Save";
 
   function toggle() {
     setFavorite.mutate(
@@ -23,7 +23,7 @@ export function FavoriteButton({ group }: { group: PhraseGroupDTO }) {
         onError: (error) =>
           notifications.show({
             color: "red",
-            title: "Couldn't update your phrasebook",
+            title: "Couldn't update your saved phrases",
             message: errorMessage(error),
           }),
       },
@@ -38,11 +38,12 @@ export function FavoriteButton({ group }: { group: PhraseGroupDTO }) {
         onClick={toggle}
         disabled={setFavorite.isPending}
         aria-label={label}
+        data-saved={isFavorite}
       >
         {isFavorite ? (
-          <IconStarFilled size={20} />
+          <IconBookmarkFilled size={20} />
         ) : (
-          <IconStar size={20} stroke={1.8} />
+          <IconBookmark size={20} stroke={1.8} />
         )}
       </ActionIcon>
     </Tooltip>

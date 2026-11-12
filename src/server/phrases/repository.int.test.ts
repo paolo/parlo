@@ -402,7 +402,11 @@ describe("DrizzlePhraseRepository", () => {
   describe("setCorrectionApplied", () => {
     const applied = (userId: string): NewPhraseGroup => ({
       ...newGroup(userId),
-      correction: { ...newGroup(userId).correction!, applied: true },
+      correction: {
+        text: "Llegué tarde",
+        explanation: "«Me tarde» no existe.",
+        applied: true,
+      },
       phrases: newGroup(userId).phrases.map((p) =>
         p.isRoot
           ? { ...p, text: "Llegué tarde", correctedFrom: "me tarde" }
