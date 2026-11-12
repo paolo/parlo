@@ -12,11 +12,17 @@ import { POST } from "./route";
 const getSession = vi.hoisted(() => vi.fn());
 vi.mock("@/server/auth/session", () => ({ getSession }));
 
-// `after` only works inside a Next request; here it just keeps the promise so tests can wait for it.
+// `after` only works inside a Next request. Here it keeps the callbacks, and `runAfter` runs them as Next would once
+// the response is finished; `background` holds what they started, so tests can wait for it.
+const deferred = vi.hoisted(() => [] as (() => Promise<unknown>)[]);
 const background = vi.hoisted(() => [] as Promise<unknown>[]);
 vi.mock("next/server", () => ({
-  after: (task: Promise<unknown>) => background.push(task),
+  after: (task: () => Promise<unknown>) => deferred.push(task),
 }));
+function runAfter() {
+  for (const task of deferred.splice(0)) background.push(task());
+  return Promise.all(background);
+}
 
 const deps = vi.hoisted(() => ({
   limiter: { check: vi.fn(), record: vi.fn(), usage: vi.fn() },
@@ -81,6 +87,7 @@ describe("POST /api/translations", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     background.length = 0;
+    deferred.length = 0;
     getSession.mockResolvedValue({ userId: "u1" });
     deps.limiter.check.mockResolvedValue({ ok: true });
     deps.repository.insertGroup.mockResolvedValue(savedGroup);
@@ -95,7 +102,7 @@ describe("POST /api/translations", () => {
 
     expect(res.status).toBe(201);
     await events(res);
-    await Promise.all(background);
+    await runAfter();
     expect(res.headers.get("Server-Timing")).toMatch(
       /^profile;dur=.+, limit;dur=.+, detect;dur=/,
     );
@@ -121,7 +128,7 @@ describe("POST /api/translations", () => {
   it("answers with the group it stores: same id and time, root first", async () => {
     const res = await post({ text: "me late the train" });
     const done = (await events(res)).at(-1);
-    await Promise.all(background);
+    await runAfter();
     const group = (done as Extract<TranslationEvent, { type: "done" }>).group;
 
     const saved = deps.repository.insertGroup.mock
@@ -164,7 +171,7 @@ describe("POST /api/translations", () => {
       lang: "es",
       text: "Voy a perder el tren",
     });
-    await Promise.all(background);
+    await runAfter();
   });
 
   it("sends done only once the group is stored", async () => {
@@ -185,7 +192,7 @@ describe("POST /api/translations", () => {
 
     finishSave(savedGroup);
     expect((await all).at(-1)?.type).toBe("done");
-    await Promise.all(background);
+    await runAfter();
   });
 
   it("ends with save_failed when the write fails, still records usage, and logs it", async () => {
@@ -194,7 +201,7 @@ describe("POST /api/translations", () => {
 
     const res = await post({ text: "me late the train" });
     const lines = await events(res);
-    await Promise.all(background);
+    await runAfter();
 
     expect(res.status).toBe(201);
     expect(lines.at(-1)).toEqual({ type: "error", error: "save_failed" });
@@ -213,8 +220,8 @@ describe("POST /api/translations", () => {
     const done = lines.at(-1) as Extract<TranslationEvent, { type: "done" }>;
 
     expect(done.type).toBe("done");
-    expect(background).toHaveLength(1);
-    await Promise.all(background);
+    expect(deps.repository.pruneHistory).not.toHaveBeenCalled();
+    await runAfter();
     expect(deps.repository.pruneHistory).toHaveBeenCalledWith(
       "u1",
       done.group.id,
@@ -227,7 +234,7 @@ describe("POST /api/translations", () => {
 
     const res = await post({ text: "me late the train" });
     expect((await events(res)).at(-1)?.type).toBe("done");
-    await Promise.all(background);
+    await runAfter();
     expect(error).toHaveBeenCalledWith(
       "Trimming history failed",
       expect.any(Error),

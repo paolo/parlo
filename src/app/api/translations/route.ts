@@ -133,7 +133,8 @@ export const POST = withSession(async (req, { userId }) => {
         ),
       ]);
       if (saved) {
-        after(
+        // A callback, not a promise: it starts only once the response is finished.
+        after(() =>
           getPhraseRepository()
             .pruneHistory(userId, stored.id)
             .catch((error) => console.error("Trimming history failed", error)),
