@@ -25,13 +25,13 @@ Everything is built on `corrections-and-recent` (it holds the spec and this plan
 
 ## Progress
 
-- [ ] 1. Store corrections applied; set them applied or not
-- [ ] 2. `done` after the save, trim after the response, `save_failed`
-- [ ] 3. Recent filter and the Saved / Recent Phrasebook
-- [ ] 4. Saved and the bookmark everywhere; Practice without Recent
-- [ ] 5. Bookmark taps while the answer streams
-- [ ] 6. Character diff and `MorphText`
-- [ ] 7. Corrected / Suggestion pill replaces the correction box
+- [x] 1. Store corrections applied; set them applied or not
+- [x] 2. `done` after the save, trim after the response, `save_failed`
+- [x] 3. Recent filter and the Saved / Recent Phrasebook
+- [x] 4. Saved and the bookmark everywhere; Practice without Recent
+- [x] 5. Bookmark taps while the answer streams
+- [x] 6. Character diff and `MorphText`
+- [x] 7. Corrected / Suggestion pill replaces the correction box
 
 ## Global Constraints
 
