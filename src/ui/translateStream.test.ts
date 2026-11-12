@@ -96,6 +96,20 @@ describe("streamTranslation", () => {
     expect(error.body).toEqual({ error: "translation_failed" });
   });
 
+  it("throws save_failed when the answer could not be saved", async () => {
+    fetching(
+      streamed([
+        '{"type":"detected","lang":"en"}\n{"type":"error","error":"save_failed"}\n',
+      ]),
+    );
+
+    const error = await streamTranslation("hi", () => {}).catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(502);
+    expect(error.body).toEqual({ error: "save_failed" });
+  });
+
   it("throws translation_failed when the stream stops before its last line", async () => {
     fetching(streamed(['{"type":"detected","lang":"en"}\n{"type":"transl']));
 

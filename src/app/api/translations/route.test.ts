@@ -20,7 +20,11 @@ vi.mock("next/server", () => ({
 
 const deps = vi.hoisted(() => ({
   limiter: { check: vi.fn(), record: vi.fn(), usage: vi.fn() },
-  repository: { insertGroup: vi.fn(), findById: vi.fn() },
+  repository: {
+    insertGroup: vi.fn(),
+    findById: vi.fn(),
+    pruneHistory: vi.fn(),
+  },
   profiles: { getProfile: vi.fn(), replaceProfile: vi.fn() },
   translator: undefined as unknown,
 }));
@@ -80,6 +84,7 @@ describe("POST /api/translations", () => {
     getSession.mockResolvedValue({ userId: "u1" });
     deps.limiter.check.mockResolvedValue({ ok: true });
     deps.repository.insertGroup.mockResolvedValue(savedGroup);
+    deps.repository.pruneHistory.mockResolvedValue(undefined);
     deps.profiles.getProfile.mockResolvedValue(esEnFr);
     translator = new FakeTranslator(result);
     deps.translator = translator;
@@ -162,7 +167,7 @@ describe("POST /api/translations", () => {
     await Promise.all(background);
   });
 
-  it("does not wait for the write: the last line is out while it is still pending", async () => {
+  it("sends done only once the group is stored", async () => {
     let finishSave: (group: PhraseGroupDTO) => void = () => {};
     deps.repository.insertGroup.mockReturnValue(
       new Promise<PhraseGroupDTO>((resolve) => {
@@ -171,15 +176,19 @@ describe("POST /api/translations", () => {
     );
 
     const res = await post({ text: "me late the train" });
-    const lines = await events(res);
+    const all = events(res);
+    const early = await Promise.race([
+      all.then(() => "ended"),
+      new Promise((resolve) => setTimeout(() => resolve("waiting"), 50)),
+    ]);
+    expect(early).toBe("waiting");
 
-    expect(res.status).toBe(201);
-    expect(lines.at(-1)?.type).toBe("done");
     finishSave(savedGroup);
+    expect((await all).at(-1)?.type).toBe("done");
     await Promise.all(background);
   });
 
-  it("still answers 201 when the write fails, and logs it", async () => {
+  it("ends with save_failed when the write fails, still records usage, and logs it", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     deps.repository.insertGroup.mockRejectedValue(new Error("db down"));
 
@@ -188,9 +197,39 @@ describe("POST /api/translations", () => {
     await Promise.all(background);
 
     expect(res.status).toBe(201);
-    expect(lines.at(-1)?.type).toBe("done");
+    expect(lines.at(-1)).toEqual({ type: "error", error: "save_failed" });
+    expect(lines.some((e) => e.type === "done")).toBe(false);
+    expect(deps.limiter.record).toHaveBeenCalled();
+    expect(deps.repository.pruneHistory).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledWith(
       "Saving a translation failed",
+      expect.any(Error),
+    );
+  });
+
+  it("trims history after the response, not before done", async () => {
+    const res = await post({ text: "me late the train" });
+    const lines = await events(res);
+    const done = lines.at(-1) as Extract<TranslationEvent, { type: "done" }>;
+
+    expect(done.type).toBe("done");
+    expect(background).toHaveLength(1);
+    await Promise.all(background);
+    expect(deps.repository.pruneHistory).toHaveBeenCalledWith(
+      "u1",
+      done.group.id,
+    );
+  });
+
+  it("only logs a failed trim", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    deps.repository.pruneHistory.mockRejectedValue(new Error("db down"));
+
+    const res = await post({ text: "me late the train" });
+    expect((await events(res)).at(-1)?.type).toBe("done");
+    await Promise.all(background);
+    expect(error).toHaveBeenCalledWith(
+      "Trimming history failed",
       expect.any(Error),
     );
   });

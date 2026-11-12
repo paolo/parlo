@@ -46,8 +46,13 @@ export interface PhrasePage {
 }
 
 export interface PhraseRepository {
-  /** Inserts the group and its phrases in one transaction. */
+  /** Inserts the group and its phrases in one transaction. Does not trim history: see `pruneHistory`. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
+  /**
+   * Keeps at most the history limit of the user's groups by deleting the oldest unsaved ones. Saved groups and
+   * `keepId` (the group just stored) are never deleted.
+   */
+  pruneHistory(userId: string, keepId: string): Promise<void>;
   /**
    * Favorites the user's group for the bundle phrase, creating it from `group` when there is none. Never makes
    * a second group for the same ref. Throws PhrasebookFullError when it would be a new favorite past the cap.

@@ -28,6 +28,7 @@ export function TranslationResult({
   profileLangs = [],
   layout = "row",
   pending = false,
+  unsaved = false,
 }: {
   group: PhraseGroupDTO;
   /** The viewer's languages in profile order; the cards follow it. */
@@ -36,6 +37,8 @@ export function TranslationResult({
   layout?: "row" | "stack";
   /** The answer is still arriving: `group` is a partial one with no id, so there is nothing to favorite yet. */
   pending?: boolean;
+  /** The answer could not be stored: there is nothing to save or correct. */
+  unsaved?: boolean;
 }) {
   const accept = useSetCorrectionApplied();
   // Null until the user chooses: a suggestion not yet applied is shown, an applied one stays out of the way.
@@ -78,7 +81,9 @@ export function TranslationResult({
             </Tooltip>
           )}
           {/* Keyed so a new translation doesn't inherit the previous one's star. */}
-          {!pending && <FavoriteButton key={group.id} group={current} />}
+          {!pending && !unsaved && (
+            <FavoriteButton key={group.id} group={current} />
+          )}
         </Group>
       </Group>
       {root && current.correction && showCorrection && (

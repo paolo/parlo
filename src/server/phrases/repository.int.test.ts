@@ -257,12 +257,27 @@ describe("DrizzlePhraseRepository", () => {
     const small = { historyLimit: 3, phrasebookLimit: 100 };
     const listIds = async (userId: string) =>
       (await repo().listGroups(userId, { limit: 100 })).items.map((g) => g.id);
+    /** Saves a group and trims history, as the translation route does once it has answered. */
+    const save = async (limits: PhraseLimits, group: NewPhraseGroup) => {
+      const saved = await repo(limits).insertGroup(group);
+      await repo(limits).pruneHistory(group.userId, saved.id);
+      return saved;
+    };
+
+    it("insertGroup alone deletes nothing over the limit", async () => {
+      const owner = await createTestUser();
+      for (let i = 0; i < 4; i++) {
+        await repo(small).insertGroup(newGroup(owner.id));
+      }
+
+      expect(await listIds(owner.id)).toHaveLength(4);
+    });
 
     it("removes the oldest group once the limit is passed and keeps the newest", async () => {
       const owner = await createTestUser();
       const ids: string[] = [];
       for (let i = 0; i < 4; i++) {
-        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+        ids.push((await save(small, newGroup(owner.id))).id);
       }
 
       expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[1]]);
@@ -270,11 +285,11 @@ describe("DrizzlePhraseRepository", () => {
 
     it("spares a starred group and removes the oldest unstarred one instead", async () => {
       const owner = await createTestUser();
-      const first = await repo(small).insertGroup(newGroup(owner.id));
+      const first = await save(small, newGroup(owner.id));
       await repo(small).setFavorite(owner.id, first.id, true);
       const ids = [first.id];
       for (let i = 0; i < 3; i++) {
-        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+        ids.push((await save(small, newGroup(owner.id))).id);
       }
 
       expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[0]]);
@@ -286,9 +301,7 @@ describe("DrizzlePhraseRepository", () => {
         const g = await repo().insertGroup(newGroup(owner.id));
         await repo().setFavorite(owner.id, g.id, true);
       }
-      await repo({ historyLimit: 2, phrasebookLimit: 100 }).insertGroup(
-        newGroup(owner.id),
-      );
+      await save({ historyLimit: 2, phrasebookLimit: 100 }, newGroup(owner.id));
 
       // Over the limit, but the only unstarred group is the one just saved: all four stay.
       expect(await listIds(owner.id)).toHaveLength(4);
@@ -302,10 +315,8 @@ describe("DrizzlePhraseRepository", () => {
     it("never prunes another user's groups", async () => {
       const owner = await createTestUser();
       const other = await createTestUser();
-      for (let i = 0; i < 3; i++)
-        await repo(small).insertGroup(newGroup(other.id));
-      for (let i = 0; i < 4; i++)
-        await repo(small).insertGroup(newGroup(owner.id));
+      for (let i = 0; i < 3; i++) await save(small, newGroup(other.id));
+      for (let i = 0; i < 4; i++) await save(small, newGroup(owner.id));
 
       expect(await listIds(other.id)).toHaveLength(3);
     });

@@ -79,9 +79,12 @@ export class DrizzlePhraseRepository implements PhraseRepository {
           })),
         )
         .returning();
-      await this.pruneHistory(tx, group.userId, inserted.id);
       return toDTO({ ...inserted, phrases });
     });
+  }
+
+  async pruneHistory(userId: string, keepId: string): Promise<void> {
+    await this.db.transaction((tx) => this.pruneHistoryIn(tx, userId, keepId));
   }
 
   async favoriteBundleGroup(group: NewBundleGroup): Promise<PhraseGroupDTO> {
@@ -112,7 +115,7 @@ export class DrizzlePhraseRepository implements PhraseRepository {
           .insert(phrase)
           .values(group.phrases.map((p) => ({ ...p, groupId: inserted.id })))
           .returning();
-        await this.pruneHistory(tx, group.userId, inserted.id);
+        await this.pruneHistoryIn(tx, group.userId, inserted.id);
         return toDTO({ ...inserted, phrases });
       });
     } catch (error) {
@@ -149,7 +152,7 @@ export class DrizzlePhraseRepository implements PhraseRepository {
    * Keeps at most `historyLimit` groups by deleting the oldest unstarred ones. Starred groups and the
    * group just saved are never deleted, so a user full of starred groups simply stays over the limit.
    */
-  private async pruneHistory(
+  private async pruneHistoryIn(
     tx: Pick<Db, "select" | "delete">,
     userId: string,
     justSavedId: string,

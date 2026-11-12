@@ -1,6 +1,7 @@
 "use client";
 
 import { notifications } from "@mantine/notifications";
+import { ApiError } from "../api";
 import { errorMessage } from "../errors";
 import { InstallBanner } from "../install/InstallBanner";
 import { partialGroup } from "../phrases";
@@ -15,19 +16,30 @@ import { TranslationResult } from "./TranslationResult";
 export function TranslateView() {
   const translate = useTranslate();
   const profile = useProfile();
-  const partial = translate.isPending
-    ? partialGroup(translate.variables, translate.progress)
-    : null;
+  // The answer came through but could not be stored: keep showing it, with nothing that needs a stored group.
+  const unsaved = isSaveFailed(translate.error);
+  const partial =
+    translate.isPending || unsaved
+      ? partialGroup(translate.variables ?? "", translate.progress)
+      : null;
   const shown = partial ?? translate.data?.group;
 
   function onSubmit(text: string) {
     translate.mutate(text, {
       onError: (error) =>
-        notifications.show({
-          color: "red",
-          title: "Couldn't translate",
-          message: errorMessage(error),
-        }),
+        notifications.show(
+          isSaveFailed(error)
+            ? {
+                color: "red",
+                title: "Couldn't save this translation",
+                message: "It won't be in your phrasebook.",
+              }
+            : {
+                color: "red",
+                title: "Couldn't translate",
+                message: errorMessage(error),
+              },
+        ),
     });
   }
 
@@ -59,7 +71,8 @@ export function TranslateView() {
             <TranslationResult
               key={translate.submittedAt}
               group={shown}
-              pending={partial !== null}
+              pending={translate.isPending}
+              unsaved={unsaved}
               profileLangs={profile.data?.languages.map((l) => l.lang)}
               layout="stack"
             />
@@ -73,4 +86,8 @@ export function TranslateView() {
       <InstallBanner />
     </>
   );
+}
+
+function isSaveFailed(error: unknown): boolean {
+  return error instanceof ApiError && error.body?.error === "save_failed";
 }
