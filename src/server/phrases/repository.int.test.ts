@@ -228,6 +228,37 @@ describe("DrizzlePhraseRepository", () => {
         ids[0],
       ]);
     });
+    it("lists only groups created since the given time, still paged newest first", async () => {
+      const owner = await createTestUser();
+      const [old, recent, newest] = await seed(owner.id, 3);
+      const now = Date.now();
+      for (const [id, at] of [
+        [old, new Date(now - 8 * 86_400_000)],
+        [recent, new Date(now - 6 * 86_400_000)],
+        [newest, new Date(now - 3_600_000)],
+      ] as const) {
+        await getDb().execute(
+          sql`update phrase_group set created_at = ${at.toISOString()}::timestamptz where id = ${id}`,
+        );
+      }
+
+      const pages = [];
+      let cursor: string | undefined;
+      do {
+        const page = await repo().listGroups(owner.id, {
+          limit: 1,
+          cursor,
+          since: new Date(now - 7 * 86_400_000),
+        });
+        pages.push(page);
+        cursor = page.nextCursor ?? undefined;
+      } while (cursor);
+
+      expect(pages.flatMap((p) => p.items.map((g) => g.id))).toEqual([
+        newest,
+        recent,
+      ]);
+    });
   });
 
   describe("deleteGroup", () => {

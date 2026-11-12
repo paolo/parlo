@@ -31,7 +31,7 @@ export const queryKeys = {
   usage: ["usage"] as const,
   profile: ["profile"] as const,
   phraseGroups: ["phrase-groups"] as const,
-  history: ["phrase-groups", { favorite: false }] as const,
+  history: ["phrase-groups", { recent: true }] as const,
   favorites: ["phrase-groups", { favorite: true }] as const,
   allFavorites: ["phrase-groups", { favorite: true, all: true }] as const,
   recent: ["phrase-groups", { favorite: false, all: true }] as const,
@@ -68,14 +68,15 @@ export function useTranslate() {
 
 const PAGE_SIZE = 20;
 
-/** History (or, with `favorite`, the phrasebook) one page at a time. */
-export function usePhraseGroups({ favorite }: { favorite: boolean }) {
+/** The saved phrases (the phrasebook) or the last few days of translations, one page at a time. */
+export function usePhraseGroups({ list }: { list: "saved" | "recent" }) {
+  const saved = list === "saved";
   return useInfiniteQuery({
-    queryKey: favorite ? queryKeys.favorites : queryKeys.history,
+    queryKey: saved ? queryKeys.favorites : queryKeys.history,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       apiFetch<PhraseGroupsPage>(
-        `/api/phrase-groups?favorite=${favorite}&limit=${PAGE_SIZE}${
+        `/api/phrase-groups?${saved ? "favorite=true" : "recent=true"}&limit=${PAGE_SIZE}${
           pageParam ? `&cursor=${pageParam}` : ""
         }`,
       ),

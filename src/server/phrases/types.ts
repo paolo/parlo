@@ -82,10 +82,18 @@ export interface PhraseRepository {
   ): Promise<PhraseGroupDTO | null>;
   /** Returns false when the user has no group with that id. */
   deleteGroup(userId: string, id: string): Promise<boolean>;
-  /** One page of the user's groups, newest first; `favorite` keeps only the starred ones. */
+  /**
+   * One page of the user's groups, newest first; `favorite` keeps only the saved ones, `since` only those
+   * created at or after it.
+   */
   listGroups(
     userId: string,
-    options: { favorite?: boolean; limit: number; cursor?: string },
+    options: {
+      favorite?: boolean;
+      since?: Date;
+      limit: number;
+      cursor?: string;
+    },
   ): Promise<PhrasePage>;
 }
 

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { phrase, phraseGroup } from "../db/schema";
 import { decodeCursor, encodeCursor } from "./cursor";
@@ -290,15 +290,17 @@ export class DrizzlePhraseRepository implements PhraseRepository {
     userId: string,
     {
       favorite = false,
+      since,
       limit,
       cursor,
-    }: { favorite?: boolean; limit: number; cursor?: string },
+    }: { favorite?: boolean; since?: Date; limit: number; cursor?: string },
   ): Promise<PhrasePage> {
     const position = cursor ? decodeCursor(cursor) : null;
     const rows = await this.db.query.phraseGroup.findMany({
       where: and(
         eq(phraseGroup.userId, userId),
         favorite ? eq(phraseGroup.isFavorite, true) : undefined,
+        since ? gte(phraseGroup.createdAt, since) : undefined,
         position
           ? sql`(${phraseGroup.createdAt}, ${phraseGroup.id}) < (${position.createdAt}::timestamptz, ${position.id}::uuid)`
           : undefined,

@@ -36,6 +36,7 @@ describe("GET /api/phrase-groups", () => {
     expect(await res.json()).toEqual({ items, nextCursor: null, limit: 500 });
     expect(repository.listGroups).toHaveBeenCalledWith("u1", {
       favorite: false,
+      since: undefined,
       limit: 20,
       cursor: undefined,
     });
@@ -47,9 +48,27 @@ describe("GET /api/phrase-groups", () => {
     expect(await res.json()).toMatchObject({ limit: 100 });
     expect(repository.listGroups).toHaveBeenCalledWith("u1", {
       favorite: true,
+      since: undefined,
       limit: 100,
       cursor: undefined,
     });
+  });
+
+  it("passes a 7-day since for recent=true", async () => {
+    vi.useFakeTimers({ now: new Date("2026-11-11T12:00:00Z") });
+    try {
+      const res = await get("?recent=true");
+
+      expect(res.status).toBe(200);
+      expect(repository.listGroups).toHaveBeenCalledWith("u1", {
+        favorite: false,
+        since: new Date("2026-11-04T12:00:00Z"),
+        limit: 20,
+        cursor: undefined,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("passes a valid cursor through and returns the next one", async () => {
@@ -70,6 +89,7 @@ describe("GET /api/phrase-groups", () => {
     ["a non-numeric limit", "?limit=x"],
     ["a malformed cursor", "?cursor=garbage"],
     ["an unknown favorite value", "?favorite=maybe"],
+    ["an unknown recent value", "?recent=yes"],
   ])("rejects %s with 400 without querying", async (_name, query) => {
     const res = await get(query);
 

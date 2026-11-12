@@ -4,9 +4,14 @@ import { getEnv } from "@/server/env";
 import { withSession } from "@/server/http/responses";
 import { parseQuery } from "@/server/http/validation";
 import { decodeCursor } from "@/server/phrases/cursor";
+import { RECENT_DAYS } from "@/shared/recent";
 
 const querySchema = z.object({
   favorite: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  recent: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
@@ -20,10 +25,13 @@ const querySchema = z.object({
 export const GET = withSession(async (req, { userId }) => {
   const parsed = parseQuery(req, querySchema);
   if ("response" in parsed) return parsed.response;
-  const { favorite, limit, cursor } = parsed.data;
+  const { favorite, recent, limit, cursor } = parsed.data;
 
   const page = await getPhraseRepository().listGroups(userId, {
     favorite,
+    since: recent
+      ? new Date(Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000)
+      : undefined,
     limit,
     cursor,
   });
