@@ -75,6 +75,7 @@ export function TranslateView() {
               unsaved={unsaved}
               profileLangs={profile.data?.languages.map((l) => l.lang)}
               layout="stack"
+              animate
             />
           ) : (
             <p className={classes.empty}>

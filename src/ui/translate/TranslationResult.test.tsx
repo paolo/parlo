@@ -83,29 +83,28 @@ describe("TranslationResult", () => {
     expect(screen.getByText("Il pleut des cordes")).toBeInTheDocument();
   });
 
-  describe("accepting a correction", () => {
+  describe("corrections", () => {
     afterEach(() => vi.unstubAllGlobals());
 
     const correction = {
       text: "Llegué tarde",
       explanation: "«Me tarde» no existe.",
-      accepted: false,
     };
-    const typed = makeGroup({
-      correction,
-      phrases: [
-        { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
-        { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
-        {
-          lang: "fr",
-          text: "J'étais en retard",
-          isRoot: false,
-          correctedFrom: null,
-        },
-      ],
-    });
-    const accepted = {
-      ...typed,
+    const others = [
+      {
+        lang: "en" as const,
+        text: "I was late",
+        isRoot: false,
+        correctedFrom: null,
+      },
+      {
+        lang: "fr" as const,
+        text: "J'étais en retard",
+        isRoot: false,
+        correctedFrom: null,
+      },
+    ];
+    const applied = makeGroup({
       correction: { ...correction, accepted: true },
       phrases: [
         {
@@ -114,145 +113,159 @@ describe("TranslationResult", () => {
           isRoot: true,
           correctedFrom: "me tarde",
         },
-        ...typed.phrases.slice(1),
+        ...others,
       ],
-    };
-
-    it("replaces the root text and tucks the alert away once applied", async () => {
-      vi.stubGlobal(
-        "fetch",
-        // The labels also ask for the profile, to show the region the user picked.
-        vi.fn(async (url: string) =>
-          Response.json(
-            url === "/api/profile" ? { languages: [] } : { group: accepted },
-          ),
-        ),
-      );
-      renderWithProviders(<TranslationResult group={typed} />);
-
-      await userEvent.click(
-        screen.getByRole("button", { name: /use corrected/i }),
-      );
-
-      expect(
-        await screen.findByRole("button", { name: "Show correction" }),
-      ).toBeInTheDocument();
-      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
-      expect(fetch).toHaveBeenCalledWith(
-        "/api/phrase-groups/g1",
-        expect.objectContaining({
-          method: "PATCH",
-          body: JSON.stringify({ correctionApplied: true }),
-        }),
-      );
-      expect(screen.getAllByText("Llegué tarde").length).toBeGreaterThan(0);
-      expect(
-        screen.queryByRole("button", { name: /use corrected/i }),
-      ).not.toBeInTheDocument();
-
-      // It can be brought back, now saying it was applied, with the original struck out.
-      await userEvent.click(
-        screen.getByRole("button", { name: "Show correction" }),
-      );
-      expect(screen.getByText("Correction applied")).toBeInTheDocument();
-      expect(screen.getByText("me tarde")).toBeInTheDocument();
     });
-
-    it("keeps the button and shows an error when the request fails", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async () =>
-          Response.json({ error: "no_correction" }, { status: 409 }),
-        ),
-      );
-      renderWithProviders(<TranslationResult group={typed} />);
-
-      await userEvent.click(
-        screen.getByRole("button", { name: /use corrected/i }),
-      );
-
-      await vi.waitFor(() => expect(notify).toHaveBeenCalled());
-      expect(notify).toHaveBeenCalledWith(
-        expect.objectContaining({
-          color: "red",
-          message: "There is no correction to apply.",
-        }),
-      );
-      expect(
-        screen.getByRole("button", { name: /use corrected/i }),
-      ).toBeInTheDocument();
-    });
-  });
-
-  describe("showing and hiding the correction", () => {
-    const base = makeGroup({
+    const typed = makeGroup({
+      correction: { ...correction, accepted: false },
       phrases: [
-        {
-          lang: "es",
-          text: "Llegué tarde",
-          isRoot: true,
-          correctedFrom: "me tarde",
-        },
-        { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
-        {
-          lang: "fr",
-          text: "J'étais en retard",
-          isRoot: false,
-          correctedFrom: null,
-        },
+        { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
+        ...others,
       ],
     });
-    const withCorrection = (accepted: boolean) => ({
-      ...base,
-      correction: {
-        text: "Llegué tarde",
-        explanation: "«Me tarde» no existe.",
-        accepted,
-      },
+    const plain = makeGroup({
+      phrases: [
+        { lang: "es", text: "Llegué tarde", isRoot: true, correctedFrom: null },
+        ...others,
+      ],
     });
 
-    it("shows a suggestion that is not applied yet, and lets it be dismissed and brought back", async () => {
-      renderWithProviders(<TranslationResult group={withCorrection(false)} />);
+    /** Answers the profile, and a PATCH with `group` (or the error status). */
+    function api(group: unknown, status = 200) {
+      const fn = vi.fn(async (url: string, _init?: RequestInit) =>
+        url === "/api/profile"
+          ? Response.json({ languages: [] })
+          : status === 200
+            ? Response.json({ group })
+            : Response.json({ error: "not_found" }, { status }),
+      );
+      vi.stubGlobal("fetch", fn);
+      return fn;
+    }
+    const patches = (fn: ReturnType<typeof api>) =>
+      fn.mock.calls.filter(
+        ([, init]) => (init as RequestInit)?.method === "PATCH",
+      );
+
+    it("shows Corrected on the root card for an applied correction, with no box above the cards", () => {
+      renderWithProviders(<TranslationResult group={applied} />);
 
       expect(
-        screen.getByText("This could sound more natural"),
+        screen.getByRole("button", { name: "Corrected" }),
       ).toBeInTheDocument();
-      await userEvent.click(
-        screen.getByRole("button", { name: "Hide correction" }),
-      );
-      expect(
-        screen.queryByText("This could sound more natural"),
-      ).not.toBeInTheDocument();
-
-      await userEvent.click(
-        screen.getByRole("button", { name: "Show correction" }),
-      );
-      expect(
-        screen.getByText("This could sound more natural"),
-      ).toBeInTheDocument();
-    });
-
-    it("starts with an applied correction hidden, as in History and the Phrasebook", async () => {
-      renderWithProviders(<TranslationResult group={withCorrection(true)} />);
-
-      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
-      await userEvent.click(
-        screen.getByRole("button", { name: "Show correction" }),
-      );
-      expect(screen.getByText("Correction applied")).toBeInTheDocument();
-
-      await userEvent.click(
-        screen.getByRole("button", { name: "Hide correction" }),
-      );
-      expect(screen.queryByText("Correction applied")).not.toBeInTheDocument();
-    });
-
-    it("offers nothing when there is no correction", () => {
-      renderWithProviders(<TranslationResult group={base} />);
-
+      expect(screen.getByText("Llegué tarde")).toBeInTheDocument();
+      expect(screen.queryByText(/original/i)).toBeNull();
+      expect(screen.queryByRole("alert")).toBeNull();
       expect(
         screen.queryByRole("button", { name: "Show correction" }),
-      ).not.toBeInTheDocument();
+      ).toBeNull();
+    });
+
+    it("Keep what I typed shows the typed text at once and saves it", async () => {
+      const fn = api(typed);
+      renderWithProviders(<TranslationResult group={applied} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Corrected" }));
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Keep what I typed" }),
+      );
+
+      expect(
+        await screen.findByRole("button", { name: "Suggestion" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("me tarde", { selector: "p" }),
+      ).toBeInTheDocument();
+      expect(patches(fn)).toHaveLength(1);
+      expect(patches(fn)[0][0]).toBe("/api/phrase-groups/g1");
+      expect(
+        JSON.parse((patches(fn)[0][1] as RequestInit).body as string),
+      ).toEqual({
+        correctionApplied: false,
+      });
+    });
+
+    it("goes back and warns when the change fails", async () => {
+      api(null, 404);
+      renderWithProviders(<TranslationResult group={applied} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Corrected" }));
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Keep what I typed" }),
+      );
+
+      await vi.waitFor(() =>
+        expect(notify).toHaveBeenCalledWith(
+          expect.objectContaining({
+            color: "red",
+            title: "Couldn't change the correction",
+          }),
+        ),
+      );
+      expect(
+        screen.getByRole("button", { name: "Corrected" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Llegué tarde", { selector: "p" }),
+      ).toBeInTheDocument();
+    });
+
+    it("shows Suggestion for an old group whose correction was not applied, and applies it", async () => {
+      const fn = api(applied);
+      renderWithProviders(<TranslationResult group={typed} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Suggestion" }));
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Use the correction" }),
+      );
+
+      expect(
+        await screen.findByRole("button", { name: "Corrected" }),
+      ).toBeInTheDocument();
+      expect(
+        JSON.parse((patches(fn)[0][1] as RequestInit).body as string),
+      ).toEqual({
+        correctionApplied: true,
+      });
+    });
+
+    it("offers no pill when there is no correction", () => {
+      renderWithProviders(<TranslationResult group={plain} />);
+
+      expect(screen.getByText("Original")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /corrected|suggestion/i }),
+      ).toBeNull();
+    });
+
+    it("morphs the root card when the stored group replaces the partial one", () => {
+      const partial = makeGroup({
+        id: "",
+        phrases: [
+          { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
+          ...others,
+        ],
+      });
+      const { container, rerender } = renderWithProviders(
+        <TranslationResult group={partial} pending animate />,
+      );
+      expect(
+        container.querySelector("[aria-hidden='true'] [data-kind]"),
+      ).toBeNull();
+
+      rerender(<TranslationResult group={applied} animate />);
+
+      expect(container.querySelector("[data-kind='del']")).not.toBeNull();
+      expect(screen.getByText("Llegué tarde")).toBeInTheDocument();
+    });
+
+    it("does not morph in the Phrasebook", () => {
+      const { container, rerender } = renderWithProviders(
+        <TranslationResult group={typed} />,
+      );
+      rerender(<TranslationResult group={applied} />);
+
+      expect(container.querySelector("[data-kind]")).toBeNull();
     });
   });
 });

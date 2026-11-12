@@ -175,6 +175,37 @@ describe("PhrasebookView", () => {
     );
   });
 
+  it("shows the correction pill in one language only on the phrase that was typed", async () => {
+    mockApi([
+      {
+        ...group("a", "Llegué tarde", "J'étais en retard"),
+        correction: {
+          text: "Llegué tarde",
+          explanation: "«Me tarde» no existe.",
+          accepted: true,
+        },
+      },
+    ]);
+    await renderAll();
+    await screen.findByText("Llegué tarde");
+    expect(
+      screen.getByRole("button", { name: "Corrected" }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      await screen.findByRole("radio", { name: /Français/ }),
+    );
+    expect(await screen.findByText("J'étais en retard")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Corrected" })).toBeNull();
+
+    await userEvent.click(
+      await screen.findByRole("radio", { name: /Español/ }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Corrected" }),
+    ).toBeInTheDocument();
+  });
+
   describe("filtering", () => {
     it("starts on Saved and asks only for the saved phrases", async () => {
       const api = mockApi([
