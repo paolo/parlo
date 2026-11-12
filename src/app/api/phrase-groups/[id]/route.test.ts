@@ -11,7 +11,7 @@ vi.mock("@/server/auth/session", () => ({ getSession }));
 const repository = vi.hoisted(() => ({
   setFavorite: vi.fn(),
   deleteGroup: vi.fn(),
-  acceptCorrection: vi.fn(),
+  setCorrectionApplied: vi.fn(),
 }));
 vi.mock("@/server/container", () => ({
   getPhraseRepository: () => repository,
@@ -54,8 +54,9 @@ describe("PATCH /api/phrase-groups/:id", () => {
   it.each([
     ["missing isFavorite", {}],
     ["a non-boolean isFavorite", { isFavorite: "yes" }],
-    ["both actions at once", { isFavorite: true, acceptCorrection: true }],
-    ["acceptCorrection false", { acceptCorrection: false }],
+    ["both actions at once", { isFavorite: true, correctionApplied: true }],
+    ["the old acceptCorrection", { acceptCorrection: true }],
+    ["a non-boolean correctionApplied", { correctionApplied: "no" }],
     ["an unknown key", { other: 1 }],
   ])("rejects %s with 400", async (_name, body) => {
     const res = await patch(body);
@@ -69,30 +70,34 @@ describe("PATCH /api/phrase-groups/:id", () => {
     expect((await patch({ isFavorite: true })).status).toBe(401);
   });
 
-  it("accepts the stored correction and returns the group", async () => {
-    repository.acceptCorrection.mockResolvedValue(starred);
-    const res = await patch({ acceptCorrection: true });
+  it.each([
+    true,
+    false,
+  ])("sets the correction applied (%s) and returns the group", async (applied) => {
+    repository.setCorrectionApplied.mockResolvedValue(starred);
+    const res = await patch({ correctionApplied: applied });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ group: starred });
-    expect(repository.acceptCorrection).toHaveBeenCalledWith("u1", "g1");
+    expect(repository.setCorrectionApplied).toHaveBeenCalledWith(
+      "u1",
+      "g1",
+      applied,
+    );
     expect(repository.setFavorite).not.toHaveBeenCalled();
   });
 
-  it("returns 404 when accepting on a group that isn't the user's", async () => {
-    repository.acceptCorrection.mockResolvedValue(null);
-    expect((await patch({ acceptCorrection: true })).status).toBe(404);
+  it("returns 404 when changing the correction of a group that isn't the user's", async () => {
+    repository.setCorrectionApplied.mockResolvedValue(null);
+    expect((await patch({ correctionApplied: false })).status).toBe(404);
   });
 
-  it.each([
-    "no_correction",
-    "already_accepted",
-  ] as const)("returns 409 %s", async (code) => {
-    repository.acceptCorrection.mockRejectedValue(
-      new CorrectionNotAcceptableError(code),
+  it("returns 409 no_correction", async () => {
+    repository.setCorrectionApplied.mockRejectedValue(
+      new CorrectionNotAcceptableError("no_correction"),
     );
-    const res = await patch({ acceptCorrection: true });
+    const res = await patch({ correctionApplied: true });
     expect(res.status).toBe(409);
-    expect(await res.json()).toEqual({ error: code });
+    expect(await res.json()).toEqual({ error: "no_correction" });
   });
 
   it("returns 409 with the limit when the phrasebook is full", async () => {

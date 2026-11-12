@@ -66,11 +66,18 @@ export class DrizzlePhraseRepository implements PhraseRepository {
           notes: group.notes,
           correctionText: group.correction?.text ?? null,
           correctionExplanation: group.correction?.explanation ?? null,
+          correctionAccepted: group.correction?.applied ?? false,
         })
         .returning();
       const phrases = await tx
         .insert(phrase)
-        .values(group.phrases.map((p) => ({ ...p, groupId: inserted.id })))
+        .values(
+          group.phrases.map((p) => ({
+            ...p,
+            correctedFrom: p.correctedFrom ?? null,
+            groupId: inserted.id,
+          })),
+        )
         .returning();
       await this.pruneHistory(tx, group.userId, inserted.id);
       return toDTO({ ...inserted, phrases });
@@ -174,13 +181,14 @@ export class DrizzlePhraseRepository implements PhraseRepository {
     );
   }
 
-  async acceptCorrection(
+  async setCorrectionApplied(
     userId: string,
     id: string,
+    applied: boolean,
   ): Promise<PhraseGroupDTO | null> {
     if (!UUID.test(id)) return null;
     const found = await this.db.transaction(async (tx) => {
-      // The row lock makes a double click wait for the first accept, then see it as already accepted.
+      // The row lock makes a second request wait for the first, then see the state it left.
       const [group] = await tx
         .select()
         .from(phraseGroup)
@@ -190,20 +198,22 @@ export class DrizzlePhraseRepository implements PhraseRepository {
       if (!group.correctionText || !group.correctionExplanation) {
         throw new CorrectionNotAcceptableError("no_correction");
       }
-      if (group.correctionAccepted) {
-        throw new CorrectionNotAcceptableError("already_accepted");
-      }
+      if (group.correctionAccepted === applied) return true;
       const [root] = await tx
         .select()
         .from(phrase)
         .where(and(eq(phrase.groupId, id), eq(phrase.isRoot, true)));
       await tx
         .update(phrase)
-        .set({ correctedFrom: root.text, text: group.correctionText })
+        .set(
+          applied
+            ? { text: group.correctionText, correctedFrom: root.text }
+            : { text: root.correctedFrom ?? root.text, correctedFrom: null },
+        )
         .where(eq(phrase.id, root.id));
       await tx
         .update(phraseGroup)
-        .set({ correctionAccepted: true })
+        .set({ correctionAccepted: applied })
         .where(eq(phraseGroup.id, id));
       return true;
     });

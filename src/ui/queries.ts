@@ -178,13 +178,14 @@ export function useDeleteGroup() {
   });
 }
 
-export function useAcceptCorrection() {
+/** Applies the group's correction to its root phrase, or puts back what the user typed. */
+export function useSetCorrectionApplied() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
+    mutationFn: ({ id, applied }: { id: string; applied: boolean }) =>
       apiFetch<{ group: PhraseGroupDTO }>(`/api/phrase-groups/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ acceptCorrection: true }),
+        body: JSON.stringify({ correctionApplied: applied }),
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),

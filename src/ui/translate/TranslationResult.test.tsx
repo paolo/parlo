@@ -120,7 +120,7 @@ describe("TranslationResult", () => {
         "/api/phrase-groups/g1",
         expect.objectContaining({
           method: "PATCH",
-          body: JSON.stringify({ acceptCorrection: true }),
+          body: JSON.stringify({ correctionApplied: true }),
         }),
       );
       expect(screen.getAllByText("Llegué tarde").length).toBeGreaterThan(0);
@@ -140,7 +140,7 @@ describe("TranslationResult", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn(async () =>
-          Response.json({ error: "already_accepted" }, { status: 409 }),
+          Response.json({ error: "no_correction" }, { status: 409 }),
         ),
       );
       renderWithProviders(<TranslationResult group={typed} />);
@@ -153,7 +153,7 @@ describe("TranslationResult", () => {
       expect(notify).toHaveBeenCalledWith(
         expect.objectContaining({
           color: "red",
-          message: "That correction was already applied.",
+          message: "There is no correction to apply.",
         }),
       );
       expect(

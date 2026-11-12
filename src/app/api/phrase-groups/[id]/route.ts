@@ -9,7 +9,7 @@ import {
 
 const bodySchema = z.union([
   z.object({ isFavorite: z.boolean() }).strict(),
-  z.object({ acceptCorrection: z.literal(true) }).strict(),
+  z.object({ correctionApplied: z.boolean() }).strict(),
 ]);
 
 export const PATCH = withSession<{ id: string }>(
@@ -20,8 +20,12 @@ export const PATCH = withSession<{ id: string }>(
     const repository = getPhraseRepository();
     try {
       const group =
-        "acceptCorrection" in parsed.data
-          ? await repository.acceptCorrection(userId, params.id)
+        "correctionApplied" in parsed.data
+          ? await repository.setCorrectionApplied(
+              userId,
+              params.id,
+              parsed.data.correctionApplied,
+            )
           : await repository.setFavorite(
               userId,
               params.id,

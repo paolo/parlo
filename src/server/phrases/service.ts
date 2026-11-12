@@ -7,10 +7,11 @@ import {
 import type { NewPhraseGroup, PhraseDTO, PhraseGroupDTO } from "./types";
 
 /**
- * Maps a translation into a phrase group. The detected language is the root, and the root keeps the
- * user's own text: any rewording by the model only appears as a suggested correction. The group gets one
+ * Maps a translation into a phrase group. The detected language is the root. A correction is applied at once: the
+ * root holds the corrected text and keeps what the user typed in `correctedFrom`, so it can be reverted. Any other
+ * rewording by the model (its entry for the root language) is ignored. The group gets one
  * phrase per language of the user's profile. The model must translate into every other language exactly
- * once; its entry for the root language is optional because the root keeps the user's text anyway.
+ * once; its entry for the root language is optional because the root never uses it.
  */
 export function buildNewGroup(
   userId: string,
@@ -44,12 +45,20 @@ export function buildNewGroup(
   return {
     userId,
     notes: result.notes,
-    correction,
-    phrases: languages.map(({ lang }) => ({
-      lang,
-      text: lang === root ? text : (translated.get(lang) as string),
-      isRoot: lang === root,
-    })),
+    correction: correction && { ...correction, applied: true },
+    phrases: languages.map(({ lang }) => {
+      if (lang !== root) {
+        return {
+          lang,
+          text: translated.get(lang) as string,
+          isRoot: false,
+          correctedFrom: null,
+        };
+      }
+      return correction
+        ? { lang, text: correction.text, isRoot: true, correctedFrom: text }
+        : { lang, text, isRoot: true, correctedFrom: null };
+    }),
   };
 }
 
@@ -72,9 +81,16 @@ export function describeNewGroup(
     isFavorite: false,
     bundleRef: null,
     notes: group.notes,
-    correction: group.correction && { ...group.correction, accepted: false },
+    correction: group.correction && {
+      text: group.correction.text,
+      explanation: group.correction.explanation,
+      accepted: group.correction.applied ?? false,
+    },
     phrases: orderPhraseDTOs(
-      group.phrases.map((p) => ({ ...p, correctedFrom: null })),
+      group.phrases.map((p) => ({
+        ...p,
+        correctedFrom: p.correctedFrom ?? null,
+      })),
     ),
   };
 }

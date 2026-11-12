@@ -20,7 +20,7 @@ import { FavoriteButton } from "../FavoriteButton";
 import { LangLabel } from "../LangLabel";
 import { PhraseCard } from "../PhraseCard";
 import { orderPhrases } from "../phrases";
-import { useAcceptCorrection } from "../queries";
+import { useSetCorrectionApplied } from "../queries";
 import { roleFor } from "../roles";
 
 export function TranslationResult({
@@ -37,7 +37,7 @@ export function TranslationResult({
   /** The answer is still arriving: `group` is a partial one with no id, so there is nothing to favorite yet. */
   pending?: boolean;
 }) {
-  const accept = useAcceptCorrection();
+  const accept = useSetCorrectionApplied();
   // Null until the user chooses: a suggestion not yet applied is shown, an applied one stays out of the way.
   const [correctionShown, setCorrectionShown] = useState<boolean | null>(null);
   // Show the saved state once accepted, but only for the group that was accepted.
@@ -87,16 +87,19 @@ export function TranslationResult({
           correction={current.correction}
           onClose={() => setCorrectionShown(false)}
           onAccept={() =>
-            accept.mutate(current.id, {
-              // Once applied the box has done its job: tuck it away (it can be shown again).
-              onSuccess: () => setCorrectionShown(false),
-              onError: (error) =>
-                notifications.show({
-                  color: "red",
-                  title: "Couldn't apply the correction",
-                  message: errorMessage(error),
-                }),
-            })
+            accept.mutate(
+              { id: current.id, applied: true },
+              {
+                // Once applied the box has done its job: tuck it away (it can be shown again).
+                onSuccess: () => setCorrectionShown(false),
+                onError: (error) =>
+                  notifications.show({
+                    color: "red",
+                    title: "Couldn't apply the correction",
+                    message: errorMessage(error),
+                  }),
+              },
+            )
           }
           accepting={accept.isPending}
         />

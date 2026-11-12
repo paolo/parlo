@@ -99,10 +99,12 @@ describe("POST /api/translations", () => {
     const saved = deps.repository.insertGroup.mock
       .calls[0][0] as NewPhraseGroup;
     expect(saved.userId).toBe("u1");
+    // The correction is applied before saving; the typed text is kept beside it.
     expect(saved.phrases.find((p) => p.isRoot)).toEqual({
       lang: "en",
-      text: "me late the train",
+      text: "I'm going to miss the train",
       isRoot: true,
+      correctedFrom: "me late the train",
     });
     expect(deps.limiter.record).toHaveBeenCalledWith(
       "u1",
@@ -127,15 +129,15 @@ describe("POST /api/translations", () => {
       correction: {
         text: "I'm going to miss the train",
         explanation: "«Me late» no es inglés.",
-        accepted: false,
+        accepted: true,
       },
     });
     expect(group.phrases.map((p) => p.lang)).toEqual(["en", "es", "fr"]);
     expect(group.phrases[0]).toEqual({
       lang: "en",
-      text: "me late the train",
+      text: "I'm going to miss the train",
       isRoot: true,
-      correctedFrom: null,
+      correctedFrom: "me late the train",
     });
   });
 
