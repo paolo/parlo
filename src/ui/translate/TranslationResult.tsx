@@ -35,7 +35,7 @@ export function TranslationResult({
   profileLangs?: Lang[];
   /** "row" puts the cards side by side when there is room; "stack" always one under the other. */
   layout?: "row" | "stack";
-  /** The answer is still arriving: `group` is a partial one with no id, so there is nothing to favorite yet. */
+  /** The answer is still arriving: `group` is a partial one with no id, so a bookmark tap waits for it. */
   pending?: boolean;
   /** The answer could not be stored: there is nothing to save or correct. */
   unsaved?: boolean;
@@ -80,10 +80,9 @@ export function TranslationResult({
               </ActionIcon>
             </Tooltip>
           )}
-          {/* Keyed so a new translation doesn't inherit the previous one's star. */}
-          {!pending && !unsaved && (
-            <FavoriteButton key={group.id} group={current} />
-          )}
+          {/* Not keyed by id: a tap made while the answer streams must survive the stored group arriving. A new
+              translation remounts the whole result (TranslateView keys it by request). */}
+          {!unsaved && <FavoriteButton group={current} pending={pending} />}
         </Group>
       </Group>
       {root && current.correction && showCorrection && (

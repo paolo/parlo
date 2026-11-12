@@ -16,15 +16,41 @@ const phrase = (lang: "pt" | "en" | "fr", text: string, isRoot = false) => ({
 });
 
 describe("TranslationResult", () => {
-  it("offers no star while the answer is still arriving, and does once it is stored", () => {
-    const group = makeGroup();
-    const { rerender } = renderWithProviders(
-      <TranslationResult group={group} pending />,
+  it("offers the bookmark while the answer is still arriving", () => {
+    renderWithProviders(
+      <TranslationResult group={makeGroup({ id: "" })} pending />,
     );
-    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
 
-    rerender(<TranslationResult group={group} />);
-    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+  it("offers no bookmark for an answer that could not be saved", () => {
+    renderWithProviders(<TranslationResult group={makeGroup()} unsaved />);
+    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
+  });
+
+  it("keeps a pending tap when the stored group replaces the partial one", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        url === "/api/profile"
+          ? Response.json({ languages: [] })
+          : Response.json({ group: makeGroup({ isFavorite: true }) }),
+      ),
+    );
+    const { rerender } = renderWithProviders(
+      <TranslationResult group={makeGroup({ id: "" })} pending />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    rerender(<TranslationResult group={makeGroup()} />);
+
+    await vi.waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/phrase-groups/g1",
+        expect.objectContaining({ method: "PATCH" }),
+      ),
+    );
+    vi.unstubAllGlobals();
   });
 
   it("renders one card per phrase for any languages and names the detected one", () => {
