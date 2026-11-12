@@ -16,6 +16,7 @@ export function CorrectionPill({
   lang,
   applied,
   onChange,
+  busy = false,
   animate = false,
 }: {
   correction: { text: string; explanation: string };
@@ -25,6 +26,8 @@ export function CorrectionPill({
   lang: Lang;
   applied: boolean;
   onChange: (applied: boolean) => void;
+  /** A change is being saved: nothing can be switched until it settles, so taps never race. */
+  busy?: boolean;
   /** Pops in, as when the correction has just arrived. */
   animate?: boolean;
 }) {
@@ -37,6 +40,8 @@ export function CorrectionPill({
       onChange={setOpened}
       position="bottom-start"
       withinPortal
+      trapFocus
+      returnFocus
       classNames={{ dropdown: classes.dropdown }}
     >
       <Popover.Target>
@@ -45,6 +50,7 @@ export function CorrectionPill({
           className={`${classes.pill} ${animate ? classes.arrive : ""}`}
           onClick={() => setOpened((o) => !o)}
           aria-expanded={opened}
+          disabled={busy}
         >
           <Icon size={13} stroke={1.8} aria-hidden />
           {applied ? "Corrected" : "Suggestion"}
@@ -66,6 +72,7 @@ export function CorrectionPill({
         <p className={classes.explanation}>{correction.explanation}</p>
         <Button
           variant="outline"
+          disabled={busy}
           onClick={() => {
             setOpened(false);
             onChange(!applied);

@@ -86,6 +86,7 @@ export function GroupItem({
                     lang={single.phrase.lang}
                     applied={correction.applied}
                     onChange={correction.setApplied}
+                    busy={correction.busy}
                   />
                 ) : undefined
               }

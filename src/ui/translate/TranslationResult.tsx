@@ -86,6 +86,7 @@ export function TranslationResult({
                   lang={phrase.lang}
                   applied={correction.applied}
                   onChange={correction.setApplied}
+                  busy={correction.busy}
                   animate={animate}
                 />
               ) : undefined

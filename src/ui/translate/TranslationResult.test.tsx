@@ -185,6 +185,37 @@ describe("TranslationResult", () => {
       });
     });
 
+    it("takes no second change while the first is being saved", async () => {
+      let finish: (res: Response) => void = () => {};
+      const fn = vi.fn((url: string, _init?: RequestInit) =>
+        url === "/api/profile"
+          ? Promise.resolve(Response.json({ languages: [] }))
+          : new Promise<Response>((resolve) => {
+              finish = resolve;
+            }),
+      );
+      vi.stubGlobal("fetch", fn);
+      renderWithProviders(<TranslationResult group={applied} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "Corrected" }));
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Keep what I typed" }),
+      );
+
+      const pill = screen.getByRole("button", { name: "Suggestion" });
+      expect(pill).toBeDisabled();
+      await userEvent.click(pill);
+      expect(
+        screen.queryByRole("button", { name: "Use the correction" }),
+      ).toBeNull();
+      expect(
+        fn.mock.calls.filter(([, init]) => init?.method === "PATCH"),
+      ).toHaveLength(1);
+
+      finish(Response.json({ group: typed }));
+      await vi.waitFor(() => expect(pill).toBeEnabled());
+    });
+
     it("goes back and warns when the change fails", async () => {
       api(null, 404);
       renderWithProviders(<TranslationResult group={applied} />);

@@ -38,5 +38,5 @@ export function useCorrection(group: PhraseGroupDTO) {
     );
   }
 
-  return { shown, applied, typed, setApplied };
+  return { shown, applied, typed, setApplied, busy: mutation.isPending };
 }

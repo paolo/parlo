@@ -60,4 +60,30 @@ describe("CorrectionPill", () => {
     );
     expect(onChange).toHaveBeenCalledWith(true);
   });
+  it("moves keyboard focus into the bubble and back to the pill", async () => {
+    renderWithProviders(
+      <CorrectionPill
+        correction={correction}
+        typed="que hora es"
+        lang="es"
+        applied
+        onChange={() => {}}
+      />,
+    );
+    const pill = screen.getByRole("button", { name: "Corrected" });
+    pill.focus();
+
+    await userEvent.keyboard("{Enter}");
+    const keep = await screen.findByRole("button", {
+      name: "Keep what I typed",
+    });
+    await vi.waitFor(() =>
+      expect(keep.closest("[role='dialog']")).toContainElement(
+        document.activeElement as HTMLElement,
+      ),
+    );
+
+    await userEvent.keyboard("{Escape}");
+    await vi.waitFor(() => expect(pill).toHaveFocus());
+  });
 });
