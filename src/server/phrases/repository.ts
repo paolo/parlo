@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { phrase, phraseGroup } from "../db/schema";
 import { decodeCursor, encodeCursor } from "./cursor";
@@ -66,15 +66,25 @@ export class DrizzlePhraseRepository implements PhraseRepository {
           notes: group.notes,
           correctionText: group.correction?.text ?? null,
           correctionExplanation: group.correction?.explanation ?? null,
+          correctionAccepted: group.correction?.applied ?? false,
         })
         .returning();
       const phrases = await tx
         .insert(phrase)
-        .values(group.phrases.map((p) => ({ ...p, groupId: inserted.id })))
+        .values(
+          group.phrases.map((p) => ({
+            ...p,
+            correctedFrom: p.correctedFrom ?? null,
+            groupId: inserted.id,
+          })),
+        )
         .returning();
-      await this.pruneHistory(tx, group.userId, inserted.id);
       return toDTO({ ...inserted, phrases });
     });
+  }
+
+  async pruneHistory(userId: string, keepId: string): Promise<void> {
+    await this.db.transaction((tx) => this.pruneHistoryIn(tx, userId, keepId));
   }
 
   async favoriteBundleGroup(group: NewBundleGroup): Promise<PhraseGroupDTO> {
@@ -105,7 +115,7 @@ export class DrizzlePhraseRepository implements PhraseRepository {
           .insert(phrase)
           .values(group.phrases.map((p) => ({ ...p, groupId: inserted.id })))
           .returning();
-        await this.pruneHistory(tx, group.userId, inserted.id);
+        await this.pruneHistoryIn(tx, group.userId, inserted.id);
         return toDTO({ ...inserted, phrases });
       });
     } catch (error) {
@@ -142,7 +152,7 @@ export class DrizzlePhraseRepository implements PhraseRepository {
    * Keeps at most `historyLimit` groups by deleting the oldest unstarred ones. Starred groups and the
    * group just saved are never deleted, so a user full of starred groups simply stays over the limit.
    */
-  private async pruneHistory(
+  private async pruneHistoryIn(
     tx: Pick<Db, "select" | "delete">,
     userId: string,
     justSavedId: string,
@@ -174,13 +184,14 @@ export class DrizzlePhraseRepository implements PhraseRepository {
     );
   }
 
-  async acceptCorrection(
+  async setCorrectionApplied(
     userId: string,
     id: string,
+    applied: boolean,
   ): Promise<PhraseGroupDTO | null> {
     if (!UUID.test(id)) return null;
     const found = await this.db.transaction(async (tx) => {
-      // The row lock makes a double click wait for the first accept, then see it as already accepted.
+      // The row lock makes a second request wait for the first, then see the state it left.
       const [group] = await tx
         .select()
         .from(phraseGroup)
@@ -190,20 +201,22 @@ export class DrizzlePhraseRepository implements PhraseRepository {
       if (!group.correctionText || !group.correctionExplanation) {
         throw new CorrectionNotAcceptableError("no_correction");
       }
-      if (group.correctionAccepted) {
-        throw new CorrectionNotAcceptableError("already_accepted");
-      }
+      if (group.correctionAccepted === applied) return true;
       const [root] = await tx
         .select()
         .from(phrase)
         .where(and(eq(phrase.groupId, id), eq(phrase.isRoot, true)));
       await tx
         .update(phrase)
-        .set({ correctedFrom: root.text, text: group.correctionText })
+        .set(
+          applied
+            ? { text: group.correctionText, correctedFrom: root.text }
+            : { text: root.correctedFrom ?? root.text, correctedFrom: null },
+        )
         .where(eq(phrase.id, root.id));
       await tx
         .update(phraseGroup)
-        .set({ correctionAccepted: true })
+        .set({ correctionAccepted: applied })
         .where(eq(phraseGroup.id, id));
       return true;
     });
@@ -277,15 +290,17 @@ export class DrizzlePhraseRepository implements PhraseRepository {
     userId: string,
     {
       favorite = false,
+      since,
       limit,
       cursor,
-    }: { favorite?: boolean; limit: number; cursor?: string },
+    }: { favorite?: boolean; since?: Date; limit: number; cursor?: string },
   ): Promise<PhrasePage> {
     const position = cursor ? decodeCursor(cursor) : null;
     const rows = await this.db.query.phraseGroup.findMany({
       where: and(
         eq(phraseGroup.userId, userId),
         favorite ? eq(phraseGroup.isFavorite, true) : undefined,
+        since ? gte(phraseGroup.createdAt, since) : undefined,
         position
           ? sql`(${phraseGroup.createdAt}, ${phraseGroup.id}) < (${position.createdAt}::timestamptz, ${position.id}::uuid)`
           : undefined,

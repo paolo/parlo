@@ -15,6 +15,7 @@ import { notifications } from "@mantine/notifications";
 import { IconTrash } from "@tabler/icons-react";
 import type { PhraseGroupDTO } from "@/server/phrases/types";
 import { LANGUAGES, type Lang } from "../../shared/languages";
+import { CorrectionPill } from "../CorrectionPill";
 import { errorMessage } from "../errors";
 import { FavoriteButton } from "../FavoriteButton";
 import { PhraseCard } from "../PhraseCard";
@@ -22,6 +23,7 @@ import { pickPhrase } from "../phrases";
 import { useDeleteGroup } from "../queries";
 import { roleFor } from "../roles";
 import { TranslationResult } from "../translate/TranslationResult";
+import { useCorrection } from "../useCorrection";
 import type { ShowIn } from "./ShowInSelect";
 
 export function GroupItem({
@@ -48,7 +50,9 @@ export function GroupItem({
     });
   }
 
-  const single = showIn === "all" ? null : pickPhrase(group, showIn);
+  const correction = useCorrection(group);
+  const shown = correction.shown;
+  const single = showIn === "all" ? null : pickPhrase(shown, showIn);
   return (
     <Paper withBorder radius="sm" p="md">
       <Stack gap="sm">
@@ -74,6 +78,18 @@ export function GroupItem({
             <PhraseCard
               phrase={single.phrase}
               langRole={roleFor(single.phrase.lang, profileLangs)}
+              badge={
+                single.phrase.isRoot && shown.correction ? (
+                  <CorrectionPill
+                    correction={shown.correction}
+                    typed={correction.typed}
+                    lang={single.phrase.lang}
+                    applied={correction.applied}
+                    onChange={correction.setApplied}
+                    busy={correction.busy}
+                  />
+                ) : undefined
+              }
             />
             {single.fallback && (
               <Text size="sm" c="dimmed">

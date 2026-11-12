@@ -107,35 +107,49 @@ export const POST = withSession(async (req, { userId }) => {
     try {
       const result = await run;
       const group = buildNewGroup(userId, text, result, languages);
-      // The answer is on screen already; the group gets its id and time here so the last line can describe
-      // it, and the write runs beside the usage record and on past the response. Usage is still awaited:
-      // the quota meter refetches right after, and the ledger is what stops runaway spend.
+      // The group gets its id and time here so the last line can describe it.
       const stored = {
         ...group,
         id: crypto.randomUUID(),
         createdAt: new Date(),
       };
-      const saveStarted = performance.now();
-      after(
-        getPhraseRepository()
-          .insertGroup(stored)
-          .then(
-            () =>
-              console.info(
-                `Translation saved in ${(performance.now() - saveStarted).toFixed(1)}ms`,
-              ),
-            (error) => console.error("Saving a translation failed", error),
-          ),
-      );
-      await timer.time("record", () =>
-        limiter.record(userId, "translation", result.usage),
-      );
+      // The cards are on screen already. `done` waits for the write (beside the usage record), so any id the
+      // client holds is a stored group; the history trim runs after the response. Usage is awaited because the
+      // quota meter refetches right after, and the ledger is what stops runaway spend.
+      const [saved] = await Promise.all([
+        timer.time("save", () =>
+          getPhraseRepository()
+            .insertGroup(stored)
+            .then(
+              () => true,
+              (error) => {
+                console.error("Saving a translation failed", error);
+                return false;
+              },
+            ),
+        ),
+        timer.time("record", () =>
+          limiter.record(userId, "translation", result.usage),
+        ),
+      ]);
+      if (saved) {
+        // A callback, not a promise: it starts only once the response is finished.
+        after(() =>
+          getPhraseRepository()
+            .pruneHistory(userId, stored.id)
+            .catch((error) => console.error("Trimming history failed", error)),
+        );
+      }
       console.info(
         "Translation timing",
         timer.header(),
         `answer;dur=${(performance.now() - modelStarted).toFixed(1)}`,
       );
-      events.push({ type: "done", group: describeNewGroup(stored) });
+      events.push(
+        saved
+          ? { type: "done", group: describeNewGroup(stored) }
+          : { type: "error", error: "save_failed" },
+      );
     } catch (error) {
       console.error("Translation failed", error);
       events.push({ type: "error", error: "translation_failed" });

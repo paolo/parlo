@@ -38,9 +38,6 @@ describe("errorMessage", () => {
     expect(
       errorMessage(new ApiError(409, { error: "phrasebook_full", limit: 100 })),
     ).toBe("Your phrasebook is full (100). Remove one to add another.");
-    expect(errorMessage(new ApiError(409, { error: "already_accepted" }))).toBe(
-      "That correction was already applied.",
-    );
     expect(errorMessage(new ApiError(409, { error: "no_correction" }))).toBe(
       "There is no correction to apply.",
     );

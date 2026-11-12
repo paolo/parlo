@@ -38,6 +38,9 @@ const legacy = makeGroup({
   ],
 });
 
+/** The query strings of the list requests, in order. */
+const requested: string[] = [];
+
 /** A fake API holding `groups`, paged by `pageSize`, where DELETE removes (or 404s on) a group. */
 function mockApi(
   groups: PhraseGroupDTO[],
@@ -47,6 +50,7 @@ function mockApi(
   }: { pageSize?: number; deleteStatus?: number } = {},
 ) {
   let rows = [...groups];
+  requested.length = 0;
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === "/api/profile") return Response.json({ languages: profile });
     if (init?.method === "DELETE") {
@@ -57,6 +61,7 @@ function mockApi(
     }
     const params = new URL(url, "http://x").searchParams;
     const favorite = params.get("favorite") === "true";
+    requested.push(params.toString());
     const cursor = params.get("cursor");
     const start = cursor ? Number(cursor) : 0;
     const matching = favorite ? rows.filter((g) => g.isFavorite) : rows;
@@ -73,11 +78,11 @@ function mockApi(
   return fetchMock;
 }
 
-/** The Phrasebook opens on Favorites; most of these tests are about the full list. */
+/** The Phrasebook opens on Saved; most of these tests are about the recent list. */
 async function renderAll() {
   renderWithProviders(<PhrasebookView />);
   const filter = screen.getByRole("radiogroup", { name: "Phrases" });
-  await userEvent.click(within(filter).getByRole("radio", { name: "All" }));
+  await userEvent.click(within(filter).getByRole("radio", { name: "Recent" }));
 }
 
 describe("PhrasebookView", () => {
@@ -89,15 +94,18 @@ describe("PhrasebookView", () => {
   beforeEach(() => notify.mockClear());
   afterEach(() => vi.unstubAllGlobals());
 
-  it("lists the groups and the history limit note", async () => {
+  it("lists the last 7 days under Recent, and says so", async () => {
     mockApi([group("a", "Uno", "Un"), group("b", "Dos", "Deux")]);
     await renderAll();
 
     expect(await screen.findByText("Uno")).toBeInTheDocument();
     expect(screen.getByText("Dos")).toBeInTheDocument();
     expect(
-      screen.getByText("Keeps your last 500 phrases. Favorite phrases stay."),
+      screen.getByText(
+        "Your phrases from the last 7 days. Save one to keep it.",
+      ),
     ).toBeInTheDocument();
+    expect(requested.at(-1)).toBe("recent=true&limit=20");
   });
 
   it("loads more groups and hides the button on the last page", async () => {
@@ -152,19 +160,54 @@ describe("PhrasebookView", () => {
     ).toBeInTheDocument();
   });
 
-  it("tells a new user how to fill the history", async () => {
+  it("says when nothing was translated in the last 7 days", async () => {
     mockApi([]);
     await renderAll();
 
-    expect(await screen.findByText(/nothing here yet/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Nothing from the last 7 days. Translate something and it shows up here.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
       "href",
       "/translate",
     );
   });
 
+  it("shows the correction pill in one language only on the phrase that was typed", async () => {
+    mockApi([
+      {
+        ...group("a", "Llegué tarde", "J'étais en retard"),
+        correction: {
+          text: "Llegué tarde",
+          explanation: "«Me tarde» no existe.",
+          accepted: true,
+        },
+      },
+    ]);
+    await renderAll();
+    await screen.findByText("Llegué tarde");
+    expect(
+      screen.getByRole("button", { name: "Corrected" }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      await screen.findByRole("radio", { name: /Français/ }),
+    );
+    expect(await screen.findByText("J'étais en retard")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Corrected" })).toBeNull();
+
+    await userEvent.click(
+      await screen.findByRole("radio", { name: /Español/ }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Corrected" }),
+    ).toBeInTheDocument();
+  });
+
   describe("filtering", () => {
-    it("starts on Favorites and asks only for the favorites", async () => {
+    it("starts on Saved and asks only for the saved phrases", async () => {
       const api = mockApi([
         group("a", "Uno", "Un"),
         starred("b", "Dos", "Deux"),
@@ -175,38 +218,41 @@ describe("PhrasebookView", () => {
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();
       const filter = screen.getByRole("radiogroup", { name: "Phrases" });
       expect(
-        within(filter).getByRole("radio", { name: "Favorites" }),
+        within(filter).getByRole("radio", { name: "Saved" }),
       ).toBeChecked();
+      expect(within(filter).getAllByRole("radio")).toHaveLength(2);
       expect(api).toHaveBeenCalledWith(
         "/api/phrase-groups?favorite=true&limit=20",
         expect.anything(),
       );
     });
 
-    it("lists only favorite phrases, with the phrasebook limit, under Favorites", async () => {
+    it("lists only saved phrases, with the phrasebook limit, under Saved", async () => {
       mockApi([group("a", "Uno", "Un"), starred("b", "Dos", "Deux")]);
       await renderAll();
       await screen.findByText("Uno");
       expect(screen.getByText("Dos")).toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Saved" }));
 
       expect(await screen.findByText("Dos")).toBeInTheDocument();
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();
       expect(
-        screen.getByText("Holds up to 100 favorite phrases."),
+        screen.getByText("Holds up to 100 saved phrases."),
       ).toBeInTheDocument();
     });
 
-    it("says how to add a favorite when there are none", async () => {
+    it("says how to save a phrase when there are none", async () => {
       mockApi([group("a", "Uno", "Un")]);
       await renderAll();
       await screen.findByText("Uno");
 
-      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Saved" }));
 
       expect(
-        await screen.findByText(/haven't added any favorites yet/i),
+        await screen.findByText(
+          "You haven't saved any phrases yet. Save a translation to keep it here and practice it.",
+        ),
       ).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /translate/i })).toHaveAttribute(
         "href",
@@ -222,7 +268,7 @@ describe("PhrasebookView", () => {
         await screen.findByRole("radio", { name: /Français/ }),
       );
 
-      await userEvent.click(screen.getByRole("radio", { name: "Favorites" }));
+      await userEvent.click(screen.getByRole("radio", { name: "Saved" }));
 
       expect(await screen.findByText("Un")).toBeInTheDocument();
       expect(screen.queryByText("Uno")).not.toBeInTheDocument();

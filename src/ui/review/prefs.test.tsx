@@ -21,8 +21,8 @@ describe("practice prefs", () => {
   });
 
   it("round-trips a saved choice", () => {
-    savePrefs({ source: "recent", count: 20 });
-    expect(loadPrefs()).toEqual({ source: "recent", count: 20 });
+    savePrefs({ source: "favorites", count: 20 });
+    expect(loadPrefs()).toEqual({ source: "favorites", count: 20 });
   });
 
   it("falls back to the defaults for garbage", () => {
@@ -45,14 +45,22 @@ describe("practice prefs", () => {
       throw new Error("blocked");
     });
     expect(loadPrefs()).toEqual(DEFAULT_PREFS);
-    expect(() => savePrefs({ source: "recent", count: 5 })).not.toThrow();
+    expect(() => savePrefs({ source: "favorites", count: 5 })).not.toThrow();
   });
 
-  it("falls back to Starter when Favorites is chosen but empty", () => {
+  it("falls back to Starter for a remembered Recent source", () => {
+    window.localStorage.setItem(
+      "parlo.practice",
+      JSON.stringify({ source: "recent", count: 5 }),
+    );
+    expect(loadPrefs()).toEqual({ source: "starter", count: 5 });
+  });
+
+  it("falls back to Starter when Saved is chosen but empty", () => {
     const favorites = { source: "favorites", count: 5 } as const;
     expect(resolveSource(favorites, 0)).toBe("starter");
     expect(resolveSource(favorites, 3)).toBe("favorites");
-    expect(resolveSource({ source: "recent", count: 5 }, 0)).toBe("recent");
+    expect(resolveSource({ source: "starter", count: 5 }, 0)).toBe("starter");
   });
 
   it("ignores an old All count", () => {

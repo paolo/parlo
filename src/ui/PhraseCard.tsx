@@ -2,9 +2,10 @@
 
 import { ActionIcon, CopyButton } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { PhraseDTO } from "@/server/phrases/types";
 import { LangLabel } from "./LangLabel";
+import { MorphText } from "./MorphText";
 import classes from "./PhraseCard.module.css";
 import type { Role } from "./roles";
 
@@ -16,10 +17,16 @@ export function PhraseCard({
   phrase,
   langRole,
   index = 0,
+  badge,
+  morphFrom,
 }: {
   phrase: PhraseDTO;
   langRole?: Role;
   index?: number;
+  /** Replaces the root's "Original" badge, e.g. with the correction pill. */
+  badge?: ReactNode;
+  /** The text shown before: when it differs, the phrase animates from it to its own text. */
+  morphFrom?: string;
 }) {
   return (
     <article
@@ -35,7 +42,8 @@ export function PhraseCard({
       <div className={classes.top}>
         <span className={classes.label}>
           <LangLabel lang={phrase.lang} flagSize="var(--parlo-size-flag-s)" />
-          {phrase.isRoot && <span className={classes.badge}>Original</span>}
+          {phrase.isRoot &&
+            (badge ?? <span className={classes.badge}>Original</span>)}
         </span>
         <CopyButton value={phrase.text}>
           {({ copied, copy }) => (
@@ -57,7 +65,16 @@ export function PhraseCard({
         </CopyButton>
       </div>
       <p className={classes.phrase} lang={phrase.lang} dir="auto">
-        {phrase.text}
+        {morphFrom !== undefined && morphFrom !== phrase.text ? (
+          // Keyed by the change, so a second change restarts the animation.
+          <MorphText
+            key={`${morphFrom}→${phrase.text}`}
+            from={morphFrom}
+            to={phrase.text}
+          />
+        ) : (
+          phrase.text
+        )}
       </p>
     </article>
   );

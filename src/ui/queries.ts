@@ -31,10 +31,9 @@ export const queryKeys = {
   usage: ["usage"] as const,
   profile: ["profile"] as const,
   phraseGroups: ["phrase-groups"] as const,
-  history: ["phrase-groups", { favorite: false }] as const,
+  history: ["phrase-groups", { recent: true }] as const,
   favorites: ["phrase-groups", { favorite: true }] as const,
   allFavorites: ["phrase-groups", { favorite: true, all: true }] as const,
-  recent: ["phrase-groups", { favorite: false, all: true }] as const,
 };
 
 export function useUsage() {
@@ -68,14 +67,15 @@ export function useTranslate() {
 
 const PAGE_SIZE = 20;
 
-/** History (or, with `favorite`, the phrasebook) one page at a time. */
-export function usePhraseGroups({ favorite }: { favorite: boolean }) {
+/** The saved phrases (the phrasebook) or the last few days of translations, one page at a time. */
+export function usePhraseGroups({ list }: { list: "saved" | "recent" }) {
+  const saved = list === "saved";
   return useInfiniteQuery({
-    queryKey: favorite ? queryKeys.favorites : queryKeys.history,
+    queryKey: saved ? queryKeys.favorites : queryKeys.history,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       apiFetch<PhraseGroupsPage>(
-        `/api/phrase-groups?favorite=${favorite}&limit=${PAGE_SIZE}${
+        `/api/phrase-groups?${saved ? "favorite=true" : "recent=true"}&limit=${PAGE_SIZE}${
           pageParam ? `&cursor=${pageParam}` : ""
         }`,
       ),
@@ -89,15 +89,6 @@ export function useAllFavorites() {
     queryKey: queryKeys.allFavorites,
     queryFn: () =>
       apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=true&limit=100"),
-  });
-}
-
-/** The latest 100 translations in one request, for practicing from history. */
-export function useRecentGroups() {
-  return useQuery({
-    queryKey: queryKeys.recent,
-    queryFn: () =>
-      apiFetch<PhraseGroupsPage>("/api/phrase-groups?favorite=false&limit=100"),
   });
 }
 
@@ -178,13 +169,14 @@ export function useDeleteGroup() {
   });
 }
 
-export function useAcceptCorrection() {
+/** Applies the group's correction to its root phrase, or puts back what the user typed. */
+export function useSetCorrectionApplied() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
+    mutationFn: ({ id, applied }: { id: string; applied: boolean }) =>
       apiFetch<{ group: PhraseGroupDTO }>(`/api/phrase-groups/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ acceptCorrection: true }),
+        body: JSON.stringify({ correctionApplied: applied }),
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.phraseGroups }),

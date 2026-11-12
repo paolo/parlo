@@ -63,7 +63,7 @@ async function start() {
     await screen.findByRole("button", { name: /^start$/i }),
   );
 }
-/** Picks the radio whose name starts with `name` ("Favorites" also matches "Favorites 6"). */
+/** Picks the radio whose name starts with `name` ("Saved" also matches "Saved 6"). */
 const pickRadio = async (group: string, name: string) => {
   await ensureSetup();
   await userEvent.click(
@@ -132,11 +132,19 @@ describe("ReviewView", () => {
   });
 
   it("deals the saved source and count on arrival", async () => {
-    remember({ source: "recent", count: 5 });
-    mockApi([a], many(25));
+    remember({ source: "favorites", count: 5 });
+    mockApi(many(25));
     renderWithProviders(<ReviewView random={keepOrder} />);
 
-    expect(await screen.findByText("Recent · 5 cards")).toBeInTheDocument();
+    expect(await screen.findByText("Saved · 5 cards")).toBeInTheDocument();
+  });
+
+  it("deals Starter for a remembered Recent source, which no longer exists", async () => {
+    remember({ source: "recent", count: 5 });
+    mockApi(many(25));
+    renderWithProviders(<ReviewView random={keepOrder} />);
+
+    expect(await screen.findByText("Starter · 5 cards")).toBeInTheDocument();
   });
 
   it("deals Starter when the saved source is Favorites and there are none", async () => {
@@ -262,12 +270,14 @@ describe("ReviewView", () => {
   it("explains that practice uses favorite phrases when there are none", async () => {
     mockApi([]);
     renderWithProviders(<ReviewView random={keepOrder} />);
-    await pickRadio("Where cards come from", "Favorites");
+    await pickRadio("Where cards come from", "Saved");
     await start();
 
     expect(await screen.findByText("Your deck is empty")).toBeInTheDocument();
     expect(
-      screen.getByText(/practice uses your favorite phrases/i),
+      screen.getByText(
+        "Practice uses your saved phrases. Translate something, tap its bookmark, and it joins your deck.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /^Practice in:/ }),
@@ -292,11 +302,7 @@ describe("ReviewView", () => {
 
     const urls = api.mock.calls.map(([url]) => url);
     expect(new Set(urls)).toEqual(
-      new Set([
-        "/api/profile",
-        "/api/phrase-groups?favorite=true&limit=100",
-        "/api/phrase-groups?favorite=false&limit=100",
-      ]),
+      new Set(["/api/profile", "/api/phrase-groups?favorite=true&limit=100"]),
     );
   });
 
@@ -314,13 +320,13 @@ describe("ReviewView", () => {
     });
 
     it("remembers the last source and count", async () => {
-      remember({ source: "recent", count: 20 });
-      mockApi([a], many(25));
+      remember({ source: "favorites", count: 20 });
+      mockApi(many(25));
       renderWithProviders(<ReviewView random={keepOrder} />);
       await ensureSetup();
 
       await screen.findByRole("button", { name: /^start$/i });
-      expect(screen.getByRole("radio", { name: /^Recent/ })).toBeChecked();
+      expect(screen.getByRole("radio", { name: /^Saved/ })).toBeChecked();
       expect(screen.getByRole("radio", { name: "20" })).toBeChecked();
     });
 
@@ -382,9 +388,7 @@ describe("ReviewView", () => {
       renderWithProviders(<ReviewView random={keepOrder} />);
       await start();
 
-      expect(
-        await screen.findByText("Favorites · 5 cards"),
-      ).toBeInTheDocument();
+      expect(await screen.findByText("Saved · 5 cards")).toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /^start$/i }),
       ).not.toBeInTheDocument();
@@ -397,28 +401,29 @@ describe("ReviewView", () => {
       expect(screen.queryByText("One")).not.toBeInTheDocument();
     });
 
-    it("deals Recent from history, including what was never favorited", async () => {
-      remember({ source: "recent", count: 10 });
-      const api = mockApi([], [a, b]);
+    it("offers only Saved and Starter as sources", async () => {
+      mockApi([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
-      await start();
+      await ensureSetup();
 
-      expect(await screen.findByText("0 of 2")).toBeInTheDocument();
+      const sources = await screen.findByRole("radiogroup", {
+        name: "Where cards come from",
+      });
+      expect(within(sources).getAllByRole("radio")).toHaveLength(2);
       expect(
-        api.mock.calls.some(
-          ([url]) => url === "/api/phrase-groups?favorite=false&limit=100",
-        ),
-      ).toBe(true);
+        within(sources).getByRole("radio", { name: /^Saved/ }),
+      ).toBeInTheDocument();
+      expect(
+        within(sources).getByRole("radio", { name: /^Starter/ }),
+      ).toBeInTheDocument();
     });
 
     it("says how many phrases the chosen source has", async () => {
-      mockApi([a, b], [a, b, card("c", "Tres", "Three", "Trois")]);
+      mockApi([a, b]);
       renderWithProviders(<ReviewView random={keepOrder} />);
       await ensureSetup();
 
       expect(await screen.findByText("2 phrases")).toBeInTheDocument();
-      await pickRadio("Where cards come from", "Recent");
-      expect(screen.getByText("3 phrases")).toBeInTheDocument();
       await pickRadio("Where cards come from", "Starter");
       expect(await screen.findByText("100 phrases")).toBeInTheDocument();
     });
@@ -447,7 +452,7 @@ describe("ReviewView", () => {
       expect(screen.getByRole("radio", { name: "5" })).toBeChecked();
       await start();
       expect(await screen.findByText("0 of 3")).toBeInTheDocument();
-      expect(screen.getByText("Favorites · 3 cards")).toBeInTheDocument();
+      expect(screen.getByText("Saved · 3 cards")).toBeInTheDocument();
     });
 
     it("shows a Starter card's other versions only in the languages the user has", async () => {
@@ -475,28 +480,6 @@ describe("ReviewView", () => {
       const speak = await screen.findByRole("radio", { name: /^Say it/ });
       expect(speak).toBeDisabled();
       expect(screen.getByText("Soon")).toBeInTheDocument();
-    });
-
-    it("offers Starter when Recent fails to load", async () => {
-      remember({ source: "recent", count: 10 });
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async (url: string) =>
-          url === "/api/profile"
-            ? Response.json({ languages: profile })
-            : url.includes("favorite=false")
-              ? Response.json({ error: "boom" }, { status: 500 })
-              : Response.json({ items: [a], nextCursor: null, limit: 100 }),
-        ),
-      );
-      renderWithProviders(<ReviewView random={keepOrder} />);
-      await start();
-
-      expect(
-        await screen.findByText(/couldn't load these phrases/i),
-      ).toBeInTheDocument();
-      await click("Use Starter");
-      expect(await screen.findByText("0 of 10")).toBeInTheDocument();
     });
 
     it("shows Starter cards in Arabic as Arabic, directed by the text", async () => {
@@ -545,7 +528,7 @@ describe("ReviewView", () => {
       await click("Practice again");
 
       expect(await screen.findByText("0 of 1")).toBeInTheDocument();
-      expect(screen.getByText("Favorites · 1 card")).toBeInTheDocument();
+      expect(screen.getByText("Saved · 1 card")).toBeInTheDocument();
     });
   });
 
@@ -608,19 +591,19 @@ describe("ReviewView", () => {
       await start();
       await screen.findByText("Hi, how are you?");
 
-      await click("Add to favorites");
+      await click("Save");
 
       expect(
-        await screen.findByRole("button", { name: "Remove from favorites" }),
+        await screen.findByRole("button", { name: "Remove from saved" }),
       ).toBeInTheDocument();
       expect(sent(api, "PUT")[0][0]).toBe(
         "/api/bundle-favorites/starter/starter-001",
       );
 
-      await click("Remove from favorites");
+      await click("Remove from saved");
 
       expect(
-        await screen.findByRole("button", { name: "Add to favorites" }),
+        await screen.findByRole("button", { name: "Save" }),
       ).toBeInTheDocument();
       expect(sent(api, "DELETE")[0][0]).toBe(
         "/api/bundle-favorites/starter/starter-001",
@@ -643,27 +626,26 @@ describe("ReviewView", () => {
       await screen.findByText("Hi, how are you?");
 
       expect(
-        await screen.findByRole("button", { name: "Remove from favorites" }),
+        await screen.findByRole("button", { name: "Remove from saved" }),
       ).toBeInTheDocument();
     });
 
-    it("favorites a Recent card through the phrase group", async () => {
-      remember({ source: "recent", count: 5 });
-      const api = fakeServer([], [a]);
+    it("un-saves a Saved card through the phrase group", async () => {
+      remember({ source: "favorites", count: 5 });
+      const api = fakeServer([{ ...a, isFavorite: true }]);
       renderWithProviders(<ReviewView random={keepOrder} />);
       await practiceEnglish();
-      await screen.findByRole("radio", { name: "Recent" });
       await start();
       await screen.findByText("One");
 
-      await click("Add to favorites");
+      await click("Remove from saved");
 
       expect(
-        await screen.findByRole("button", { name: "Remove from favorites" }),
+        await screen.findByRole("button", { name: "Save" }),
       ).toBeInTheDocument();
       const [url, init] = sent(api, "PATCH")[0];
       expect(url).toBe("/api/phrase-groups/a");
-      expect(JSON.parse(init.body)).toEqual({ isFavorite: true });
+      expect(JSON.parse(init.body)).toEqual({ isFavorite: false });
     });
 
     it("leaves the round alone when a card is un-starred, and shows it un-starred if it comes back", async () => {
@@ -675,38 +657,36 @@ describe("ReviewView", () => {
       await start();
       await screen.findByText("One");
 
-      await click("Remove from favorites");
-      await screen.findByRole("button", { name: "Add to favorites" });
+      await click("Remove from saved");
+      await screen.findByRole("button", { name: "Save" });
 
       // Still the same round: same size, same summary, and the next card is the next one dealt.
       expect(screen.getByText("0 of 2")).toBeInTheDocument();
-      expect(screen.getByText("Favorites · 2 cards")).toBeInTheDocument();
+      expect(screen.getByText("Saved · 2 cards")).toBeInTheDocument();
       await click("Reveal");
       await click("Again");
       expect(await screen.findByText("Two")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Remove from favorites" }),
+        screen.getByRole("button", { name: "Remove from saved" }),
       ).toBeInTheDocument();
       await click("Reveal");
       await click("Got it");
       // "One" returns after the Again, with its star as the user left it.
       expect(await screen.findByText("One")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Add to favorites" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
     });
 
     it("keeps the arrival round's summary when a card is un-starred", async () => {
       remember({ source: "favorites", count: 5 });
       fakeServer([a, b]);
       renderWithProviders(<ReviewView random={keepOrder} />);
-      await screen.findByText("Favorites · 2 cards");
+      await screen.findByText("Saved · 2 cards");
       await screen.findByText("Uno");
 
-      await click("Remove from favorites");
-      await screen.findByRole("button", { name: "Add to favorites" });
+      await click("Remove from saved");
+      await screen.findByRole("button", { name: "Save" });
 
-      expect(screen.getByText("Favorites · 2 cards")).toBeInTheDocument();
+      expect(screen.getByText("Saved · 2 cards")).toBeInTheDocument();
       expect(screen.getByText("0 of 2")).toBeInTheDocument();
     });
 
@@ -714,12 +694,12 @@ describe("ReviewView", () => {
       remember({ source: "favorites", count: 5 });
       fakeServer([a]);
       renderWithProviders(<ReviewView random={keepOrder} />);
-      await screen.findByText("Favorites · 1 card");
+      await screen.findByText("Saved · 1 card");
 
-      await click("Remove from favorites");
-      await screen.findByRole("button", { name: "Add to favorites" });
+      await click("Remove from saved");
+      await screen.findByRole("button", { name: "Save" });
 
-      expect(screen.getByText("Favorites · 1 card")).toBeInTheDocument();
+      expect(screen.getByText("Saved · 1 card")).toBeInTheDocument();
       expect(screen.queryByText(/^Starter ·/)).toBeNull();
     });
 
@@ -731,8 +711,8 @@ describe("ReviewView", () => {
       await screen.findByRole("button", { name: /^start$/i });
       await start();
       await screen.findByText("One");
-      await click("Remove from favorites");
-      await screen.findByRole("button", { name: "Add to favorites" });
+      await click("Remove from saved");
+      await screen.findByRole("button", { name: "Save" });
       await click("Reveal");
       await click("Got it");
       await screen.findByText("Two");
@@ -766,12 +746,10 @@ describe("ReviewView", () => {
       await start();
       await screen.findByText("Hi, how are you?");
 
-      await click("Add to favorites");
+      await click("Save");
 
       await waitFor(() => expect(sent(api, "PUT")).toHaveLength(1));
-      expect(
-        await screen.findByRole("button", { name: "Add to favorites" }),
-      ).toBeEnabled();
+      expect(await screen.findByRole("button", { name: "Save" })).toBeEnabled();
     });
   });
 

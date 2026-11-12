@@ -94,7 +94,7 @@ describe("LandingGame", () => {
     expect(await screen.findByText("0 of 5")).toBeInTheDocument();
     expect(document.querySelector('p[lang="es"]')).not.toBeNull();
     expect(screen.queryByText("English")).toBeNull();
-    expect(screen.queryByRole("button", { name: /favorites/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
 
     await click("Reveal");
 

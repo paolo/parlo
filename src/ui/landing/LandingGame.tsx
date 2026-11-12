@@ -187,7 +187,6 @@ export function LandingGame() {
         <PracticeRound
           key={round}
           groups={groups}
-          source="starter"
           count={CARDS}
           practice={native.lang}
           languages={visitorLanguages(native)}

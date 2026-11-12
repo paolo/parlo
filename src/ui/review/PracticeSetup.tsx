@@ -11,8 +11,7 @@ import classes from "./PracticeSetup.module.css";
 import { COUNTS, type Count, countAllowed, type Source } from "./prefs";
 
 export const SOURCE_LABELS: Record<Source, string> = {
-  favorites: "Favorites",
-  recent: "Recent",
+  favorites: "Saved",
   starter: "Starter",
 };
 

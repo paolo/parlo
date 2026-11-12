@@ -1,0 +1,81 @@
+/* Sits in a phrase card's label row, in its ink and type, where the "Original" badge would be. */
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--parlo-space-1);
+  border: 1.5px solid currentColor;
+  border-radius: var(--parlo-radius-pill);
+  padding: 2px 8px 2px 6px;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* The badge stays small, but the pressable area is 44px tall. */
+.pill::before {
+  content: "";
+  position: absolute;
+  inset: -14px -6px;
+}
+
+.pill:disabled {
+  cursor: progress;
+}
+
+.pill:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.arrive {
+  animation: pop var(--parlo-dur-pop) var(--parlo-ease-spring) both;
+}
+
+.dropdown {
+  background: var(--parlo-surface-raised);
+  color: var(--parlo-text);
+  border: 1px solid var(--parlo-border-strong);
+  border-radius: var(--parlo-radius-row);
+  padding: var(--parlo-space-4);
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+.caption {
+  margin: 0;
+  font: 600 12px / 1.2 var(--parlo-font-sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parlo-text-muted);
+}
+
+.phrase {
+  margin: var(--parlo-space-1) 0 var(--parlo-space-2);
+  font: 700 18px / 1.2 var(--parlo-font-display);
+}
+
+.phrase s {
+  color: var(--parlo-text-soft);
+}
+
+.explanation {
+  margin: 0 0 var(--parlo-space-3);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--parlo-text-soft);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

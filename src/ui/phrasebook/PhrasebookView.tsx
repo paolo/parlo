@@ -3,16 +3,17 @@
 import { Button, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 import { useState } from "react";
+import { RECENT_DAYS } from "../../shared/recent";
 import { PhraseGroupList } from "../history/PhraseGroupList";
 import { type ShowIn, ShowInSelect } from "../history/ShowInSelect";
 
-type Filter = "all" | "favorites";
+type Filter = "saved" | "recent";
 
-/** The phrases the user favorited, newest first; All shows everything they have translated. */
+/** The phrases the user saved, newest first; Recent shows what they translated in the last few days. */
 export function PhrasebookView() {
-  const [filter, setFilter] = useState<Filter>("favorites");
+  const [filter, setFilter] = useState<Filter>("saved");
   const [showIn, setShowIn] = useState<ShowIn>("all");
-  const favorites = filter === "favorites";
+  const saved = filter === "saved";
 
   return (
     <Stack gap="lg">
@@ -22,8 +23,8 @@ export function PhrasebookView() {
           value={filter}
           onChange={(next) => setFilter(next as Filter)}
           data={[
-            { value: "favorites", label: "Favorites" },
-            { value: "all", label: "All" },
+            { value: "saved", label: "Saved" },
+            { value: "recent", label: "Recent" },
           ]}
         />
         <ShowInSelect value={showIn} onChange={setShowIn} />
@@ -31,21 +32,21 @@ export function PhrasebookView() {
       <PhraseGroupList
         // Remount on a filter change so each list keeps its own scroll and loading state.
         key={filter}
-        favorite={favorites}
+        list={filter}
         showIn={showIn}
         note={(limit) => (
           <Text size="sm" c="dimmed">
-            {favorites
-              ? `Holds up to ${limit} favorite phrases.`
-              : `Keeps your last ${limit} phrases. Favorite phrases stay.`}
+            {saved
+              ? `Holds up to ${limit} saved phrases.`
+              : `Your phrases from the last ${RECENT_DAYS} days. Save one to keep it.`}
           </Text>
         )}
         empty={
           <Stack align="flex-start" gap="xs">
             <Text c="dimmed">
-              {favorites
-                ? "You haven't added any favorites yet. Add a translation to your favorites to keep it here and practice it."
-                : "Nothing here yet. Translate something and it will show up."}
+              {saved
+                ? "You haven't saved any phrases yet. Save a translation to keep it here and practice it."
+                : `Nothing from the last ${RECENT_DAYS} days. Translate something and it shows up here.`}
             </Text>
             <Button component={Link} href="/translate">
               Go to Translate

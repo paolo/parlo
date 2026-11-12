@@ -55,3 +55,26 @@ export function partialGroup(
     ],
   };
 }
+
+/**
+ * The group as it looks with its correction applied (the root holds the corrected text and keeps the typed one in
+ * `correctedFrom`) or not (the root holds the typed text). The group itself when it has no correction or is
+ * already that way.
+ */
+export function withCorrection(
+  group: PhraseGroupDTO,
+  applied: boolean,
+): PhraseGroupDTO {
+  const { correction } = group;
+  if (!correction || correction.accepted === applied) return group;
+  return {
+    ...group,
+    correction: { ...correction, accepted: applied },
+    phrases: group.phrases.map((p) => {
+      if (!p.isRoot) return p;
+      return applied
+        ? { ...p, text: correction.text, correctedFrom: p.text }
+        : { ...p, text: p.correctedFrom ?? p.text, correctedFrom: null };
+    }),
+  };
+}

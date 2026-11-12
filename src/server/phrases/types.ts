@@ -25,8 +25,15 @@ export interface NewPhraseGroup {
   createdAt?: Date;
   userId: string;
   notes: string | null;
-  correction: { text: string; explanation: string } | null;
-  phrases: { lang: Lang; text: string; isRoot: boolean }[];
+  /** `applied`: the root phrase already holds the corrected text (its typed text is in `correctedFrom`). */
+  correction: { text: string; explanation: string; applied?: boolean } | null;
+  phrases: {
+    lang: Lang;
+    text: string;
+    isRoot: boolean;
+    /** What the user typed, when the root holds an applied correction instead. */
+    correctedFrom?: string | null;
+  }[];
 }
 
 /** A bundle phrase to save for a user: the group is favorited and found again by its ref. */
@@ -39,8 +46,13 @@ export interface PhrasePage {
 }
 
 export interface PhraseRepository {
-  /** Inserts the group and its phrases in one transaction. */
+  /** Inserts the group and its phrases in one transaction. Does not trim history: see `pruneHistory`. */
   insertGroup(group: NewPhraseGroup): Promise<PhraseGroupDTO>;
+  /**
+   * Keeps at most the history limit of the user's groups by deleting the oldest unsaved ones. Saved groups and
+   * `keepId` (the group just stored) are never deleted.
+   */
+  pruneHistory(userId: string, keepId: string): Promise<void>;
   /**
    * Favorites the user's group for the bundle phrase, creating it from `group` when there is none. Never makes
    * a second group for the same ref. Throws PhrasebookFullError when it would be a new favorite past the cap.
@@ -59,17 +71,29 @@ export interface PhraseRepository {
     isFavorite: boolean,
   ): Promise<PhraseGroupDTO | null>;
   /**
-   * Replaces the root phrase with the group's stored correction, keeping the typed text in
-   * `correctedFrom`. Returns null when the user has no group with that id; throws
-   * CorrectionNotAcceptableError when there is nothing to accept.
+   * Puts the group's stored correction in the root phrase (keeping the typed text in `correctedFrom`), or puts the
+   * typed text back. Setting the state the group already has returns it unchanged. Returns null when the user has
+   * no group with that id; throws CorrectionNotAcceptableError when the group has no correction.
    */
-  acceptCorrection(userId: string, id: string): Promise<PhraseGroupDTO | null>;
+  setCorrectionApplied(
+    userId: string,
+    id: string,
+    applied: boolean,
+  ): Promise<PhraseGroupDTO | null>;
   /** Returns false when the user has no group with that id. */
   deleteGroup(userId: string, id: string): Promise<boolean>;
-  /** One page of the user's groups, newest first; `favorite` keeps only the starred ones. */
+  /**
+   * One page of the user's groups, newest first; `favorite` keeps only the saved ones, `since` only those
+   * created at or after it.
+   */
   listGroups(
     userId: string,
-    options: { favorite?: boolean; limit: number; cursor?: string },
+    options: {
+      favorite?: boolean;
+      since?: Date;
+      limit: number;
+      cursor?: string;
+    },
   ): Promise<PhrasePage>;
 }
 
@@ -87,10 +111,10 @@ export class PhrasebookFullError extends Error {
   }
 }
 
-/** The group has no correction to accept, or its correction was already accepted. */
+/** The group has no correction to apply or revert. */
 export class CorrectionNotAcceptableError extends Error {
-  constructor(readonly code: "no_correction" | "already_accepted") {
-    super(`The correction cannot be accepted (${code})`);
+  constructor(readonly code: "no_correction") {
+    super(`The correction cannot be changed (${code})`);
     this.name = "CorrectionNotAcceptableError";
   }
 }

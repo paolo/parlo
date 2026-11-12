@@ -228,6 +228,37 @@ describe("DrizzlePhraseRepository", () => {
         ids[0],
       ]);
     });
+    it("lists only groups created since the given time, still paged newest first", async () => {
+      const owner = await createTestUser();
+      const [old, recent, newest] = await seed(owner.id, 3);
+      const now = Date.now();
+      for (const [id, at] of [
+        [old, new Date(now - 8 * 86_400_000)],
+        [recent, new Date(now - 6 * 86_400_000)],
+        [newest, new Date(now - 3_600_000)],
+      ] as const) {
+        await getDb().execute(
+          sql`update phrase_group set created_at = ${at.toISOString()}::timestamptz where id = ${id}`,
+        );
+      }
+
+      const pages = [];
+      let cursor: string | undefined;
+      do {
+        const page = await repo().listGroups(owner.id, {
+          limit: 1,
+          cursor,
+          since: new Date(now - 7 * 86_400_000),
+        });
+        pages.push(page);
+        cursor = page.nextCursor ?? undefined;
+      } while (cursor);
+
+      expect(pages.flatMap((p) => p.items.map((g) => g.id))).toEqual([
+        newest,
+        recent,
+      ]);
+    });
   });
 
   describe("deleteGroup", () => {
@@ -257,12 +288,27 @@ describe("DrizzlePhraseRepository", () => {
     const small = { historyLimit: 3, phrasebookLimit: 100 };
     const listIds = async (userId: string) =>
       (await repo().listGroups(userId, { limit: 100 })).items.map((g) => g.id);
+    /** Saves a group and trims history, as the translation route does once it has answered. */
+    const save = async (limits: PhraseLimits, group: NewPhraseGroup) => {
+      const saved = await repo(limits).insertGroup(group);
+      await repo(limits).pruneHistory(group.userId, saved.id);
+      return saved;
+    };
+
+    it("insertGroup alone deletes nothing over the limit", async () => {
+      const owner = await createTestUser();
+      for (let i = 0; i < 4; i++) {
+        await repo(small).insertGroup(newGroup(owner.id));
+      }
+
+      expect(await listIds(owner.id)).toHaveLength(4);
+    });
 
     it("removes the oldest group once the limit is passed and keeps the newest", async () => {
       const owner = await createTestUser();
       const ids: string[] = [];
       for (let i = 0; i < 4; i++) {
-        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+        ids.push((await save(small, newGroup(owner.id))).id);
       }
 
       expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[1]]);
@@ -270,11 +316,11 @@ describe("DrizzlePhraseRepository", () => {
 
     it("spares a starred group and removes the oldest unstarred one instead", async () => {
       const owner = await createTestUser();
-      const first = await repo(small).insertGroup(newGroup(owner.id));
+      const first = await save(small, newGroup(owner.id));
       await repo(small).setFavorite(owner.id, first.id, true);
       const ids = [first.id];
       for (let i = 0; i < 3; i++) {
-        ids.push((await repo(small).insertGroup(newGroup(owner.id))).id);
+        ids.push((await save(small, newGroup(owner.id))).id);
       }
 
       expect(await listIds(owner.id)).toEqual([ids[3], ids[2], ids[0]]);
@@ -286,9 +332,7 @@ describe("DrizzlePhraseRepository", () => {
         const g = await repo().insertGroup(newGroup(owner.id));
         await repo().setFavorite(owner.id, g.id, true);
       }
-      await repo({ historyLimit: 2, phrasebookLimit: 100 }).insertGroup(
-        newGroup(owner.id),
-      );
+      await save({ historyLimit: 2, phrasebookLimit: 100 }, newGroup(owner.id));
 
       // Over the limit, but the only unstarred group is the one just saved: all four stay.
       expect(await listIds(owner.id)).toHaveLength(4);
@@ -302,10 +346,8 @@ describe("DrizzlePhraseRepository", () => {
     it("never prunes another user's groups", async () => {
       const owner = await createTestUser();
       const other = await createTestUser();
-      for (let i = 0; i < 3; i++)
-        await repo(small).insertGroup(newGroup(other.id));
-      for (let i = 0; i < 4; i++)
-        await repo(small).insertGroup(newGroup(owner.id));
+      for (let i = 0; i < 3; i++) await save(small, newGroup(other.id));
+      for (let i = 0; i < 4; i++) await save(small, newGroup(owner.id));
 
       expect(await listIds(other.id)).toHaveLength(3);
     });
@@ -357,66 +399,99 @@ describe("DrizzlePhraseRepository", () => {
     });
   });
 
-  describe("acceptCorrection", () => {
-    it("makes the correction the root text and keeps the typed text", async () => {
+  describe("setCorrectionApplied", () => {
+    const applied = (userId: string): NewPhraseGroup => ({
+      ...newGroup(userId),
+      correction: {
+        text: "Llegué tarde",
+        explanation: "«Me tarde» no existe.",
+        applied: true,
+      },
+      phrases: newGroup(userId).phrases.map((p) =>
+        p.isRoot
+          ? { ...p, text: "Llegué tarde", correctedFrom: "me tarde" }
+          : p,
+      ),
+    });
+    const typedRoot = {
+      lang: "es",
+      text: "me tarde",
+      isRoot: true,
+      correctedFrom: null,
+    };
+    const correctedRoot = {
+      lang: "es",
+      text: "Llegué tarde",
+      isRoot: true,
+      correctedFrom: "me tarde",
+    };
+
+    it("stores a group whose correction was applied", async () => {
       const owner = await createTestUser();
-      const { id } = await repo().insertGroup(newGroup(owner.id));
+      const group = await repo().insertGroup(applied(owner.id));
 
-      const group = await repo().acceptCorrection(owner.id, id);
-
-      expect(group?.correction).toMatchObject({
+      expect(group.correction).toMatchObject({
         text: "Llegué tarde",
         accepted: true,
       });
-      expect(group?.phrases).toEqual([
-        {
-          lang: "es",
-          text: "Llegué tarde",
-          isRoot: true,
-          correctedFrom: "me tarde",
-        },
-        { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
-        {
-          lang: "fr",
-          text: "J'étais en retard",
-          isRoot: false,
-          correctedFrom: null,
-        },
-      ]);
-      expect(await repo().findById(owner.id, id)).toEqual(group);
+      expect(group.phrases[0]).toEqual(correctedRoot);
+      expect(await repo().findById(owner.id, group.id)).toEqual(group);
     });
 
-    it("refuses a second accept and leaves the group as it was", async () => {
+    it("reverts to the typed text and applies again", async () => {
       const owner = await createTestUser();
-      const { id } = await repo().insertGroup(newGroup(owner.id));
-      const accepted = await repo().acceptCorrection(owner.id, id);
+      const { id } = await repo().insertGroup(applied(owner.id));
 
-      await expect(repo().acceptCorrection(owner.id, id)).rejects.toMatchObject(
-        { code: "already_accepted" },
-      );
-      await expect(
-        repo().acceptCorrection(owner.id, id),
-      ).rejects.toBeInstanceOf(CorrectionNotAcceptableError);
-
-      expect(await repo().findById(owner.id, id)).toEqual(accepted);
-      expect(accepted?.phrases[0].correctedFrom).toBe("me tarde");
-    });
-
-    it("applies once when two accepts race", async () => {
-      const owner = await createTestUser();
-      const { id } = await repo().insertGroup(newGroup(owner.id));
-
-      const results = await Promise.allSettled([
-        repo().acceptCorrection(owner.id, id),
-        repo().acceptCorrection(owner.id, id),
-      ]);
-
-      expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-      const stored = await repo().findById(owner.id, id);
-      expect(stored?.phrases[0]).toMatchObject({
+      const reverted = await repo().setCorrectionApplied(owner.id, id, false);
+      expect(reverted?.correction).toMatchObject({
         text: "Llegué tarde",
-        correctedFrom: "me tarde",
+        explanation: "«Me tarde» no existe.",
+        accepted: false,
       });
+      expect(reverted?.phrases[0]).toEqual(typedRoot);
+      expect(await repo().findById(owner.id, id)).toEqual(reverted);
+
+      const again = await repo().setCorrectionApplied(owner.id, id, true);
+      expect(again?.correction?.accepted).toBe(true);
+      expect(again?.phrases[0]).toEqual(correctedRoot);
+      expect(again?.phrases.slice(1).map((p) => p.text)).toEqual([
+        "I was late",
+        "J'étais en retard",
+      ]);
+    });
+
+    it("returns the group unchanged when it already has that state", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(applied(owner.id));
+
+      const same = await repo().setCorrectionApplied(owner.id, id, true);
+      expect(same?.phrases[0]).toEqual(correctedRoot);
+
+      await repo().setCorrectionApplied(owner.id, id, false);
+      const still = await repo().setCorrectionApplied(owner.id, id, false);
+      expect(still?.phrases[0]).toEqual(typedRoot);
+      expect(still?.correction?.accepted).toBe(false);
+    });
+
+    it("ends in the requested state when two requests race", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(applied(owner.id));
+
+      await Promise.all([
+        repo().setCorrectionApplied(owner.id, id, false),
+        repo().setCorrectionApplied(owner.id, id, false),
+      ]);
+
+      const stored = await repo().findById(owner.id, id);
+      expect(stored?.phrases[0]).toEqual(typedRoot);
+    });
+
+    it("applies an old group's correction that was never applied", async () => {
+      const owner = await createTestUser();
+      const { id } = await repo().insertGroup(newGroup(owner.id));
+
+      const group = await repo().setCorrectionApplied(owner.id, id, true);
+      expect(group?.phrases[0]).toEqual(correctedRoot);
     });
 
     it("refuses a group saved without a correction", async () => {
@@ -426,20 +501,27 @@ describe("DrizzlePhraseRepository", () => {
         correction: null,
       });
 
-      await expect(repo().acceptCorrection(owner.id, id)).rejects.toMatchObject(
-        { code: "no_correction" },
-      );
+      await expect(
+        repo().setCorrectionApplied(owner.id, id, true),
+      ).rejects.toMatchObject({ code: "no_correction" });
+      await expect(
+        repo().setCorrectionApplied(owner.id, id, false),
+      ).rejects.toBeInstanceOf(CorrectionNotAcceptableError);
     });
 
     it("returns null for a stranger's group and a malformed id", async () => {
       const owner = await createTestUser();
       const stranger = await createTestUser();
-      const { id } = await repo().insertGroup(newGroup(owner.id));
+      const { id } = await repo().insertGroup(applied(owner.id));
 
-      expect(await repo().acceptCorrection(stranger.id, id)).toBeNull();
-      expect(await repo().acceptCorrection(owner.id, "not-a-uuid")).toBeNull();
+      expect(
+        await repo().setCorrectionApplied(stranger.id, id, false),
+      ).toBeNull();
+      expect(
+        await repo().setCorrectionApplied(owner.id, "not-a-uuid", false),
+      ).toBeNull();
       expect((await repo().findById(owner.id, id))?.correction?.accepted).toBe(
-        false,
+        true,
       );
     });
   });

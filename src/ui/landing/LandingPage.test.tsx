@@ -89,6 +89,13 @@ describe("LandingPage", () => {
     expect(within(section).getByText("Punjabi")).toBeInTheDocument();
   });
 
+  it("says a saved translation joins the phrasebook", () => {
+    renderWithProviders(<LandingPage />);
+    expect(
+      screen.getByText("Save a translation and it joins your phrasebook."),
+    ).toBeInTheDocument();
+  });
+
   it("no longer has a separate languages section", () => {
     renderWithProviders(<LandingPage />);
 

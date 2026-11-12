@@ -7,7 +7,6 @@ import type { ProfileLanguage } from "@/server/profile/types";
 import { LANGUAGES, type Lang } from "../../shared/languages";
 import { PracticeDeck } from "./PracticeDeck";
 import { RevealPanel, TypedPanel } from "./PracticePanels";
-import type { Source } from "./prefs";
 import classes from "./ReviewView.module.css";
 import { buildCards, pickRandom, ReviewSession } from "./session";
 
@@ -24,11 +23,10 @@ function snapshot(session: ReviewSession) {
 /**
  * One round of cards: deals `count` of `groups` at random, then grades them until none is left. It needs no
  * account: the viewer's languages come in as `languages` (profile order, each with its region), and with
- * `favorites` off the cards carry no star, so a round can run signed out and without a single request.
+ * `favorites` off the cards carry no bookmark, so a round can run signed out and without a single request.
  */
 export function PracticeRound({
   groups,
-  source,
   count,
   practice,
   answerLang,
@@ -40,7 +38,6 @@ export function PracticeRound({
   finishedFooter,
 }: {
   groups: PhraseGroupDTO[];
-  source: Source;
   /** How many cards to deal, drawn at random; fewer when the source has fewer. */
   count: number;
   practice: Lang;
@@ -96,9 +93,7 @@ export function PracticeRound({
         <Text c="dimmed">
           {noVersion
             ? `None of these phrases have a ${needed} version. Try another language.`
-            : source === "recent"
-              ? "Nothing translated yet. Translate something and it shows up here."
-              : "Practice uses your favorite phrases. Translate something, tap its star, and it joins your deck."}
+            : "Practice uses your saved phrases. Translate something, tap its bookmark, and it joins your deck."}
         </Text>
         {skippedLine}
         {onUseStarter && (

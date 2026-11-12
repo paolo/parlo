@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { PhraseDTO } from "@/server/phrases/types";
 import { makeGroup } from "@/test/fixtures";
-import { orderPhrases, partialGroup, pickPhrase } from "./phrases";
+import {
+  orderPhrases,
+  partialGroup,
+  pickPhrase,
+  withCorrection,
+} from "./phrases";
 
 const phrase = (lang: PhraseDTO["lang"], isRoot = false): PhraseDTO => ({
   lang,
@@ -80,5 +85,46 @@ describe("partialGroup", () => {
       { lang: "es", text: "Llego tarde", isRoot: false, correctedFrom: null },
     ]);
     expect(group?.id).toBe("");
+  });
+});
+
+describe("withCorrection", () => {
+  const explanation = "«Me tarde» no existe.";
+  const others: PhraseDTO[] = [
+    { lang: "en", text: "I was late", isRoot: false, correctedFrom: null },
+  ];
+  const applied = makeGroup({
+    correction: { text: "Llegué tarde", explanation, accepted: true },
+    phrases: [
+      {
+        lang: "es",
+        text: "Llegué tarde",
+        isRoot: true,
+        correctedFrom: "me tarde",
+      },
+      ...others,
+    ],
+  });
+  const typed = makeGroup({
+    correction: { text: "Llegué tarde", explanation, accepted: false },
+    phrases: [
+      { lang: "es", text: "me tarde", isRoot: true, correctedFrom: null },
+      ...others,
+    ],
+  });
+
+  it("puts the typed text back", () => {
+    expect(withCorrection(applied, false)).toEqual(typed);
+  });
+
+  it("applies the correction", () => {
+    expect(withCorrection(typed, true)).toEqual(applied);
+  });
+
+  it("returns the group itself when it already has that state or has no correction", () => {
+    expect(withCorrection(applied, true)).toBe(applied);
+    expect(withCorrection(typed, false)).toBe(typed);
+    const plain = makeGroup();
+    expect(withCorrection(plain, true)).toBe(plain);
   });
 });

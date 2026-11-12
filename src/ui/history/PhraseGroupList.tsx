@@ -7,19 +7,19 @@ import { usePhraseGroups, useProfile } from "../queries";
 import { GroupItem } from "./GroupItem";
 import type { ShowIn } from "./ShowInSelect";
 
-/** A user's groups, newest first, loaded a page at a time. Used by History and the Phrasebook. */
+/** A user's saved or recent groups, newest first, loaded a page at a time. */
 export function PhraseGroupList({
-  favorite,
+  list,
   showIn,
   empty,
   note,
 }: {
-  favorite: boolean;
+  list: "saved" | "recent";
   showIn: ShowIn;
   empty: ReactNode;
   note?: (limit: number) => ReactNode;
 }) {
-  const groups = usePhraseGroups({ favorite });
+  const groups = usePhraseGroups({ list });
   const profile = useProfile();
 
   if (groups.isPending) return <Loader size="sm" />;

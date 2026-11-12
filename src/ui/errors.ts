@@ -30,8 +30,6 @@ export function errorMessage(error: unknown): string {
     }
     if (code === "phrasebook_full")
       return `Your phrasebook is full (${error.body?.limit}). Remove one to add another.`;
-    if (code === "already_accepted")
-      return "That correction was already applied.";
     if (code === "no_correction") return "There is no correction to apply.";
     if (code === "profile_incomplete")
       return "Pick your three languages first.";

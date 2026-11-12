@@ -4,7 +4,7 @@ import {
   TranslationFailedError,
   type TranslationResult,
 } from "../translation/types";
-import { buildNewGroup } from "./service";
+import { buildNewGroup, describeNewGroup } from "./service";
 
 const esEnFr = buildProfile([{ lang: "es" }, { lang: "en" }, { lang: "fr" }]);
 
@@ -33,7 +33,12 @@ describe("buildNewGroup", () => {
     );
     const roots = group.phrases.filter((p) => p.isRoot);
     expect(roots).toEqual([
-      { lang: detectedLang, text: "some phrase", isRoot: true },
+      {
+        lang: detectedLang,
+        text: "some phrase",
+        isRoot: true,
+        correctedFrom: null,
+      },
     ]);
     expect(group.phrases.map((p) => p.lang).sort()).toEqual(["en", "es", "fr"]);
   });
@@ -70,9 +75,19 @@ describe("buildNewGroup", () => {
       esEnFr,
     );
     expect(group.phrases).toEqual([
-      { lang: "es", text: "hola", isRoot: true },
-      { lang: "en", text: "I'm fed up with waiting", isRoot: false },
-      { lang: "fr", text: "J'en ai marre d'attendre", isRoot: false },
+      { lang: "es", text: "hola", isRoot: true, correctedFrom: null },
+      {
+        lang: "en",
+        text: "I'm fed up with waiting",
+        isRoot: false,
+        correctedFrom: null,
+      },
+      {
+        lang: "fr",
+        text: "J'en ai marre d'attendre",
+        isRoot: false,
+        correctedFrom: null,
+      },
     ]);
   });
 
@@ -104,9 +119,31 @@ describe("buildNewGroup", () => {
     );
     expect(group).toMatchObject({
       userId: "u1",
-      correction,
+      correction: { ...correction, applied: true },
       notes: "Expresión coloquial.",
     });
+  });
+
+  it("applies a correction: the root holds the corrected text and keeps the typed one", () => {
+    const group = buildNewGroup(
+      "u1",
+      "que hora es",
+      {
+        ...result,
+        correction: { text: "¿Qué hora es?", explanation: "Lleva ¿ y tilde." },
+      },
+      esEnFr,
+    );
+    expect(group.correction?.applied).toBe(true);
+    expect(group.phrases.find((p) => p.isRoot)).toEqual({
+      lang: "es",
+      text: "¿Qué hora es?",
+      isRoot: true,
+      correctedFrom: "que hora es",
+    });
+    for (const p of group.phrases.filter((p) => !p.isRoot)) {
+      expect(p.correctedFrom).toBeNull();
+    }
   });
 
   it("drops a 'correction' identical to the input", () => {
@@ -117,6 +154,10 @@ describe("buildNewGroup", () => {
       esEnFr,
     );
     expect(group.correction).toBeNull();
+    expect(group.phrases.find((p) => p.isRoot)).toMatchObject({
+      text: "Hola",
+      correctedFrom: null,
+    });
   });
 
   it("rejects results in an unsupported language", () => {
@@ -149,5 +190,35 @@ describe("buildNewGroup", () => {
     expect(() =>
       buildNewGroup("u1", "hola", { ...result, translations }, esEnFr),
     ).toThrow(TranslationFailedError);
+  });
+});
+
+describe("describeNewGroup", () => {
+  it("describes an applied correction as accepted", () => {
+    const group = buildNewGroup(
+      "u1",
+      "que hora es",
+      {
+        ...result,
+        correction: { text: "¿Qué hora es?", explanation: "Lleva ¿ y tilde." },
+      },
+      esEnFr,
+    );
+    const described = describeNewGroup({
+      ...group,
+      id: "g1",
+      createdAt: new Date("2026-11-11T12:00:00Z"),
+    });
+    expect(described.correction).toEqual({
+      text: "¿Qué hora es?",
+      explanation: "Lleva ¿ y tilde.",
+      accepted: true,
+    });
+    expect(described.phrases[0]).toEqual({
+      lang: "es",
+      text: "¿Qué hora es?",
+      isRoot: true,
+      correctedFrom: "que hora es",
+    });
   });
 });
