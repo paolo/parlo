@@ -7,6 +7,9 @@
 
 .del {
   overflow: hidden;
+  /* Kept on one line: as its width folds to 0 the letters would otherwise wrap one per line, leaving an
+     invisible column that pushes the phrase down. */
+  white-space: nowrap;
   animation: fold-out var(--parlo-dur-strike) var(--parlo-ease-draw) forwards;
 }
 
